@@ -48,7 +48,7 @@ static int parse_opt(int key, char *arg, struct argp_state *state) {
             }
             else if (state->arg_num >= 2) {
                 /* Too many arguments. */
-                ERR("Too many arguments");
+                ERROR("Too many arguments");
                 argp_usage(state);
                 return EXIT_FAILURE;
             }
@@ -71,11 +71,5 @@ int main(int argc, char **argv) {
     }
 
     log_init(settings.verbosity);
-    ERR("Foo");
-    errno = 2;
-    ERR("Foo");
-    WRN("Foo");
-    INF("Foo");
-    DBG("Foo");
     return EXIT_SUCCESS;
 }
