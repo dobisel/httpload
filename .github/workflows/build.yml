@@ -1,0 +1,21 @@
+name: Build 
+
+on:
+  push:
+    branches: [ master, 'feature/*' ]
+    tags: [ 'v*' ]
+
+  pull_request:
+    branches: [ master, 'feature/*' ]
+
+jobs:
+  ubuntu-latest:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+    - name: Build project
+      run: make
+    - name: Run tests & coverage
+      run: make coverage
+
