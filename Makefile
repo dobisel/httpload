@@ -1,26 +1,38 @@
 CC = gcc
-CFLAGS = -I.
-PREFIX = /usr/local
-BUILD := ./build
+CFLAGS = \
+	-I. \
+	-Wall 
 
-COMMON_DEPS := logging.h common.h
-MODS := logging httpload
-OBJS := $(MODS:%=$(BUILD)/%.o)
+PREFIX = /usr/local
+SRC = .
+BUILD = ./build
+modules := logging httpload cli
+objects := $(modules:%=$(BUILD)/%.o)
 
 
 all: httpload
 
 
-httpload: cli.c $(OBJS)
+httpload: main.c $(objects)
 	$(CC) $(CFLAGS) -o $@ $^
 
 
-$(BUILD)/%.o : %.c %.h $(COMMON_DEPS)
+$(BUILD)/%.o: $(SRC)/%.c $(SRC)/%.h
 	mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 
 .PHONY: clean
 clean:
-	rm -r $(BUILD) httpload
+	-rm -r $(BUILD)
+	-rm httpload
 
+
+.PHONY: test
+test:
+	$(MAKE) -C tests test
+
+
+.PHONY: coverage
+coverage:
+	$(MAKE) -C tests coverage

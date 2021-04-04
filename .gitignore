@@ -54,5 +54,12 @@ dkms.conf
 # Vim
 .*.sw[po]
 
+# gcov
+*.gcno
+*.gcda
+*.gcov
+
 # Project specific
 httpload
+tests/test_cli
+build

@@ -64,7 +64,7 @@ static int parse_opt(int key, char *arg, struct argp_state *state) {
 static struct argp argp = {options, parse_opt, args_doc, doc};
 
 
-int main(int argc, char **argv) {
+int cli_run(int argc, char **argv) {
     int err = argp_parse(&argp, argc, argv, 0, 0, NULL);
     if (err) {
         return err;
