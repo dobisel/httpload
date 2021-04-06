@@ -65,6 +65,11 @@ static struct argp argp = {options, parse_opt, args_doc, doc};
 
 
 int cli_run(int argc, char **argv) {
+    //ERROR("argc: %d", argc);
+    //int i = 0;
+    //for (i=0; i < argc; i++) {
+    //    printf("%s\n", argv[i]);
+    //}
     int err = argp_parse(&argp, argc, argv, 0, 0, NULL);
     if (err) {
         return err;

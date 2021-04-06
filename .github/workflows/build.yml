@@ -14,8 +14,10 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
-    - name: Build project
-      run: make
-    - name: Run tests & coverage
-      run: make coverage
+    - name: Install dependencies
+      run: python -m pip install cpp-coveralls
+    - name: Build, Run tests & coverage
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: make coveralls
 

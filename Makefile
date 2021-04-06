@@ -1,38 +1,17 @@
 CC = gcc
-CFLAGS = \
-	-I. \
-	-Wall 
-
+CFLAGS = -I. -Wall
 PREFIX = /usr/local
-SRC = .
-BUILD = ./build
-modules := logging httpload cli
-objects := $(modules:%=$(BUILD)/%.o)
-
-
-all: httpload
-
+headers_exclude = common.h
+headers = $(filter-out $(headers_exclude), $(wildcard *.h))
+objects = $(headers:.h=.o)
 
 httpload: main.c $(objects)
-	$(CC) $(CFLAGS) -o $@ $^
+$(objects): %.o: %.c %.h
 
 
-$(BUILD)/%.o: $(SRC)/%.c $(SRC)/%.h
-	mkdir -p $(dir $@)
-	$(CC) -c $(CFLAGS) -o $@ $<
-
+include tests/Makefile
 
 .PHONY: clean
-clean:
-	-rm -r $(BUILD)
-	-rm httpload
+clean::
+	-rm -f httpload *.o *.gcda *.gcno *.gcov
 
-
-.PHONY: test
-test:
-	$(MAKE) -C tests test
-
-
-.PHONY: coverage
-coverage:
-	$(MAKE) -C tests coverage

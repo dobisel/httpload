@@ -1,40 +1,42 @@
-CC = gcc
-CFLAGS = \
-	-I$(SRC) \
+
+ifdef GCOV
+
+CFLAGS += \
 	-I./include \
-	-Wall \
 	-g \
-	--coverage \
-	-fprofile-exclude-files="test_*" 
+	--coverage
 
+endif
 
-SRC = ..
-BUILD = build
-modules := logging httpload cli
-objects := $(modules:%=$(BUILD)/%.o)
+tests/test_cli: tests/test_cli.c $(objects)
+	$(CC) -Itests/include $(CFLAGS) -o $@ $^
 
-
-$(BUILD)/%.o: $(SRC)/%.c $(SRC)/%.h
-	mkdir -p $(dir $@)
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-
-$(BUILD)/test_cli: test_cli.c $(objects)
-	$(CC) $(CFLAGS) -o $@ $^
+.PHONY: test
+test: tests/test_cli
+	tests/test_cli
+	-cat stdout.tmp
+	-rm stdout.tmp
 
 
 .PHONY: coverage
 coverage: test
-	gcov -o$(BUILD) $(SRC)/*.c
+ifdef COVERALLS 
+	coveralls -e tests
+else
+	gcov *.c
+endif
 
 
-.PHONY: test
-test: $(BUILD)/test_cli
-	$(BUILD)/test_cli
+.PHONY: cover
+cover:
+	$(MAKE) coverage GCOV=1
+
+.PHONY: coveralls
+coveralls: 
+	$(MAKE) coverage GCOV=1 COVERALLS=1
 
 
 .PHONY: clean
-clean:
-	-rm -r $(BUILD)
-	-rm *.gcda *.gcno *.gcov
+clean::
+	-cd tests; rm test_cli *.o *.gcda *.gcno *.gcov
 

@@ -14,6 +14,8 @@ static fpos_t stdoutposback;
 void switchstdout(const char *newfile) {
     fflush(stdout);
     fgetpos(stdout, &stdoutposback);
+    errno = 0;
+    clearerr(stdout);
     stdoutback = dup(fileno(stdout));
     freopen(newfile, "w", stdout);
 }
@@ -29,8 +31,9 @@ void restorestdout() {
 
 
 int capture(int argc, char **argv, char *const out, int outlen) {
-    char *stdoutfile = "build/stdout.txt";
+    char *stdoutfile = "stdout.tmp";
     switchstdout(stdoutfile);
+    ERROR("RUN");
     int ret = cli_run(argc, argv);
     restorestdout();
     FILE *of = fopen(stdoutfile, "r");
@@ -39,17 +42,30 @@ int capture(int argc, char **argv, char *const out, int outlen) {
     return ret;
 }
 
+#define PROG    "httpload"
+
 
 void test_version() {
-    char out[1024];
-    char *p[] = {"-V"};
-    int status = capture(1, p, out, 1024);
+    char out[1024] = {0};
+    char *p[2] = {PROG, "--version"};
+    int status = capture(2, p, out, 1024);
+    
     eqint(status, 0);
-    eqstr("[I] Logging Initialized, level: Info" CR, out);
+    //eqstr("[I] Logging Initialized, level: Info" CR, out);
 }
+
+
+//void test_verbosity() {
+//    char out[1024] = {0};
+//    char *p[] = {PROG, "-v", "0"};
+//    int status = capture(3, p, out, 1024);
+//    eqint(status, 0);
+//    eqstr(CR, out);
+//}
 
 
 int main() {
     test_version();
+    //test_verbosity();
 }
 
