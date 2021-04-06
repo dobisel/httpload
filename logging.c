@@ -12,8 +12,7 @@ const char * log_levelnames [] = {
 };
 
 
-void log_init(enum log_level level) {
+void log_setlevel(enum log_level level) {
     log_level = level;
-    INFO("Logging Initialized, level: %s", log_levelnames[level]);
 }
 

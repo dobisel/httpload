@@ -1,8 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-
-#define CR  "\r\n"
+#define HTTPLOAD_VERSION    "0.1.0a1"
+#define CR  "\n"
 
 #endif
 

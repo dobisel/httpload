@@ -21,16 +21,18 @@ extern char log_level;
 extern const char * log_levelnames[];
 
 
+#define LOG_ERR_FP stderr
 #define LOG_FP stdout
 #define LOG_SHOULD_I( level ) ((level) <= log_level)
 #define LOG_LEVEL_FMT   "[%.1s] "
 
 
 #define ERROR(fmt, ...) \
-    fprintf(LOG_FP, LOG_LEVEL_FMT "%s -- " fmt CR, \
-            log_levelnames[LOG_ERROR], \
-            errno? strerror(errno): "(errno == 0)", \
-            ## __VA_ARGS__ ); \
+    fprintf(stderr, "httpload: " fmt, ## __VA_ARGS__ ); \
+    if (errno) \
+        fprintf(stderr, " -- errno: %d additional info: %s" CR, \
+                errno, strerror(errno)); \
+    else fprintf(stderr, CR); \
     fflush(LOG_FP); 
 
 
@@ -56,7 +58,7 @@ extern const char * log_levelnames[];
 #define INFO( ... ) LOG(LOG_INFO, __VA_ARGS__ )
 
 
-void log_init(enum log_level level);
+void log_setlevel(enum log_level level);
 
 
 #endif

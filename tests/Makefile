@@ -14,8 +14,6 @@ tests/test_cli: tests/test_cli.c $(objects)
 .PHONY: test
 test: tests/test_cli
 	tests/test_cli
-	-cat stdout.tmp
-	-rm stdout.tmp
 
 
 .PHONY: coverage

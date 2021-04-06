@@ -8,7 +8,6 @@ objects = $(headers:.h=.o)
 httpload: main.c $(objects)
 $(objects): %.o: %.c %.h
 
-
 include tests/Makefile
 
 .PHONY: clean
