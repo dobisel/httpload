@@ -6,7 +6,17 @@
 Event based HTTP stress testing. 
 
 
-## Run tests
+## Contribution
+
+Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
+
+### Install development prerequicites:
+
+```shell
+apt install build-essential make indent
+```
+
+### Run tests
 
 ```shell
 make test
