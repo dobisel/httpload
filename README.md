@@ -10,11 +10,13 @@ Event based HTTP stress testing.
 
 Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 
+
 ### Install development prerequicites:
 
 ```shell
 apt install build-essential make indent
 ```
+
 
 ### Run tests
 
@@ -22,3 +24,12 @@ apt install build-essential make indent
 make test
 make cover
 ```
+
+### Indent
+
+Run make indent to uniform the code with `GNU indent` tool before commit.
+
+```shell
+make indent
+```
+

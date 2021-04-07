@@ -12,5 +12,8 @@ include tests/Makefile
 
 .PHONY: clean
 clean::
-	-rm -f httpload *.o *.gcda *.gcno *.gcov
+	-rm -f httpload *.o *.gcda *.gcno *.gcov *.c~
 
+.PHONY: indent
+indent:
+	indent -br -brf -brs *.c
