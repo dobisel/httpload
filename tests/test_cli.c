@@ -80,6 +80,7 @@ capture(int argc, char **argv, char *const out, char *const err) {
         bytes = read(errpipe[0], err, CAPTMAX);
         err[bytes] = 0;
         close(errpipe[0]);
+        status = WEXITSTATUS(status);
     }
     else if (pid == 0) {
         /* Child */
@@ -98,7 +99,7 @@ capture(int argc, char **argv, char *const out, char *const err) {
         close(errpipe[1]);
         exit(status);
     }
-    return WEXITSTATUS(status);
+    return status;
 }
 
 

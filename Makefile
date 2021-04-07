@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I. -Wall
+CFLAGS = -I. -Wall -fplan9-extensions
 IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut
 PREFIX = /usr/local
 headers_exclude = common.h

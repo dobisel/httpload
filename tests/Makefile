@@ -1,5 +1,5 @@
 TEST_CFLAGS = -I./tests
-testobjs := 
+testobjs := httpdmock.o
 testobjs := $(testobjs:%=tests/%)
 tests := $(wildcard tests/test_*.c)
 tests := $(tests:%.c=%)
@@ -10,17 +10,19 @@ CFLAGS += \
 	--coverage
 endif
 
+tests/httpmock: tests/httpmock.c
+	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
 $(testobjs): %.o: %.c %.h
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -c -o $@ $<
 
-#$(tests): %: %.c $(objects) $(testobjs)
-$(tests): %: %.c $(objects)
+$(tests): %: %.c $(objects) $(testobjs)
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
 .PHONY: test
 test: $(tests)
 	tests/test_cli
+	tests/test_http_simple
 
 .PHONY: coverage
 coverage: test

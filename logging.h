@@ -26,6 +26,16 @@ extern const char *log_levelnames[];
 #define LOG_SHOULD_I( level ) ((level) <= log_level)
 #define LOG_LEVEL_FMT   "[%.1s] "
 
+#define FATAL(fmt, ...) \
+    fprintf(stderr, "[%s:%d] fatal: " fmt, __FUNCTION__, __LINE__, \
+        ## __VA_ARGS__ ); \
+    if (errno) \
+        fprintf(stderr, " -- errno: %d additional info: %s" CR, \
+                errno, strerror(errno)); \
+    else fprintf(stderr, CR); \
+    fflush(LOG_FP); \
+    exit(-1);
+
 
 #define ERROR(fmt, ...) \
     fprintf(stderr, "httpload: " fmt, ## __VA_ARGS__ ); \
