@@ -1,20 +1,26 @@
+TEST_CFLAGS = -I./tests
+testobjs := 
+testobjs := $(testobjs:%=tests/%)
+tests := $(wildcard tests/test_*.c)
+tests := $(tests:%.c=%)
 
 ifdef GCOV
-
 CFLAGS += \
-	-I./include \
 	-g \
 	--coverage
-
 endif
 
-tests/test_cli: tests/test_cli.c $(objects)
-	$(CC) -Itests/include $(CFLAGS) -o $@ $^
+
+$(testobjs): %.o: %.c %.h
+	$(CC) $(TEST_CFLAGS) $(CFLAGS) -c -o $@ $<
+
+#$(tests): %: %.c $(objects) $(testobjs)
+$(tests): %: %.c $(objects)
+	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
 .PHONY: test
-test: tests/test_cli
+test: $(tests)
 	tests/test_cli
-
 
 .PHONY: coverage
 coverage: test
@@ -24,7 +30,6 @@ else
 	gcov *.c
 endif
 
-
 .PHONY: cover
 cover:
 	$(MAKE) coverage GCOV=1
@@ -33,8 +38,10 @@ cover:
 coveralls: 
 	$(MAKE) coverage GCOV=1 COVERALLS=1
 
-
 .PHONY: clean
 clean::
-	-cd tests; rm test_cli *.o *.gcda *.gcno *.gcov
+	-cd tests; rm test_cli *.o *.gcda *.gcno *.gcov *.c~
 
+.PHONY: indent
+indent::
+	indent $(IFLAGS) tests/*.c tests/*.h 

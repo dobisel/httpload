@@ -59,7 +59,12 @@ dkms.conf
 *.gcda
 *.gcov
 
+# GNU indent
+*.[ch]~
+
 # Project specific
 httpload
 tests/test_cli
+tests/test_http_simple
+tests/httpmock
 build

@@ -41,88 +41,94 @@
 #define GIVEN() pcolor(YELLOW, "Given: ")
 
 
-static void printbinary(const unsigned char *buf, int buflen) {
-    int i;
-    for (i = 0; i < buflen; i++){
-        printf("\\%02X", buf[i]);
-    }
-    printf("\n");
+static void
+printbinary (const unsigned char *buf, int buflen) {
+	int i;
+	for (i = 0; i < buflen; i++) {
+		printf ("\\%02X", buf[i]);
+	}
+	printf ("\n");
 }
 
 
-void equalbin(const unsigned char *expected, const unsigned char *given, 
-        uint32_t len) {
-    SUCCESS(memcmp(given, expected, len) == 0);
+void
+equalbin (const unsigned char *expected, const unsigned char *given,
+	      uint32_t len) {
+	SUCCESS (memcmp (given, expected, len) == 0);
 
-    /* Error */
-    FAILED();
-    EXPECTED();
-    printbinary(expected, len);
+	/* Error */
+	FAILED ();
+	EXPECTED ();
+	printbinary (expected, len);
 
-    GIVEN();
-    printbinary(given, len);
+	GIVEN ();
+	printbinary (given, len);
 
-    exit(EXIT_FAILURE);
+	exit (EXIT_FAILURE);
 }
 
 
-void equalchr(const char expected, const char given) {
-    SUCCESS(given == expected);
+void
+equalchr (const char expected, const char given) {
+	SUCCESS (given == expected);
 
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%c", expected);
+	/* Error */
+	FAILED ();
+	EXPECTED ();
+	pdataln ("%c", expected);
 
-    GIVEN();
-    pdataln("%c", given);
+	GIVEN ();
+	pdataln ("%c", given);
 
-    exit(EXIT_FAILURE);
+	exit (EXIT_FAILURE);
 }
 
 
-void equalstr(const char *expected, const char *given) {
-    SUCCESS(strcmp(given, expected) == 0);
+void
+equalstr (const char *expected, const char *given) {
+	SUCCESS (strcmp (given, expected) == 0);
 
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%s", expected);
+	/* Error */
+	FAILED ();
+	EXPECTED ();
+	pdataln ("%s", expected);
 
-    GIVEN();
-    pdataln("%s", given);
+	GIVEN ();
+	pdataln ("%s", given);
 
-    exit(EXIT_FAILURE);
+	exit (EXIT_FAILURE);
 }
 
 
-void equalnstr(const char *expected, const char *given, u_int32_t len) {
-    SUCCESS(strncmp(given, expected, len) == 0);
+void
+equalnstr (const char *expected, const char *given, u_int32_t len) {
+	SUCCESS (strncmp (given, expected, len) == 0);
 
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%.*s", len, expected);
+	/* Error */
+	FAILED ();
+	EXPECTED ();
+	pdataln ("%.*s", len, expected);
 
-    GIVEN();
-    pdataln("%.*s", len, given);
+	GIVEN ();
+	pdataln ("%.*s", len, given);
 
-    exit(EXIT_FAILURE);
+	exit (EXIT_FAILURE);
 }
 
 
-void equalint(int expected, int given) {
-    SUCCESS(given == expected);
+void
+equalint (int expected, int given) {
+	SUCCESS (given == expected);
 
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%d", expected);
+	/* Error */
+	FAILED ();
+	EXPECTED ();
+	pdataln ("%d", expected);
 
-    GIVEN();
-    pdataln("%d", given);
+	GIVEN ();
+	pdataln ("%d", given);
 
-    exit(EXIT_FAILURE);
+	exit (EXIT_FAILURE);
 }
 
 

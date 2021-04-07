@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -I. -Wall
+IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4
 PREFIX = /usr/local
 headers_exclude = common.h
 headers = $(filter-out $(headers_exclude), $(wildcard *.h))
@@ -15,5 +16,5 @@ clean::
 	-rm -f httpload *.o *.gcda *.gcno *.gcov *.c~
 
 .PHONY: indent
-indent:
-	indent -br -brf -brs *.c
+indent::
+	indent $(IFLAGS) *.c *.h 

@@ -9,16 +9,16 @@
 #include <string.h>
 
 
-enum log_level{
-    LOG_ERROR,  // 0
-    LOG_WARN,   // 1
-    LOG_INFO,   // 2
-    LOG_DEBUG,  // 3
+enum log_level {
+	LOG_ERROR,                  // 0
+	LOG_WARN,                   // 1
+	LOG_INFO,                   // 2
+	LOG_DEBUG,                  // 3
 };
 
 
 extern char log_level;
-extern const char * log_levelnames[];
+extern const char *log_levelnames[];
 
 
 #define LOG_ERR_FP stderr
@@ -33,7 +33,7 @@ extern const char * log_levelnames[];
         fprintf(stderr, " -- errno: %d additional info: %s" CR, \
                 errno, strerror(errno)); \
     else fprintf(stderr, CR); \
-    fflush(LOG_FP); 
+    fflush(LOG_FP);
 
 
 #define DEBUG(fmt, ...) \
@@ -58,7 +58,7 @@ extern const char * log_levelnames[];
 #define INFO( ... ) LOG(LOG_INFO, __VA_ARGS__ )
 
 
-void log_setlevel(enum log_level level);
+void log_setlevel (enum log_level level);
 
 
 #endif
