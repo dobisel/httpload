@@ -11,5 +11,3 @@ We value the participation of each individual and want all to have an enjoyable 
 
 ## What we don't care about
 We don't care about your level of experience, gender, gender identity and expression, sexual orientation, disability, personal appearance, body size, race, ethnicity, age, or religion.
-
-
