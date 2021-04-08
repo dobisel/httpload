@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I. -Wall
-IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs
+IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut
 PREFIX = /usr/local
 headers_exclude = common.h
 headers = $(filter-out $(headers_exclude), $(wildcard *.h))
