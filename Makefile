@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I. -Wall
-IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4
+IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs
 PREFIX = /usr/local
 headers_exclude = common.h
 headers = $(filter-out $(headers_exclude), $(wildcard *.h))
@@ -18,3 +18,10 @@ clean::
 .PHONY: indent
 indent::
 	indent $(IFLAGS) *.c *.h 
+
+indentbk = $(wildcard *.[hc]~)
+.PHONY: indent-restore
+indent-restore::
+	for f in $(indentbk:%~=%); do \
+		mv "$${f}~" "$${f}"; \
+	done

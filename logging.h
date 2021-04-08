@@ -58,7 +58,7 @@ extern const char *log_levelnames[];
 #define INFO( ... ) LOG(LOG_INFO, __VA_ARGS__ )
 
 
-void log_setlevel (enum log_level level);
+void log_setlevel(enum log_level level);
 
 
 #endif

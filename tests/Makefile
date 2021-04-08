@@ -45,3 +45,11 @@ clean::
 .PHONY: indent
 indent::
 	indent $(IFLAGS) tests/*.c tests/*.h 
+
+tindentbk = $(wildcard ./tests/*.[hc]~)
+
+.PHONY: indent-restore
+indent-restore::
+	for f in $(tindentbk:%~=%); do \
+		mv "$${f}~" "$${f}"; \
+	done

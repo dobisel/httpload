@@ -34,10 +34,10 @@ static struct argp_option options[] = {
 
 /* Parse a single option. */
 static int
-parse_opt (int key, char *arg, struct argp_state *state) {
+parse_opt(int key, char *arg, struct argp_state *state) {
 	switch (key) {
 	case 'v':
-		settings.verbosity = atoi (arg);
+		settings.verbosity = atoi(arg);
 		break;
 
 	case ARGP_KEY_ARG:
@@ -49,8 +49,8 @@ parse_opt (int key, char *arg, struct argp_state *state) {
 		}
 		else if (state->arg_num >= 2) {
 			/* Too many arguments. */
-			ERROR ("Too many arguments");
-			argp_usage (state);
+			ERROR("Too many arguments");
+			argp_usage(state);
 			return ARGP_ERR_UNKNOWN;
 		}
 		break;
@@ -66,12 +66,12 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 
 
 int
-cli_run (int argc, char **argv) {
-	int err = argp_parse (&argp, argc, argv, ARGP_NO_EXIT, 0, NULL);
+cli_run(int argc, char **argv) {
+	int err = argp_parse(&argp, argc, argv, ARGP_NO_EXIT, 0, NULL);
 	if (err) {
 		return err;
 	}
 
-	log_setlevel (settings.verbosity);
+	log_setlevel(settings.verbosity);
 	return EXIT_SUCCESS;
 }
