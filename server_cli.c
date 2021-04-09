@@ -1,5 +1,5 @@
 #include "common.h"
-#include "httpload.h"
+#include "client.h"
 #include "logging.h"
 
 #include <stdio.h>
@@ -19,8 +19,8 @@ static struct {
 
 const char *argp_program_version = HTTPLOAD_VERSION;
 const char *argp_program_bug_address = "http://github.com/dobisel/httpload";
-static char doc[] = "HTTP stress test using Linux epoll.";
-static char args_doc[] = "URL [VERB]";
+static char doc[] = "HTTP echo server using Linux epoll.";
+static char args_doc[] = "";
 
 
 /* Options definition */
@@ -66,7 +66,7 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 
 
 int
-cli_run(int argc, char **argv) {
+servercli_run(int argc, char **argv) {
     int err = argp_parse(&argp, argc, argv, ARGP_NO_EXIT, 0, NULL);
     if (err) {
         return err;

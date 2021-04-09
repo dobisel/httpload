@@ -1,5 +1,5 @@
 #include <logging.h>
-#include <httpdmock.h>
+#include <server.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -281,7 +281,7 @@ loop(int listenfd) {
 
 
 int
-httpdmock_fork(struct httpdmock *m) {
+httpd_fork(struct httpd *m) {
     int listenfd;
     int i;
     pid_t pid;
@@ -330,7 +330,7 @@ httpdmock_fork(struct httpdmock *m) {
 
 
 int
-httpdmock_join(struct httpdmock *m) {
+httpd_join(struct httpd *m) {
     int status;
     int ret; 
     int i;

@@ -1,21 +1,23 @@
 #include "logging.h"
-#include "httpdmock.h"
+#include "server.h"
 #include "testing.h"
 
 #include <unistd.h>
 
 
 void test_single_packet() {
-    struct httpdmock m = {.port = 9090, .forks = 1};
+    struct httpd m = {.port = 9090, .forks = 1};
     log_setlevel(LOG_DEBUG);
-    int err = httpdmock_fork(&m);
+    int err = httpd_fork(&m);
     if (err) {
         FATAL("Cannot start http mock server");
     }
     INFO("Listening on port: %d", m.port);
+
+    // TODO: do tests
+
     sleep(1);
-    
-    eqint(0, httpdmock_join(&m));
+    eqint(0, httpd_join(&m));
 }
 
 int

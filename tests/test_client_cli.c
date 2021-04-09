@@ -1,6 +1,6 @@
-#include "cli.h"
 #include "testing.h"
 #include "logging.h"
+#include "client_cli.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +23,7 @@ execchild(int argc, char **argv) {
     memcpy(newargv + 1, argv, argc * sizeof(char *));
     argc++;
 
-    int status = cli_run(argc, newargv);
+    int status = clientcli_run(argc, newargv);
     free(newargv);
     return status;
 }

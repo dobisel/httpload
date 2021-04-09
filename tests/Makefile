@@ -1,8 +1,14 @@
 TEST_CFLAGS = -I./tests
-testobjs := httpdmock.o
+
+# Uncomment if any test common module desired
+testobjs := 
 testobjs := $(testobjs:%=tests/%)
-tests := $(wildcard tests/test_*.c)
-tests := $(tests:%.c=%)
+
+client_tests := $(wildcard tests/test_client_*.c)
+client_tests := $(client_tests:%.c=%)
+
+server_tests := $(wildcard tests/test_server_*.c)
+server_tests := $(server_tests:%.c=%)
 
 ifdef GCOV
 CFLAGS += \
@@ -10,19 +16,31 @@ CFLAGS += \
 	--coverage
 endif
 
+show:
+	@echo $(client_tests)
+
 tests/httpmock: tests/httpmock.c
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
 $(testobjs): %.o: %.c %.h
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -c -o $@ $<
 
-$(tests): %: %.c $(objects) $(testobjs)
+$(client_tests): %: %.c $(common_objects) $(client_objects) $(testobjs)
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
+$(server_tests): %: %.c $(common_objects) $(server_objects) $(testobjs)
+	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
+
+.PHONY: client_test
+client_test: $(client_tests)
+	for t in $(client_tests); do "$${t}"; done
+
+.PHONY: server_test
+server_test: $(server_tests)
+	for t in $(server_tests); do "$${t}"; done
+
 .PHONY: test
-test: $(tests)
-	tests/test_cli
-	tests/test_http_simple
+test: server_test client_test
 
 .PHONY: coverage
 coverage: test
@@ -42,7 +60,9 @@ coveralls:
 
 .PHONY: clean
 clean::
-	-cd tests; rm test_cli *.o *.gcda *.gcno *.gcov *.c~
+	-cd tests; rm $(server_tests) $(client_tests) \
+		*.o *.gcda *.gcno *.gcov *.c~ *.h~
+
 
 .PHONY: indent
 indent::
