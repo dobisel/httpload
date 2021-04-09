@@ -55,7 +55,7 @@ enable_nonblocking(int fd) {
 
 
 static int
-tcp_listen(uint16_t *port) {
+tcp_listen(uint16_t * port) {
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     int err;
@@ -80,9 +80,9 @@ tcp_listen(uint16_t *port) {
         ERROR("cannot bind on: %d", addr.sin_port);
         return ERR_LISTEN;
     }
-   
+
     if (*port == 0) {
-        err = getsockname(fd, (struct sockaddr *) &addr, &addrlen); 
+        err = getsockname(fd, (struct sockaddr *) &addr, &addrlen);
         if (err) {
             ERROR("cannot get socketinfo: %d", fd);
             return ERR_LISTEN;
@@ -110,30 +110,31 @@ want_close(int epollfd, struct client *c) {
         ERROR("Cannot DEL EPOLL for: %d", fd);
         return err;
     }
-    free(c); 
+    free(c);
     return close(fd);
 }
 
 
 static int
 want_read(int epollfd, struct client *c, bool add) {
-    struct epoll_event ev = {0};
+    struct epoll_event ev = { 0 };
     ev.data.ptr = c;
     ev.events = EPOLLIN | EPOLLONESHOT;
-    return epoll_ctl(epollfd, add? EPOLL_CTL_ADD: EPOLL_CTL_MOD, c->fd, &ev);
+    return epoll_ctl(epollfd, add ? EPOLL_CTL_ADD : EPOLL_CTL_MOD, c->fd,
+                     &ev);
 }
 
 
 static int
 want_write(int epollfd, struct client *c) {
-    struct epoll_event ev = {0};
+    struct epoll_event ev = { 0 };
     ev.data.ptr = c;
     ev.events = EPOLLOUT | EPOLLONESHOT;
     return epoll_ctl(epollfd, EPOLL_CTL_MOD, c->fd, &ev);
 }
 
 
-static int 
+static int
 newconnection(int epollfd, struct epoll_event *event) {
     int err;
     struct sockaddr_in peeraddr;
@@ -157,8 +158,7 @@ newconnection(int epollfd, struct epoll_event *event) {
 
     err = enable_nonblocking(fd);
     if (err) {
-        ERROR("Cannot enable nonblocking mode for fd: %d",
-              fd);
+        ERROR("Cannot enable nonblocking mode for fd: %d", fd);
         return err;
     }
 
@@ -170,14 +170,14 @@ newconnection(int epollfd, struct epoll_event *event) {
     struct client *c = malloc(sizeof(struct client));
     c->fd = fd;
     c->alive = true;
-    c->len= 0;
+    c->len = 0;
 
     DEBUG("New connection: %d", fd);
     err = want_read(epollfd, c, true);
     if (err) {
         ERROR("Cannot register fd: %d for read", fd);
     }
-    
+
     return OK;
 }
 
@@ -185,7 +185,7 @@ newconnection(int epollfd, struct epoll_event *event) {
 static int
 io(int epollfd, struct epoll_event ev) {
     int err;
-    struct client *c = (struct client*) ev.data.ptr;
+    struct client *c = (struct client *) ev.data.ptr;
     if (ev.events & EPOLLRDHUP) {
         /* Closed */
         err = want_close(epollfd, c);
@@ -232,7 +232,7 @@ loop(int listenfd) {
         ERROR("Creating epoll");
         return epollfd;
     }
-    
+
     /* Accept event */
     ev.data.fd = listenfd;
     ev.events = EPOLLIN;
@@ -250,7 +250,7 @@ loop(int listenfd) {
 
     for (;;) {
         int nready = epoll_wait(epollfd, events, MAXFDS, -1);
-        
+
         for (int i = 0; i < nready; i++) {
             if (events[i].events & EPOLLERR) {
                 DEBUG("epoll_wait returned EPOLLERR");
@@ -285,14 +285,14 @@ httpd_fork(struct httpd *m) {
     int listenfd;
     int i;
     pid_t pid;
-    
+
     /* Create and listen tcp socket */
     listenfd = tcp_listen(&(m->port));
     if (listenfd < 0) {
         ERROR("Listening socket.");
         return listenfd;
     }
-    
+
     if (m->forks == 0) {
         ERROR("Invalid number of forks: %d", m->forks);
         return ERR_ARGS;
@@ -311,7 +311,7 @@ httpd_fork(struct httpd *m) {
             ERROR("Cannot fork");
             return ERR_FORK;
         }
-        if (pid > 0 ) {
+        if (pid > 0) {
             /* Parent */
             m->children[i] = pid;
         }
@@ -332,7 +332,7 @@ httpd_fork(struct httpd *m) {
 int
 httpd_join(struct httpd *m) {
     int status;
-    int ret; 
+    int ret;
     int i;
 
     for (i = 0; i < m->forks; i++) {
@@ -340,7 +340,7 @@ httpd_join(struct httpd *m) {
         wait(&status);
         ret |= WEXITSTATUS(status);
     }
-    
+
     free(m->children);
     return ret;
 }

@@ -1,8 +1,7 @@
 TEST_CFLAGS = -I./tests
 
-# Uncomment if any test common module desired
-testobjs := 
-testobjs := $(testobjs:%=tests/%)
+fixture_headers := $(wildcard tests/fixture*.h)
+fixture_objects := $(fixture_headers:%.h=%.o)
 
 client_tests := $(wildcard tests/test_client_*.c)
 client_tests := $(client_tests:%.c=%)
@@ -17,18 +16,18 @@ CFLAGS += \
 endif
 
 show:
-	@echo $(client_tests)
+	@echo $(fixture_objects)
 
 tests/httpmock: tests/httpmock.c
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
-$(testobjs): %.o: %.c %.h
+$(fixture_objects): %.o: %.c %.h
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -c -o $@ $<
 
-$(client_tests): %: %.c $(common_objects) $(client_objects) $(testobjs)
+$(client_tests): %: %.c $(common_objects) $(client_objects) $(fixture_objects)
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
-$(server_tests): %: %.c $(common_objects) $(server_objects) $(testobjs)
+$(server_tests): %: %.c $(common_objects) $(server_objects) $(fixture_objects)
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
 .PHONY: client_test
@@ -62,7 +61,6 @@ coveralls:
 clean::
 	-cd tests; rm $(server_tests) $(client_tests) \
 		*.o *.gcda *.gcno *.gcov *.c~ *.h~
-
 
 .PHONY: indent
 indent::

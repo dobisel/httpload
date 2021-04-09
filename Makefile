@@ -16,6 +16,13 @@ common_headers := $(filter-out $(client_headers), $(common_headers))
 common_objects := $(common_headers:.h=.o)
 
 
+# These rules are using implicit rule mechanism,
+# Uncomment to modify behaviour.
+#$(common_objects): %.o: %.c %.h
+#$(server_objects): %.o: %.c %.h
+#$(client_objects): %.o: %.c %.h
+
+
 all: httploadc httploads
 
 httploadc: client_main.c $(client_objects) $(common_objects)
@@ -23,8 +30,6 @@ httploadc: client_main.c $(client_objects) $(common_objects)
 
 httploads: server_main.c $(server_objects) $(common_objects)
 	$(CC) $(CFLAGS) -o $@ $^
-
-$(common_objects): %.o: %.c %.h
 
 include tests/Makefile
 

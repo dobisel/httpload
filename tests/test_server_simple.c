@@ -5,8 +5,9 @@
 #include <unistd.h>
 
 
-void test_single_packet() {
-    struct httpd m = {.port = 9090, .forks = 1};
+void
+test_single_packet() {
+    struct httpd m = {.port = 9090,.forks = 1 };
     log_setlevel(LOG_DEBUG);
     int err = httpd_fork(&m);
     if (err) {
