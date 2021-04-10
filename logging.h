@@ -2,19 +2,18 @@
 #define LOGGING_H
 
 #include "common.h"
-
+#include "cli.h"
 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <inttypes.h>
 
 
-enum log_level {
-    LOG_ERROR,                  // 0
-    LOG_WARN,                   // 1
-    LOG_INFO,                   // 2
-    LOG_DEBUG,                  // 3
-};
+#define LOG_ERROR   0
+#define LOG_WARN    1
+#define LOG_INFO    2
+#define LOG_DEBUG   3
 
 
 extern char log_level;
@@ -38,7 +37,7 @@ extern const char *log_levelnames[];
 
 
 #define ERROR(fmt, ...) \
-    fprintf(stderr, "httpload: " fmt, ## __VA_ARGS__ ); \
+    fprintf(stderr, fmt, ## __VA_ARGS__ ); \
     if (errno) \
         fprintf(stderr, " -- errno: %d additional info: %s" CR, \
                 errno, strerror(errno)); \
@@ -68,7 +67,9 @@ extern const char *log_levelnames[];
 #define INFO( ... ) LOG(LOG_INFO, __VA_ARGS__ )
 
 
-void log_setlevel(enum log_level level);
+typedef uint8_t loglevel_t;
+
+void log_setlevel(loglevel_t level);
 
 
 #endif

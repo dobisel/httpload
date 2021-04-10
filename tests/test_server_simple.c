@@ -17,7 +17,8 @@ test_single_packet() {
 
     // TODO: do tests
 
-    sleep(1);
+    sleep(.5F);
+    httpd_terminate(&m);
     eqint(0, httpd_join(&m));
 }
 

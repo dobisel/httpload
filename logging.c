@@ -13,6 +13,6 @@ const char *log_levelnames[] = {
 
 
 void
-log_setlevel(enum log_level level) {
+log_setlevel(loglevel_t level) {
     log_level = level;
 }

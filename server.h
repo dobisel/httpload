@@ -13,6 +13,7 @@ struct httpd {
 
 
 int httpd_fork(struct httpd *);
+void httpd_terminate(struct httpd *m);
 int httpd_join(struct httpd *);
 
 #endif

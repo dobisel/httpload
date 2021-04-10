@@ -328,6 +328,13 @@ httpd_fork(struct httpd *m) {
     return OK;
 }
 
+void
+httpd_terminate(struct httpd *m) {
+    int i;
+    for (i = 0; i < m->forks; i++) {
+        kill(m->children[i], SIGKILL);
+    }
+}
 
 int
 httpd_join(struct httpd *m) {
@@ -336,8 +343,7 @@ httpd_join(struct httpd *m) {
     int i;
 
     for (i = 0; i < m->forks; i++) {
-        kill(m->children[i], SIGKILL);
-        wait(&status);
+        waitpid(m->children[i], &status, 0);
         ret |= WEXITSTATUS(status);
     }
 

@@ -1,5 +1,5 @@
 #include "logging.h"
-#include "fixture_cli.h"
+#include "capture.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -24,7 +24,7 @@ execchild(mainfunc_t f, const char *prog, int argc, char **argv) {
 
 
 int
-cli_capture(mainfunc_t f, const char *prog, int argc, char **argv,
+fcapture(mainfunc_t f, const char *prog, int argc, char **argv,
         char *const out, char *const err) {
     int outpipe[2];
     int errpipe[2];

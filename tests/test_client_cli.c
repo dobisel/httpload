@@ -1,11 +1,11 @@
 #include "testing.h"
 #include "logging.h"
 #include "client_cli.h"
-#include "fixture_cli.h"
+#include "fixtures/capture.h"
 
 
-#define PROG    "httpload"
-#define CAPTURE(...) cli_capture(clientcli_run, PROG, ## __VA_ARGS__)
+#define PROG    "httploadc"
+#define fcapt(...) fcapture(clientcli_run, PROG, ## __VA_ARGS__)
 
 
 void
@@ -14,11 +14,11 @@ test_version() {
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
-    status = CAPTURE(1, (char *[]) { "--version" }, out, err);
+    status = fcapt(1, (char *[]) { "--version" }, out, err);
     eqint(0, status);
     eqstr(HTTPLOAD_VERSION CR, out);
 
-    status = CAPTURE(1, (char *[]) { "-V" }, out, err);
+    status = fcapt(1, (char *[]) { "-V" }, out, err);
     eqint(0, status);
     eqstr(HTTPLOAD_VERSION CR, out);
 }
@@ -30,7 +30,7 @@ test_verbosity() {
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
-    status = CAPTURE(2, (char *[]) { "-v", "0" }, out, err);
+    status = fcapt(2, (char *[]) { "-v", "0" }, out, err);
     eqint(0, status);
     eqstr("", out);
     eqstr("", err);
@@ -43,16 +43,16 @@ test_invalidargument() {
     int status;
 
     /* Invalid optional argument. */
-    status = CAPTURE(2, (char *[]) { "--invalidargument", "0" }, out, err);
-    eqint(EINVAL, status);
+    status = fcapt(2, (char *[]) { "--invalidargument", "0" }, out, err);
+    eqint(64, status);
     eqstr("", out);
-    eqnstr("httpload: unrecognized option '--invalidargument'", err, 49);
+    eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
 
     /* Invalid positional arguments. */
-    status = CAPTURE(3, (char *[]) { "foo", "bar", "baz" }, out, err);
-    eqint(EINVAL, status);
+    status = fcapt(3, (char *[]) { "foo", "bar", "baz" }, out, err);
+    eqint(64, status);
     eqstr("", out);
-    eqnstr("httpload: Too many arguments", err, 28);
+    eqnstr(PROG ": too many arguments", err, 29);
 }
 
 

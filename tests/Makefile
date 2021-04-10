@@ -1,6 +1,6 @@
 TEST_CFLAGS = -I./tests
 
-fixture_headers := $(wildcard tests/fixture*.h)
+fixture_headers := $(wildcard tests/fixtures/*.h)
 fixture_objects := $(fixture_headers:%.h=%.o)
 
 client_tests := $(wildcard tests/test_client_*.c)
