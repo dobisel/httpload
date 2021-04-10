@@ -23,7 +23,7 @@ extern const char *log_levelnames[];
 #define LOG_ERR_FP stderr
 #define LOG_FP stdout
 #define LOG_SHOULD_I( level ) ((level) <= log_level)
-#define LOG_LEVEL_FMT   "[%.1s] "
+#define LOG_LEVEL_FMT   "%s: "
 
 #define FATAL(fmt, ...) \
     fprintf(stderr, "[%s:%d] fatal: " fmt, __FUNCTION__, __LINE__, \

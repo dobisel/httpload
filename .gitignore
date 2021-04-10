@@ -1,3 +1,8 @@
+# Project specific
+*
+!*.*
+build
+
 # Prerequisites
 *.d
 
@@ -62,9 +67,3 @@ dkms.conf
 # GNU indent
 *.[ch]~
 
-# Project specific
-httpload
-tests/test_client_cli
-tests/test_server_cli
-tests/test_server_simple
-build

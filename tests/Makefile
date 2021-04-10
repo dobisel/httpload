@@ -9,6 +9,12 @@ client_tests := $(client_tests:%.c=%)
 server_tests := $(wildcard tests/test_server_*.c)
 server_tests := $(server_tests:%.c=%)
 
+common_tests := $(wildcard tests/test_*.c)
+common_tests := $(common_tests:%.c=%)
+common_tests := $(filter-out $(client_tests), $(common_tests))
+common_tests := $(filter-out $(server_tests), $(common_tests))
+
+
 ifdef GCOV
 CFLAGS += \
 	-g \
@@ -17,6 +23,7 @@ endif
 
 show:
 	@echo $(fixture_objects)
+	@echo $(common_tests)
 
 tests/httpmock: tests/httpmock.c
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
@@ -30,16 +37,15 @@ $(client_tests): %: %.c $(common_objects) $(client_objects) $(fixture_objects)
 $(server_tests): %: %.c $(common_objects) $(server_objects) $(fixture_objects)
 	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
-.PHONY: client_test
-client_test: $(client_tests)
-	for t in $(client_tests); do "$${t}"; done
+$(common_tests): %: %.c $(common_objects) $(fixture_objects)
+	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
 
-.PHONY: server_test
-server_test: $(server_tests)
-	for t in $(server_tests); do "$${t}"; done
 
 .PHONY: test
-test: server_test client_test
+test: $(common_tests) $(client_tests) $(server_tests) 
+	for t in $(common_tests); do "$${t}"; done
+	for t in $(client_tests); do "$${t}"; done
+	for t in $(server_tests); do "$${t}"; done
 
 .PHONY: coverage
 coverage: test
@@ -59,9 +65,9 @@ coveralls:
 
 .PHONY: clean
 clean::
-	-cd tests; rm $(server_tests) $(client_tests) \
-		*.o *.gcda *.gcno *.gcov *.c~ *.h~ \
-		fixtures/*.o
+	-cd tests; rm $(server_tests) $(client_tests) *.o *.gcda *.gcno *.gcov \
+		*.c~ *.h~ 
+	-cd tests/fixtures; rm *.o *.gcda *.gcno *.gcov *.c~ *.h~
 
 .PHONY: indent
 indent::
