@@ -60,7 +60,8 @@ coveralls:
 .PHONY: clean
 clean::
 	-cd tests; rm $(server_tests) $(client_tests) \
-		*.o *.gcda *.gcno *.gcov *.c~ *.h~
+		*.o *.gcda *.gcno *.gcov *.c~ *.h~ \
+		fixtures/*.o
 
 .PHONY: indent
 indent::

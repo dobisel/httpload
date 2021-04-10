@@ -29,7 +29,7 @@ static char args_doc[] = "URL [VERB]";
 static struct argp_option options[] = {
     ARG_VERBOSITY,
     ARG_CONCURRENCY,
-    {0}
+    { 0 }
 };
 
 

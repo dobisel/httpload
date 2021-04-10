@@ -31,9 +31,9 @@ static char args_doc[] = "";
 static struct argp_option options[] = {
     ARG_VERBOSITY,
     ARG_CONCURRENCY,
-    {"port", 'p', "PORT", 0,
-     "TCP Port to bind, default: " STR(SERVER_DEFAULT_PORT) "."},
-    {0}
+    { "port", 'p', "PORT", 0,
+     "TCP Port to bind, default: " STR(SERVER_DEFAULT_PORT) "." },
+    { 0 }
 };
 
 

@@ -64,7 +64,7 @@ dkms.conf
 
 # Project specific
 httpload
-tests/test_cli
-tests/test_http_simple
-tests/httpmock
+tests/test_client_cli
+tests/test_server_cli
+tests/test_server_simple
 build

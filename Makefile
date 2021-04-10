@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I. -Wall -fplan9-extensions
-IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut
+IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut -sar -bc
 PREFIX = /usr/local
 
 client_headers := $(wildcard client*.h)
