@@ -1,4 +1,5 @@
-TEST_CFLAGS = -I./tests -lhttp_parser
+TEST_CFLAGS = -I./tests
+TEST_LDFLAGS = -lcurl
 UNIT = % 
 
 fixture_headers := $(wildcard tests/fixtures/*.h)
@@ -27,16 +28,16 @@ show:
 	@echo $(common_tests)
 
 $(fixture_objects): %.o: %.c %.h
-	$(CC) $(CFLAGS) -c -o $@ $< $(TEST_CFLAGS) 
+	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $< -c $(LDFLAGS) $(TEST_LDFLAGS)
 
 $(client_tests): %: %.c $(common_objects) $(client_objects) $(fixture_objects)
-	$(CC) $(CFLAGS) -o $@ $^ $(TEST_CFLAGS)
+	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 $(server_tests): %: %.c $(common_objects) $(server_objects) $(fixture_objects)
-	$(CC) $(CFLAGS) -o $@ $^ $(TEST_CFLAGS)
+	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 $(common_tests): %: %.c $(common_objects) $(fixture_objects)
-	$(CC) $(CFLAGS) -o $@ $^ $(TEST_CFLAGS)
+	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 .PHONY: test
 test: $(common_tests) $(client_tests) $(server_tests)

@@ -1,6 +1,7 @@
 # Project specific
-*
-!*.*
+httpload[sc]
+tests/*
+!tests/*.*
 build
 
 # Prerequisites

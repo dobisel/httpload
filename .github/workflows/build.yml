@@ -21,7 +21,7 @@ jobs:
         cd http-parser
         sudo make install
         sudo ldconfig /usr/local/lib
-
+        sudo apt install libcurl4-gnutls-dev
     - name: Build, Run tests, Submit coverage result
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}

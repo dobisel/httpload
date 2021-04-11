@@ -36,6 +36,7 @@ test_verbosity() {
     eqstr("", err);
 }
 
+
 void
 test_invalidargument() {
     char out[CAPTMAX + 1] = { 0 };

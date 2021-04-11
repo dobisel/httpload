@@ -10,6 +10,8 @@
 // TODO: rename to RN
 #define RN  "\r\n"
 
+#define OK  0
+
 /* Check here: https://stackoverflow.com/a/5459929/680372 */
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)

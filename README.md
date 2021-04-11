@@ -14,7 +14,7 @@ Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 ### Install development prerequicites:
 
 ```shell
-apt install build-essential make indent
+apt install build-essential make indent libcurl4-gnutls-dev
 ```
 
 ```bash

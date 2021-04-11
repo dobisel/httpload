@@ -1,11 +1,14 @@
-#include <logging.h>
-#include <server.h>
+#include "logging.h"
+#include "server.h"
+#include "ringbuffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <strings.h>
 #include <stdbool.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -14,10 +17,11 @@
 #include <sys/socket.h>
 #include <sys/prctl.h>
 #include <netinet/in.h>
+#include <http_parser.h>
 
+#define MAXFDS              1024
 
-#define BUFFSIZE          1024
-#define MAXFDS              32
+#define TMPSIZE           1024 * 64
 #define BACKLOG             16
 #define OK                   0
 #define ERR_LISTEN          -2
@@ -28,16 +32,190 @@
 #define ERR_FORK            -7
 #define ERR_ARGS            -8
 
+// Must be power of 2
+#define RESPRB_SIZE          1024 * 64  // 2 ** 16
+
+#define HTTPRESP \
+    "HTTP/1.1 %d %s" RN \
+    "Server: httpload/" HTTPLOAD_VERSION RN \
+    "Content-Length: %ld" RN \
+    "Connection: %s" RN
+
+
+static char *tmp;
+static int epollfd;
+
 
 struct client {
     int fd;
-    char buff[BUFFSIZE];
-    uint16_t len;
-    bool alive;
+    char buff[RESPRB_SIZE];
+    size_t len;
+    struct ringbuffer resprb;
+    http_parser hp;
+};
+
+// TODO: EPOLLRDHUP
+
+
+static int
+want_close(struct client *c) {
+    DEBUG("Peer Closed: %d", c->fd);
+    int fd = c->fd;
+    int err = epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
+    if (err) {
+        ERROR("Cannot DEL EPOLL for: %d", fd);
+        return err;
+    }
+    free(c);
+    return close(fd);
+}
+
+
+static int
+want(struct client *c, int op, uint32_t e) {
+    struct epoll_event ev = { 0 };
+    ev.data.ptr = c;
+    ev.events = EPOLLONESHOT | EPOLLET | e;
+    return epoll_ctl(epollfd, op, c->fd, &ev);
+}
+
+
+#define WANT_READ(c, add) ({ \
+    DEBUG("WANT: READ"); \
+    want((c), (add)? EPOLL_CTL_ADD: EPOLL_CTL_MOD, EPOLLIN); })
+
+#define WANT_WRITE(c) ({ \
+    DEBUG("WANT: WRITE") \
+    want((c), EPOLL_CTL_MOD, EPOLLOUT); })
+
+
+static int
+headercomplete_cb(http_parser * p) {
+    int err;
+    size_t tmplen;
+    long clen = p->content_length;
+    struct client *c = (struct client *)p->data;
+    int keep = http_should_keep_alive(&c->hp);
+
+    tmplen = sprintf(tmp, HTTPRESP, 
+            200, "OK", 
+            clen > 0? clen: 15,
+            keep? "keep-alive": "close"
+        );
+    err = rb_write(&c->resprb, tmp, tmplen);
+    if (err) {
+        return err;
+    }
+    
+    /* Write more headers */
+    // ....
+
+    /* Terminate headers by `\r\n` */
+    err = rb_write(&c->resprb, RN, 2);
+    if (err) {
+        return err;
+    }
+    if (clen <= 0) {
+        tmplen = sprintf(tmp, "Hello HTTPLOAD!");
+        return rb_write(&c->resprb, tmp, tmplen);
+    }
+    return OK;
+}
+
+static int
+complete_cb(http_parser * p) {
+    struct client *c = (struct client *)p->data;
+    DEBUG("Complete: %s", tmp);
+    return WANT_WRITE(c);
+}
+
+static int
+body_cb(http_parser * p, const char *at, size_t len) {
+    struct client *c = (struct client *)p->data;
+    DEBUG("BODY: %.*s", (int)len, at);
+    int err = rb_write(&c->resprb, at, len);
+    if (err) {
+        ERROR("Buffer full");
+        return err;
+    }
+    return WANT_WRITE(c);
+}
+
+
+static http_parser_settings hpconf = {
+    .on_headers_complete = headercomplete_cb,
+    .on_body = body_cb,
+    .on_message_complete = complete_cb,
 };
 
 
-// TODO: EPOLLRDHUP
+static int
+io(struct epoll_event ev) {
+    int err;
+    size_t tmplen = 0;
+    ssize_t bytes = 0;
+    struct client *c = (struct client *) ev.data.ptr;
+    if (ev.events & EPOLLRDHUP) {
+        /* Closed */
+        err = want_close(c);
+        if (err) {
+            ERROR("Cannot close: %d", c->fd);
+        }
+    }
+    else if (ev.events & EPOLLIN) {
+        /* Read */
+        DEBUG("Start reading");
+        for (;;) {
+            bytes = read(c->fd, tmp, TMPSIZE);
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                DEBUG("AGAIN, TOT: %lu", tmplen);
+                errno = 0;
+                if (http_parser_execute(&c->hp, &hpconf, tmp, tmplen) !=
+                        tmplen ) {
+                    want_close(c);
+                }
+                else if (c->hp.http_errno) {
+                    DEBUG("http-parser: %d: %s", c->hp.http_errno, 
+                            http_errno_name(c->hp.http_errno));
+                    want_close(c);
+                }
+                break;
+            }
+            if (bytes <= 0) {
+                want_close(c);
+                break;
+            }
+            tmplen += bytes;
+        }
+    }
+    else if (ev.events & EPOLLOUT) {
+        /* Write */
+        for (;;) {
+            bytes = rb_readf(&c->resprb, c->fd, RESPRB_SIZE);
+            if (bytes == 0) {
+                int k = http_should_keep_alive(&c->hp);
+                DEBUG("Keep: %d", k);
+                if (k) {
+                    WANT_READ(c, false);
+                }
+                else {
+                    want_close(c);
+                }
+                break;
+            }
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                DEBUG("Write Again: %lu", tmplen);
+                WANT_WRITE(c);
+                break;
+            }
+            if (bytes <= 0) {
+                want_close(c);
+                break;
+            }
+        }
+    }
+    return OK;
+}
 
 
 static int
@@ -102,40 +280,7 @@ tcp_listen(uint16_t * port) {
 
 
 static int
-want_close(int epollfd, struct client *c) {
-    DEBUG("Peer Closed: %d", c->fd);
-    int fd = c->fd;
-    int err = epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
-    if (err) {
-        ERROR("Cannot DEL EPOLL for: %d", fd);
-        return err;
-    }
-    free(c);
-    return close(fd);
-}
-
-
-static int
-want_read(int epollfd, struct client *c, bool add) {
-    struct epoll_event ev = { 0 };
-    ev.data.ptr = c;
-    ev.events = EPOLLIN | EPOLLONESHOT;
-    return epoll_ctl(epollfd, add ? EPOLL_CTL_ADD : EPOLL_CTL_MOD, c->fd,
-                     &ev);
-}
-
-
-static int
-want_write(int epollfd, struct client *c) {
-    struct epoll_event ev = { 0 };
-    ev.data.ptr = c;
-    ev.events = EPOLLOUT | EPOLLONESHOT;
-    return epoll_ctl(epollfd, EPOLL_CTL_MOD, c->fd, &ev);
-}
-
-
-static int
-newconnection(int epollfd, struct epoll_event *event) {
+newconnection(struct epoll_event *event) {
     int err;
     struct sockaddr_in peeraddr;
     socklen_t peeraddr_len;
@@ -166,14 +311,21 @@ newconnection(int epollfd, struct epoll_event *event) {
         ERROR("fd (%d) >= MAXFDS (%d)", fd, MAXFDS);
         return ERR_MAXFD;
     }
-
+    
+    /* Create and allocate new client structure. */
     struct client *c = malloc(sizeof(struct client));
     c->fd = fd;
-    c->alive = true;
     c->len = 0;
+    
+    /* Initialize the http parser for this connection. */
+    http_parser_init(&c->hp, HTTP_REQUEST);
+    c->hp.data = c;
+    
+    /* Initialize ringbuffer. */
+    rb_init(&c->resprb, c->buff, RESPRB_SIZE);
 
     DEBUG("New connection: %d", fd);
-    err = want_read(epollfd, c, true);
+    err = WANT_READ(c, true);
     if (err) {
         ERROR("Cannot register fd: %d for read", fd);
     }
@@ -181,44 +333,10 @@ newconnection(int epollfd, struct epoll_event *event) {
     return OK;
 }
 
-
-static int
-io(int epollfd, struct epoll_event ev) {
-    int err;
-    struct client *c = (struct client *) ev.data.ptr;
-    if (ev.events & EPOLLRDHUP) {
-        /* Closed */
-        err = want_close(epollfd, c);
-        if (err) {
-            ERROR("Cannot close: %d", c->fd);
-        }
-    }
-    else if (ev.events & EPOLLIN) {
-        /* Read */
-        c->len = read(c->fd, c->buff, BUFFSIZE);
-        if (c->len) {
-            err = want_write(epollfd, c);
-            if (err) {
-                ERROR("Cannot register fd: %d for write", c->fd);
-            }
-        }
-        else {
-            err = want_close(epollfd, c);
-            if (err) {
-                ERROR("Cannot close: %d", c->fd);
-            }
-        }
-    }
-    else if (ev.events & EPOLLOUT) {
-        /* Write */
-        write(c->fd, c->buff, c->len);
-        c->len = 0;
-        err = want_read(epollfd, c, false);
-        if (err) {
-            ERROR("Cannot register fd: %d for read", c->fd);
-        }
-    }
-    return OK;
+void sigint(int s) {
+    DEBUG("SIGINT");
+    free(tmp);
+    exit(EXIT_SUCCESS);
 }
 
 
@@ -226,8 +344,13 @@ static int
 loop(int listenfd) {
     int err;
     struct epoll_event ev;
+  
+    signal(SIGINT, sigint);
 
-    int epollfd = epoll_create1(0);
+    /* Allocate memory for temp buffer. */
+    tmp = malloc(TMPSIZE);
+
+    epollfd = epoll_create1(0);
     if (epollfd < 0) {
         ERROR("Creating epoll");
         return epollfd;
@@ -260,7 +383,7 @@ loop(int listenfd) {
                 /* The listening socket is ready; 
                  * this means a new peer is connecting.
                  */
-                err = newconnection(epollfd, &events[i]);
+                err = newconnection(&events[i]);
                 if (err) {
                     ERROR("Accepting new connection");
                     return err;
@@ -268,7 +391,7 @@ loop(int listenfd) {
             }
             else {
                 /* A peer socket is ready. */
-                err = io(epollfd, events[i]);
+                err = io(events[i]);
                 if (err) {
                     ERROR("Processing socket IO.");
                     return err;
@@ -332,7 +455,7 @@ void
 httpd_terminate(struct httpd *m) {
     int i;
     for (i = 0; i < m->forks; i++) {
-        kill(m->children[i], SIGKILL);
+        kill(m->children[i], SIGINT);
     }
 }
 

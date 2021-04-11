@@ -1,6 +1,7 @@
 CC = gcc
 RM = rm -f
-CFLAGS = -I. -Wall -fplan9-extensions
+CFLAGS = -I. -Wall -fplan9-extensions -D_GNU_SOURCE=
+LDFLAGS = -lhttp_parser 
 IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut -sar -bc
 PREFIX = /usr/local
 CLEAN = httploadc httploads *.o *.gcda *.gcno *.gcov *.c~ *.h~
@@ -17,20 +18,16 @@ common_headers := $(filter-out $(client_headers), $(common_headers))
 common_objects := $(common_headers:.h=.o)
 
 
-# These rules are using implicit rule mechanism,
-# Uncomment to modify behaviour.
-#$(common_objects): %.o: %.c %.h
-#$(server_objects): %.o: %.c %.h
-#$(client_objects): %.o: %.c %.h
-
-
 all: httploadc httploads
 
+$(common_objects) $(server_objects) $(client_objects): %.o: %.c %.h
+	$(CC) $(CFLAGS) -o $@ $< -c $(LDFLAGS)
+
 httploadc: client_main.c $(client_objects) $(common_objects)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 httploads: server_main.c $(server_objects) $(common_objects)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 include tests/Makefile
 
