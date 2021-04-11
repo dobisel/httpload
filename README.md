@@ -17,6 +17,11 @@ Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 apt install build-essential make indent
 ```
 
+```bash
+git clone https://github.com/pylover/http-parser.git
+cd http-parser
+sudo make install
+```
 
 ### Run tests
 

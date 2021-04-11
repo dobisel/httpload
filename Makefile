@@ -1,8 +1,9 @@
 CC = gcc
+RM = rm -f
 CFLAGS = -I. -Wall -fplan9-extensions
 IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut -sar -bc
 PREFIX = /usr/local
-
+CLEAN = httploadc httploads *.o *.gcda *.gcno *.gcov *.c~ *.h~
 client_headers := $(wildcard client*.h)
 client_objects := $(client_headers:.h=.o)
 
@@ -35,7 +36,7 @@ include tests/Makefile
 
 .PHONY: clean
 clean::
-	-rm -f httploadc httploads *.o *.gcda *.gcno *.gcov *.c~ *.h~
+	-$(RM) -f $(CLEAN)
 
 .PHONY: indent
 indent::

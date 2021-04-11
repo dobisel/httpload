@@ -1,4 +1,5 @@
-TEST_CFLAGS = -I./tests
+TEST_CFLAGS = -I./tests -lhttp_parser
+UNIT = % 
 
 fixture_headers := $(wildcard tests/fixtures/*.h)
 fixture_objects := $(fixture_headers:%.h=%.o)
@@ -25,27 +26,24 @@ show:
 	@echo $(fixture_objects)
 	@echo $(common_tests)
 
-tests/httpmock: tests/httpmock.c
-	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
-
 $(fixture_objects): %.o: %.c %.h
-	$(CC) $(TEST_CFLAGS) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $< $(TEST_CFLAGS) 
 
 $(client_tests): %: %.c $(common_objects) $(client_objects) $(fixture_objects)
-	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(TEST_CFLAGS)
 
 $(server_tests): %: %.c $(common_objects) $(server_objects) $(fixture_objects)
-	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(TEST_CFLAGS)
 
 $(common_tests): %: %.c $(common_objects) $(fixture_objects)
-	$(CC) $(TEST_CFLAGS) $(CFLAGS) -o $@ $^
-
+	$(CC) $(CFLAGS) -o $@ $^ $(TEST_CFLAGS)
 
 .PHONY: test
-test: $(common_tests) $(client_tests) $(server_tests) 
-	for t in $(common_tests); do "$${t}"; done
-	for t in $(client_tests); do "$${t}"; done
-	for t in $(server_tests); do "$${t}"; done
+test: $(common_tests) $(client_tests) $(server_tests)
+	for t in $(filter tests/test_$(UNIT), $(common_tests)); do "$${t}"; done
+	for t in $(filter tests/test_$(UNIT), $(client_tests)); do "$${t}"; done
+	for t in $(filter tests/test_$(UNIT), $(server_tests)); do "$${t}"; done
+
 
 .PHONY: coverage
 coverage: test
@@ -65,9 +63,9 @@ coveralls:
 
 .PHONY: clean
 clean::
-	-cd tests; rm $(server_tests) $(client_tests) *.o *.gcda *.gcno *.gcov \
-		*.c~ *.h~ 
-	-cd tests/fixtures; rm *.o *.gcda *.gcno *.gcov *.c~ *.h~
+	-$(RM) $(common_tests) $(server_tests) $(client_tests)
+	-cd tests; $(RM) $(CLEAN)  
+	-cd tests/fixtures; $(RM) $(CLEAN) 
 
 .PHONY: indent
 indent::
