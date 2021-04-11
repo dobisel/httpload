@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ master, 'feature/*' ]
+    branches: [ master, 'feature/*', 'bugfix/*' ]
     tags: [ 'v*' ]
 
   pull_request:
-    branches: [ master, 'feature/*' ]
+    branches: [ master, 'feature/*', 'bugfix/*' ]
 
 jobs:
   tests:
@@ -14,23 +14,18 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
-    - name: Build, Run tests
-      run: |
-        make clean
-        make cover
-  coveralls:
-    runs-on: ubuntu-latest
-    needs: tests
-    # if: github.ref == 'refs/heads/master'
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2.0.0
     - name: Install dependencies
-      run: python -m pip install cpp-coveralls
-    - name: submit coverage result
+      run: |
+        python -m pip install cpp-coveralls
+        git clone https://github.com/pylover/http-parser.git
+        cd http-parser
+        sudo make install
+        sudo ldconfig /usr/local/lib
+
+    - name: Build, Run tests, Submit coverage result
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
-        make clean 
+        make clean
         make coveralls
 
