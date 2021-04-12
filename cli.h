@@ -18,7 +18,9 @@
     "It's recommented to use (CPU_COUNT - 1). " \
     "default: " STR(SERVER_DEFAULT_FORKS) "." }
 
-int 
-verbosity_parse(struct argp_state *state, const char *val);
+int
+    verbosity_parse(struct argp_state *state, const char *val);
 
+int
+    parse_common_opts(int key, char *arg, struct argp_state *state);
 #endif

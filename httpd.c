@@ -62,10 +62,10 @@ want_close(struct client *c) {
     int fd = c->fd;
 
     err = epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
-    if (err) {  // nocover-start
+    if (err) {                  // nocover-start
         ERROR("Cannot DEL EPOLL for: %d", fd);
         return err;
-    }  // nocover-end
+    }                           // nocover-end
     free(c);
     return close(fd);
 }
@@ -85,21 +85,22 @@ want(struct client *c, int op, uint32_t e) {
     want((c), EPOLL_CTL_MOD, EPOLLOUT); })
 
 static int
-should_keepalive(const http_parser *parser) {
-  if (parser->http_major > 0 && parser->http_minor > 0) {
-    /* HTTP/1.1 */
-    if (parser->flags & F_CONNECTION_CLOSE) {
-      return 0;
+should_keepalive(const http_parser * parser) {
+    if (parser->http_major > 0 && parser->http_minor > 0) {
+        /* HTTP/1.1 */
+        if (parser->flags & F_CONNECTION_CLOSE) {
+            return 0;
+        }
     }
-  } else {
-    /* HTTP/1.0 or earlier */
-    if (!(parser->flags & F_CONNECTION_KEEP_ALIVE)) {
-      return 0;
+    else {
+        /* HTTP/1.0 or earlier */
+        if (!(parser->flags & F_CONNECTION_KEEP_ALIVE)) {
+            return 0;
+        }
     }
-  }
 
-  //return !http_message_needs_eof(parser);
-  return 0;
+    //return !http_message_needs_eof(parser);
+    return 0;
 }
 
 static int
@@ -109,7 +110,7 @@ headercomplete_cb(http_parser * p) {
     long clen = p->content_length;
     struct client *c = (struct client *) p->data;
     int keep = should_keepalive(&c->hp);
-    
+
     tmplen = sprintf(tmp, HTTPRESP,
                      200, "OK",
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");

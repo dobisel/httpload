@@ -6,7 +6,7 @@
 #define PROG    "httploadc"
 #define fcapt(...) fcapture(clientcli_run, PROG, ## __VA_ARGS__)
 
-void
+static void
 test_version() {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
@@ -21,7 +21,7 @@ test_version() {
     eqstr(HTTPLOAD_VERSION N, out);
 }
 
-void
+static void
 test_verbosity() {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
@@ -53,7 +53,7 @@ test_verbosity() {
     eqnstr(PROG ": Invalid verbosity level: 5", err, 29);
 }
 
-void
+static void
 test_invalidargument() {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };

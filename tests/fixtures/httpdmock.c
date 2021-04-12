@@ -16,7 +16,7 @@ httpdmock_start(struct httpdmock *m) {
     char tmp[128];
 
     m->httpd.forks = 1;
-    m->httpd.port = 8080;
+    m->httpd.port = 0;
 
     err = httpd_fork(&m->httpd);
     if (err) {

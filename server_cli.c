@@ -11,11 +11,9 @@
 #define SERVER_DEFAULT_FORKS    1
 
 static struct {
-    loglevel_t verbosity;
     uint16_t port;
     uint8_t forks;
 } settings = {
-    LL_INFO,
     SERVER_DEFAULT_PORT,
     SERVER_DEFAULT_FORKS,
 };
@@ -36,10 +34,6 @@ static struct argp_option options[] = {
 static int
 parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
-        case 'v':
-            settings.verbosity = verbosity_parse(state, arg);
-            break;
-
         case 'c':
             settings.forks = atoi(arg);
             break;
@@ -58,7 +52,7 @@ parse_opt(int key, char *arg, struct argp_state *state) {
             break;
 
         default:
-            return ARGP_ERR_UNKNOWN;
+            return parse_common_opts(key, arg, state);
     }
     return EXIT_SUCCESS;
 }
@@ -72,8 +66,6 @@ servercli_run(int argc, char **argv) {
     if (err) {
         return err;
     }
-
-    log_setlevel(settings.verbosity);
 
     struct httpd m = {.port = settings.port,.forks = settings.forks };
     err = httpd_fork(&m);

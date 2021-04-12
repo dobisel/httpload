@@ -7,7 +7,7 @@
 const char *argp_program_version = HTTPLOAD_VERSION;
 const char *argp_program_bug_address = HTTPLOAD_URL;
 
-int 
+int
 verbosity_parse(struct argp_state *state, const char *val) {
     int v = atoi(val);
 
@@ -15,4 +15,17 @@ verbosity_parse(struct argp_state *state, const char *val) {
         argp_error(state, "Invalid verbosity level: %d.", v);
     }
     return v;
+}
+
+int
+parse_common_opts(int key, char *arg, struct argp_state *state) {
+    switch (key) {
+        case 'v':
+            log_setlevel(verbosity_parse(state, arg));
+            break;
+
+        default:
+            return ARGP_ERR_UNKNOWN;
+    }
+    return OK;
 }

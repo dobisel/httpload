@@ -27,8 +27,8 @@ execchild(mainfunc_t f, const char *prog, int argc, char **argv) {
 
 
 int
-fcapture(mainfunc_t f, const char *prog, int argc, char **argv,
-        char *const outbuff, char *const errbuff) {
+fcapture_timeout(int timeout, mainfunc_t f, const char *prog, int argc, 
+        char **argv, char *const outbuff, char *const errbuff) {
     int outpipe[2];
     int errpipe[2];
     pid_t pid;
@@ -61,6 +61,12 @@ fcapture(mainfunc_t f, const char *prog, int argc, char **argv,
     }
     else if (pid > 0) {
         /* Parent */
+        
+        /* Kill child after timeout, if given. */
+        if (timeout) {
+            sleep(timeout);
+            kill(pid, SIGINT);
+        }
 
         /* Wait for child process to terminate. */
         wait(&status);
