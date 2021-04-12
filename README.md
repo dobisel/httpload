@@ -15,6 +15,7 @@ Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 
 ```shell
 apt install build-essential make indent libcurl4-gnutls-dev
+sudo snap install ruby --classic
 ```
 
 ```shell

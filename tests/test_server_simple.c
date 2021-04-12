@@ -5,7 +5,7 @@
 void
 test_single_packet() {
     struct httpdmock m;
-   
+
     httpdmock_start(&m);
     eqint(200, httpdmock_get(&m));
     eqstr("Hello HTTPLOAD!", m.out);

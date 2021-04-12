@@ -20,8 +20,6 @@ static struct {
     SERVER_DEFAULT_FORKS,
 };
 
-const char *argp_program_version = HTTPLOAD_VERSION;
-const char *argp_program_bug_address = "http://github.com/dobisel/httpload";
 static char doc[] = "HTTP echo server using Linux epoll.";
 static char args_doc[] = "";
 
@@ -39,7 +37,7 @@ static int
 parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
         case 'v':
-            settings.verbosity = atoi(arg);
+            settings.verbosity = verbosity_parse(state, arg);
             break;
 
         case 'c':

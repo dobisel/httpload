@@ -1,6 +1,6 @@
 #include "common.h"
-#include "client.h"
 #include "logging.h"
+#include "cli.h"
 
 #include <stdio.h>
 #include <argp.h>
@@ -17,8 +17,6 @@ static struct {
     "GET",
 };
 
-const char *argp_program_version = HTTPLOAD_VERSION;
-const char *argp_program_bug_address = HTTPLOAD_URL;
 static char doc[] = "HTTP stress test using Linux epoll.";
 static char args_doc[] = "URL [VERB]";
 
@@ -34,11 +32,7 @@ static int
 parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
         case 'v':
-            settings.verbosity = atoi(arg);
-            if (!LOG_LEVEL_ISVALID(settings.verbosity)) {
-                argp_error(state, "Invalid verbosity level: %d.",
-                           settings.verbosity);
-            }
+            settings.verbosity = verbosity_parse(state, arg);
             break;
 
         case ARGP_KEY_ARG:

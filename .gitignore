@@ -2,6 +2,7 @@
 httpload[sc]
 tests/*
 !tests/*.*
+
 build
 
 # Prerequisites

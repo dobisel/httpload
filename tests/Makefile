@@ -16,18 +16,27 @@ common_tests := $(common_tests:%.c=%)
 common_tests := $(filter-out $(client_tests), $(common_tests))
 common_tests := $(filter-out $(server_tests), $(common_tests))
 
+nocover := \
+	client_main.c \
+	server_main.c
+
+tocover := $(wildcard *.c)
+tocover := $(filter-out $(nocover), $(tocover))
+nocover := $(subst $(eval) ,;,$(nocover))
 
 ifdef GCOV
 CFLAGS += \
-	-g \
-	--coverage
+	-fprofile-arcs \
+	-ftest-coverage \
+	-fprofile-exclude-files="$(nocover)" \
+	-g
+
 endif
 
 show:
-	@echo $(server_tests)
-	@echo $(server_objects)
-	@echo $(fixture_objects)
-	@echo $(common_tests)
+	@echo '$(nocover)'
+	@echo $(tocover)
+
 
 $(fixture_objects): %.o: %.c %.h
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $< -c $(LDFLAGS) $(TEST_LDFLAGS)
@@ -50,10 +59,10 @@ test: $(common_tests) $(client_tests) $(server_tests)
 
 .PHONY: coverage
 coverage: test
+	gcov $(tocover)
 ifdef COVERALLS 
-	coveralls -e tests
+	coveralls -n -e tests
 else
-	gcov *.c
 endif
 
 .PHONY: cover
