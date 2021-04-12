@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 
+#define PROG    "httploadc"
+
 int
 monkeymain(int argc, char **argv) {
     ERROR("e");
@@ -13,7 +15,6 @@ monkeymain(int argc, char **argv) {
     return EXIT_SUCCESS;
 }
 
-#define PROG    "monkey"
 #define fcapt(...) fcapture(monkeymain, PROG, 0, NULL, ## __VA_ARGS__)
 
 void
@@ -24,10 +25,11 @@ test_logging_verbosity() {
 
     /* Debug */
     log_setlevel(LL_DEBUG);
+    errno = 0;
     status = fcapt(out, err);
     eqint(0, status);
     eqstr("e" N, err);
-    eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:12] d" N, out);
+    eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:14] d" N, out);
 
     /* Info */
     log_setlevel(LL_INFO);

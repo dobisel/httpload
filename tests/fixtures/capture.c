@@ -1,5 +1,5 @@
 #include "logging.h"
-#include "capture.h"
+#include "fixtures/capture.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,12 +12,15 @@
 
 static int
 execchild(mainfunc_t f, const char *prog, int argc, char **argv) {
+    int status;
     char **newargv = malloc(sizeof(char *) * (argc + 1));
     newargv[0] = (char *) prog;
-    memcpy(newargv + 1, argv, argc * sizeof(char *));
-    argc++;
+    if (argc) {
+        memcpy(newargv + 1, argv, argc * sizeof(char *));
+    }
 
-    int status = f(argc, newargv);
+    argc++;
+    status = f(argc, newargv);
     free(newargv);
     return status;
 }
@@ -25,7 +28,7 @@ execchild(mainfunc_t f, const char *prog, int argc, char **argv) {
 
 int
 fcapture(mainfunc_t f, const char *prog, int argc, char **argv,
-        char *const out, char *const err) {
+        char *const outbuff, char *const errbuff) {
     int outpipe[2];
     int errpipe[2];
     pid_t pid;
@@ -33,7 +36,7 @@ fcapture(mainfunc_t f, const char *prog, int argc, char **argv,
     ssize_t bytes;
 
     /* Trim output and err. */
-    out[0] = err[0] = 0;
+    outbuff[0] = errbuff[0] = 0;
 
     /* Flush stdout before fork. */
     fflush(stdout);
@@ -67,13 +70,13 @@ fcapture(mainfunc_t f, const char *prog, int argc, char **argv,
         close(errpipe[1]);
 
         /* Read stdout then close. */
-        bytes = read(outpipe[0], out, CAPTMAX);
-        out[bytes] = 0;
+        bytes = read(outpipe[0], outbuff, CAPTMAX);
+        outbuff[bytes] = 0;
         close(outpipe[0]);
 
         /* Read stderr then close. */
-        bytes = read(errpipe[0], err, CAPTMAX);
-        err[bytes] = 0;
+        bytes = read(errpipe[0], errbuff, CAPTMAX);
+        errbuff[bytes] = 0;
         close(errpipe[0]);
         status = WEXITSTATUS(status);
     }

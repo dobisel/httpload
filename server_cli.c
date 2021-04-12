@@ -1,5 +1,5 @@
 #include "common.h"
-#include "server.h"
+#include "httpd.h"
 #include "logging.h"
 #include "cli.h"
 

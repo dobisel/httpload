@@ -17,13 +17,23 @@ Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 apt install build-essential make indent libcurl4-gnutls-dev
 ```
 
-```bash
+```shell
 git clone https://github.com/pylover/http-parser.git
 cd http-parser
 sudo make install
 ```
 
-### Run tests
+### Coding style
+
+Run:
+
+```shell
+make indent
+```
+
+to reformat the entire project.
+
+### Running tests
 
 ```shell
 make clean test

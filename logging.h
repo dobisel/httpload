@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 enum loglevel {
     LL_UNKNOWN,

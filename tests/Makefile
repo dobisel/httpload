@@ -24,6 +24,8 @@ CFLAGS += \
 endif
 
 show:
+	@echo $(server_tests)
+	@echo $(server_objects)
 	@echo $(fixture_objects)
 	@echo $(common_tests)
 
