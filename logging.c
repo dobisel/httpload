@@ -1,12 +1,13 @@
 #include "logging.h"
 
-char log_level = LOG_INFO;
+char log_level = LL_INFO;
 
 const char *log_levelnames[] = {
-    "Error",                    // 0
-    "Warning",                  // 1
-    "Info",                     // 2
-    "Debug",                    // 3
+    "Unknown",                  // 0
+    "Error",                    // 1
+    "Warning",                  // 2
+    "Info",                     // 3
+    "Debug",                    // 4
 };
 
 void

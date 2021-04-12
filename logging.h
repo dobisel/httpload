@@ -9,10 +9,14 @@
 #include <string.h>
 #include <inttypes.h>
 
-#define LOG_ERROR   0
-#define LOG_WARN    1
-#define LOG_INFO    2
-#define LOG_DEBUG   3
+enum loglevel {
+    LL_UNKNOWN,
+    LL_ERROR,   
+    LL_WARN,    
+    LL_INFO,    
+    LL_DEBUG,   
+};
+#define LOG_LEVEL_ISVALID(l) ((l <= LL_DEBUG) && (l >= LL_ERROR))
 
 extern char log_level;
 extern const char *log_levelnames[];
@@ -41,9 +45,9 @@ extern const char *log_levelnames[];
     fflush(LOG_FP);
 
 #define DEBUG(fmt, ...) \
-    if (LOG_SHOULD_I(LOG_DEBUG)) { \
+    if (LOG_SHOULD_I(LL_DEBUG)) { \
         fprintf(LOG_FP, LOG_LEVEL_FMT "[%s:%d] " fmt N, \
-                log_levelnames[LOG_DEBUG], \
+                log_levelnames[LL_DEBUG], \
                 __FUNCTION__, __LINE__, ## __VA_ARGS__); \
         fflush(LOG_FP); \
     }
@@ -56,8 +60,8 @@ extern const char *log_levelnames[];
         fflush(LOG_FP); \
     }
 
-#define WARN( ... ) LOG(LOG_WARN, __VA_ARGS__ )
-#define INFO( ... ) LOG(LOG_INFO, __VA_ARGS__ )
+#define WARN( ... ) LOG(LL_WARN, __VA_ARGS__ )
+#define INFO( ... ) LOG(LL_INFO, __VA_ARGS__ )
 
 typedef uint8_t loglevel_t;
 

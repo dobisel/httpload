@@ -58,7 +58,6 @@ struct client {
 
 static int
 want_close(struct client *c) {
-    DEBUG("Peer Closed: %d", c->fd);
     int fd = c->fd;
     int err = epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
 
@@ -79,11 +78,9 @@ want(struct client *c, int op, uint32_t e) {
 }
 
 #define WANT_READ(c, add) ({ \
-    DEBUG("WANT: READ"); \
     want((c), (add)? EPOLL_CTL_ADD: EPOLL_CTL_MOD, EPOLLIN); })
 
 #define WANT_WRITE(c) ({ \
-    DEBUG("WANT: WRITE") \
     want((c), EPOLL_CTL_MOD, EPOLLOUT); })
 
 static int
@@ -120,16 +117,12 @@ headercomplete_cb(http_parser * p) {
 static int
 complete_cb(http_parser * p) {
     struct client *c = (struct client *) p->data;
-
-    DEBUG("Complete: %s", tmp);
     return WANT_WRITE(c);
 }
 
 static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct client *c = (struct client *) p->data;
-
-    DEBUG("BODY: %.*s", (int) len, at);
     int err = rb_write(&c->resprb, at, len);
 
     if (err) {
@@ -161,11 +154,9 @@ io(struct epoll_event ev) {
     }
     else if (ev.events & EPOLLIN) {
         /* Read */
-        DEBUG("Start reading");
         for (;;) {
             bytes = read(c->fd, tmp, TMPSIZE);
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                DEBUG("AGAIN, TOT: %lu", tmplen);
                 errno = 0;
                 if (http_parser_execute(&c->hp, &hpconf, tmp, tmplen) !=
                     tmplen) {
@@ -192,7 +183,6 @@ io(struct epoll_event ev) {
             if (bytes == 0) {
                 int k = http_should_keep_alive(&c->hp);
 
-                DEBUG("Keep: %d", k);
                 if (k) {
                     WANT_READ(c, false);
                 }
@@ -202,7 +192,6 @@ io(struct epoll_event ev) {
                 break;
             }
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                DEBUG("Write Again: %lu", tmplen);
                 WANT_WRITE(c);
                 break;
             }
@@ -322,7 +311,6 @@ newconnection(struct epoll_event *event) {
     /* Initialize ringbuffer. */
     rb_init(&c->resprb, c->buff, RESPRB_SIZE);
 
-    DEBUG("New connection: %d", fd);
     err = WANT_READ(c, true);
     if (err) {
         ERROR("Cannot register fd: %d for read", fd);
@@ -333,7 +321,6 @@ newconnection(struct epoll_event *event) {
 
 void
 sigint(int s) {
-    DEBUG("SIGINT");
     free(tmp);
     exit(EXIT_SUCCESS);
 }
@@ -426,7 +413,6 @@ httpd_fork(struct httpd *m) {
     }
 
     for (i = 0; i < m->forks; i++) {
-        DEBUG("Forking: %d", i);
         pid = fork();
         if (pid == -1) {
             ERROR("Cannot fork");

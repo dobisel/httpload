@@ -23,28 +23,28 @@ test_logging_verbosity() {
     int status;
 
     /* Debug */
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     status = fcapt(out, err);
     eqint(0, status);
     eqstr("e" N, err);
     eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:12] d" N, out);
 
     /* Info */
-    log_setlevel(LOG_INFO);
+    log_setlevel(LL_INFO);
     status = fcapt(out, err);
     eqint(0, status);
     eqstr("e" N, err);
     eqstr("Warning: w" N "Info: i" N, out);
 
     /* Warning */
-    log_setlevel(LOG_WARN);
+    log_setlevel(LL_WARN);
     status = fcapt(out, err);
     eqint(0, status);
     eqstr("e" N, err);
     eqstr("Warning: w" N, out);
 
     /* ERROR */
-    log_setlevel(LOG_ERROR);
+    log_setlevel(LL_ERROR);
     status = fcapt(out, err);
     eqint(0, status);
     eqstr("e" N, err);

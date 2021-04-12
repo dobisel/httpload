@@ -27,10 +27,30 @@ test_verbosity() {
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
-    status = fcapt(2, (char *[]) { "-v", "0" }, out, err);
+    status = fcapt(2, (char *[]) { "-v", "1" }, out, err);
     eqint(0, status);
     eqstr("", out);
     eqstr("", err);
+
+    status = fcapt(2, (char *[]) { "-v", "2" }, out, err);
+    eqint(0, status);
+    eqstr("", out);
+    eqstr("", err);
+
+    status = fcapt(2, (char *[]) { "-v", "3" }, out, err);
+    eqint(0, status);
+    eqstr("", out);
+    eqstr("", err);
+
+    status = fcapt(2, (char *[]) { "-v", "4" }, out, err);
+    eqint(0, status);
+    eqstr("", out);
+    eqstr("", err);
+
+    status = fcapt(2, (char *[]) { "-v", "5" }, out, err);
+    eqint(64, status);
+    eqstr("", out);
+    eqnstr(PROG ": Invalid verbosity level: 5", err, 29);
 }
 
 void
@@ -45,16 +65,16 @@ test_invalidargument() {
     eqstr("", out);
     eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
 
-    /* Invalid positional arguments. */
+    /* Extra positional arguments. */
     status = fcapt(3, (char *[]) { "foo", "bar", "baz" }, out, err);
     eqint(64, status);
     eqstr("", out);
-    eqnstr(PROG ": too many arguments", err, 29);
+    eqnstr(PROG ": Too many arguments", err, 29);
 }
 
 int
 main() {
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     test_version();
     test_verbosity();
     test_invalidargument();

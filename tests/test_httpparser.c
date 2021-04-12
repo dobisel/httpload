@@ -86,7 +86,7 @@ test_httpparser_get() {
 
 int
 main() {
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     test_httpparser_get();
     return EXIT_SUCCESS;
 }

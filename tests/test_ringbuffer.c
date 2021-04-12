@@ -255,7 +255,7 @@ test_read_intofile() {
 
 int
 main() {
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     test_write_read();
     test_dryread();
     test_dryread_until();

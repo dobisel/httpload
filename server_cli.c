@@ -15,7 +15,7 @@ static struct {
     uint16_t port;
     uint8_t forks;
 } settings = {
-    LOG_INFO,
+    LL_INFO,
     SERVER_DEFAULT_PORT,
     SERVER_DEFAULT_FORKS,
 };

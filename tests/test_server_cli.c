@@ -23,7 +23,7 @@ test_version() {
 
 int
 main() {
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     test_version();
     return EXIT_SUCCESS;
 }

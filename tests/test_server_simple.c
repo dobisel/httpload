@@ -9,7 +9,7 @@ int
 get(const char *url) {
     CURL *curl;
     CURLcode res;
-
+    
     curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url);
     res = curl_easy_perform(curl);
@@ -29,7 +29,7 @@ test_single_packet() {
         .port = 9090,
         .forks = 1
     };
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     int err = httpd_fork(&m);
 
     if (err) {
@@ -45,7 +45,7 @@ test_single_packet() {
 
 int
 main() {
-    log_setlevel(LOG_DEBUG);
+    log_setlevel(LL_DEBUG);
     test_single_packet();
     return 0;
 }

@@ -13,7 +13,7 @@ static struct {
     char *url;
 } settings = {
     "httploadc",
-    LOG_INFO,
+    LL_INFO,
     "GET",
 };
 
@@ -35,6 +35,11 @@ parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
         case 'v':
             settings.verbosity = atoi(arg);
+            if (!LOG_LEVEL_ISVALID(settings.verbosity)) {
+                argp_error(state, "Invalid verbosity level: %d.", 
+                        settings.verbosity);
+                return ERR;
+            }
             break;
 
         case ARGP_KEY_ARG:
@@ -46,8 +51,6 @@ parse_opt(int key, char *arg, struct argp_state *state) {
             }
             else if (state->arg_num >= 2) {
                 /* Too many arguments. */
-                ERROR("%s: too many arguments", settings.prog);
-                argp_usage(state);
                 return ARGP_ERR_UNKNOWN;
             }
             break;
