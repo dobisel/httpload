@@ -9,7 +9,7 @@ int
 get(const char *url) {
     CURL *curl;
     CURLcode res;
-    
+
     curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_URL, url);
     res = curl_easy_perform(curl);

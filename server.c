@@ -117,6 +117,7 @@ headercomplete_cb(http_parser * p) {
 static int
 complete_cb(http_parser * p) {
     struct client *c = (struct client *) p->data;
+
     return WANT_WRITE(c);
 }
 

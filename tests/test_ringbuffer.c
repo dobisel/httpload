@@ -222,15 +222,6 @@ test_dryread_until() {
 
 void
 test_read_intofile() {
-    //FILE *f = fmemopen(tmp, S, "w+");
-    //eqint(3, fwrite("foo", 1, 3, f));
-    //fflush(f);
-    //eqnstr("foo", tmp, 3);
-
-    //eqint(5, fwrite("456789", 1, 6, f));
-    //fflush(f);
-    //eqnstr("foo4567", tmp, 8);
-
     char tmp[256];
     char buff[S];
     int p[2];

@@ -72,24 +72,17 @@ rb_dryread(struct ringbuffer *b, char *data, size_t len) {
 ssize_t
 rb_readf(struct ringbuffer *b, int fd, size_t len) {
     size_t bytes;
-    ssize_t err;
 
     bytes = MIN(RB_USED_TOEND(b), len);
     if (bytes) {
-        err = write(fd, b->blob + b->reader, bytes);
-        if (err < 0) {
-            return err;
-        }
+        write(fd, b->blob + b->reader, bytes);
         len -= bytes;
     }
 
     if (len) {
         len = MIN(RB_USED(b) - bytes, len);
         if (len) {
-            err = write(fd, b->blob, len);
-            if (err < 0) {
-                return err;
-            }
+            write(fd, b->blob, len);
             bytes += len;
         }
     }

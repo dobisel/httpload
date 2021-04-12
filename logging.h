@@ -11,11 +11,12 @@
 
 enum loglevel {
     LL_UNKNOWN,
-    LL_ERROR,   
-    LL_WARN,    
-    LL_INFO,    
-    LL_DEBUG,   
+    LL_ERROR,
+    LL_WARN,
+    LL_INFO,
+    LL_DEBUG,
 };
+
 #define LOG_LEVEL_ISVALID(l) ((l <= LL_DEBUG) && (l >= LL_ERROR))
 
 extern char log_level;
