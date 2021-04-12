@@ -2,7 +2,30 @@ CC = gcc
 RM = rm -f
 CFLAGS = -I. -Wall -fplan9-extensions -D_GNU_SOURCE=
 LDFLAGS = -lhttp_parser 
-IFLAGS = -as -br -brf -brs -ts4 -bli4 -i4 -di4 -npcs -nut -sar -bc
+IFLAGS = \
+		 -npcs \
+		 -nut \
+		 -as \
+		 -bs \
+		 -br \
+		 -nce \
+		 -ncdw \
+		 -brf \
+		 -brs \
+		 -ts4 \
+		 -bli4 \
+		 -i4 \
+		 -di4 \
+		 -cli4 \
+		 -sar \
+		 -bc \
+		 -bad \
+		 -bap \
+		 -bbb \
+		 -sc \
+		 -slc \
+		 -sob
+
 PREFIX = /usr/local
 CLEAN = httploadc httploads *.o *.gcda *.gcno *.gcov *.c~ *.h~
 client_headers := $(wildcard client*.h)

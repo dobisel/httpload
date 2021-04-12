@@ -3,10 +3,8 @@
 #include "client_cli.h"
 #include "fixtures/capture.h"
 
-
 #define PROG    "httploadc"
 #define fcapt(...) fcapture(clientcli_run, PROG, ## __VA_ARGS__)
-
 
 void
 test_version() {
@@ -16,13 +14,12 @@ test_version() {
 
     status = fcapt(1, (char *[]) { "--version" }, out, err);
     eqint(0, status);
-    eqstr(HTTPLOAD_VERSION CR, out);
+    eqstr(HTTPLOAD_VERSION N, out);
 
     status = fcapt(1, (char *[]) { "-V" }, out, err);
     eqint(0, status);
-    eqstr(HTTPLOAD_VERSION CR, out);
+    eqstr(HTTPLOAD_VERSION N, out);
 }
-
 
 void
 test_verbosity() {
@@ -35,7 +32,6 @@ test_verbosity() {
     eqstr("", out);
     eqstr("", err);
 }
-
 
 void
 test_invalidargument() {
@@ -55,7 +51,6 @@ test_invalidargument() {
     eqstr("", out);
     eqnstr(PROG ": too many arguments", err, 29);
 }
-
 
 int
 main() {

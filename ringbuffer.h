@@ -7,7 +7,6 @@
 #define RB_ERR_INSUFFICIENT     -100
 #define RB_ERR_NOTFOUND         -101
 
-
 #define RB_CALC(b, n)         ((n) & ((b)->size - 1))
 #define RB_USED(b)            RB_CALC(b, (b)->writer - (b)->reader)
 #define RB_AVAILABLE(b)       RB_CALC(b, (b)->reader - ((b)->writer + 1))
@@ -20,7 +19,6 @@
     (b)->writer = 0; \
 })
 
-
 #define RB_USED_TOEND(b) \
 	({ssize_t end = ((b)->size) - ((b)->reader); \
 	  ssize_t n = (((b)->writer) + end) & (((b)->size)-1); \
@@ -31,9 +29,7 @@
 	  ssize_t n = (end + ((b)->reader)) & (((b)->size)-1); \
 	  n <= end ? n : end+1;})
 
-
-
-struct ringbuffer{
+struct ringbuffer {
     size_t size;
     int reader;
     int writer;
@@ -41,20 +37,18 @@ struct ringbuffer{
     char *blob;
 };
 
-
 size_t rb_read(struct ringbuffer *b, char *data, size_t len);
 size_t rb_dryread(struct ringbuffer *b, char *data, size_t len);
 int rb_pushone(struct ringbuffer *rb, char byte);
 int rb_write(struct ringbuffer *b, const char *data, size_t len);
 void rb_init(struct ringbuffer *b, char *buff, size_t size);
 int rb_read_until_chr(struct ringbuffer *b, char *data, size_t len,
-        char delimiter, size_t *readlen);
+                      char delimiter, size_t *readlen);
 int rb_read_until(struct ringbuffer *b, char *data, size_t len,
-        char *delimiter, size_t dlen, size_t *readlen);
+                  char *delimiter, size_t dlen, size_t *readlen);
 int rb_dryread_until(struct ringbuffer *b, char *data, size_t len,
-        char *delimiter, size_t dlen, size_t *readlen);
+                     char *delimiter, size_t dlen, size_t *readlen);
 
 ssize_t rb_readf(struct ringbuffer *b, int fd, size_t len);
 
 #endif
-

@@ -1,8 +1,6 @@
 #include "logging.h"
 
-
 char log_level = LOG_INFO;
-
 
 const char *log_levelnames[] = {
     "Error",                    // 0
@@ -10,7 +8,6 @@ const char *log_levelnames[] = {
     "Info",                     // 2
     "Debug",                    // 3
 };
-
 
 void
 log_setlevel(loglevel_t level) {

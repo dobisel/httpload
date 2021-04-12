@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 
-
 int
 monkeymain(int argc, char **argv) {
     ERROR("e");
@@ -14,10 +13,8 @@ monkeymain(int argc, char **argv) {
     return EXIT_SUCCESS;
 }
 
-
 #define PROG    "monkey"
 #define fcapt(...) fcapture(monkeymain, PROG, 0, NULL, ## __VA_ARGS__)
-
 
 void
 test_logging_verbosity() {
@@ -29,31 +26,30 @@ test_logging_verbosity() {
     log_setlevel(LOG_DEBUG);
     status = fcapt(out, err);
     eqint(0, status);
-    eqstr("e" CR, err);
-    eqstr("Warning: w" CR "Info: i" CR "Debug: [monkeymain:13] d" CR, out);
+    eqstr("e" N, err);
+    eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:12] d" N, out);
 
     /* Info */
     log_setlevel(LOG_INFO);
     status = fcapt(out, err);
     eqint(0, status);
-    eqstr("e" CR, err);
-    eqstr("Warning: w" CR "Info: i" CR, out);
+    eqstr("e" N, err);
+    eqstr("Warning: w" N "Info: i" N, out);
 
     /* Warning */
     log_setlevel(LOG_WARN);
     status = fcapt(out, err);
     eqint(0, status);
-    eqstr("e" CR, err);
-    eqstr("Warning: w" CR, out);
+    eqstr("e" N, err);
+    eqstr("Warning: w" N, out);
 
     /* ERROR */
     log_setlevel(LOG_ERROR);
     status = fcapt(out, err);
     eqint(0, status);
-    eqstr("e" CR, err);
+    eqstr("e" N, err);
     eqstr("", out);
 }
-
 
 int
 main() {

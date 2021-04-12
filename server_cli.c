@@ -20,12 +20,10 @@ static struct {
     SERVER_DEFAULT_FORKS,
 };
 
-
 const char *argp_program_version = HTTPLOAD_VERSION;
 const char *argp_program_bug_address = "http://github.com/dobisel/httpload";
 static char doc[] = "HTTP echo server using Linux epoll.";
 static char args_doc[] = "";
-
 
 /* Options definition */
 static struct argp_option options[] = {
@@ -36,45 +34,43 @@ static struct argp_option options[] = {
     { 0 }
 };
 
-
 /* Parse a single option. */
 static int
 parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
-    case 'v':
-        settings.verbosity = atoi(arg);
-        break;
+        case 'v':
+            settings.verbosity = atoi(arg);
+            break;
 
-    case 'c':
-        settings.forks = atoi(arg);
-        break;
+        case 'c':
+            settings.forks = atoi(arg);
+            break;
 
-    case 'p':
-        settings.port = atoi(arg);
-        break;
+        case 'p':
+            settings.port = atoi(arg);
+            break;
 
-    case ARGP_KEY_ARG:
-        if (state->arg_num >= 0) {
-            /* Too many arguments. */
-            ERROR("Too many arguments");
-            argp_usage(state);
+        case ARGP_KEY_ARG:
+            if (state->arg_num >= 0) {
+                /* Too many arguments. */
+                ERROR("Too many arguments");
+                argp_usage(state);
+                return ARGP_ERR_UNKNOWN;
+            }
+            break;
+
+        default:
             return ARGP_ERR_UNKNOWN;
-        }
-        break;
-
-    default:
-        return ARGP_ERR_UNKNOWN;
     }
     return EXIT_SUCCESS;
 }
 
-
 static struct argp argp = { options, parse_opt, args_doc, doc };
-
 
 int
 servercli_run(int argc, char **argv) {
     int err = argp_parse(&argp, argc, argv, 0, 0, NULL);
+
     if (err) {
         return err;
     }

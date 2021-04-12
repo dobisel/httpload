@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-
 #define RED     "\e[0;31m"
 #define GREEN   "\e[0;32m"
 #define YELLOW  "\e[0;33m"
@@ -17,7 +16,6 @@
 #define WHITE   "\e[0;37m"
 
 #define CLR     "\33[0m"
-
 
 #define pcolor(c_, f_, ...) \
     printf(c_); \
@@ -33,23 +31,20 @@
 
 #define pdataln(f_, ...) pcolorln(WHITE, f_, ##__VA_ARGS__);
 
-
-
 #define SUCCESS(c) if (c) {pokln("%s Ok", __func__); return; }
 #define FAILED() perrln("%s Failed", __func__)
 #define EXPECTED() pcolor(BLUE, "Expected: ")
 #define GIVEN() pcolor(YELLOW, "Given: ")
 
-
 static void
 printbinary(const unsigned char *buf, int buflen) {
     int i;
+
     for (i = 0; i < buflen; i++) {
         printf("\\%02X", buf[i]);
     }
     printf("\n");
 }
-
 
 void
 equalbin(const unsigned char *expected, const unsigned char *given,
@@ -67,7 +62,6 @@ equalbin(const unsigned char *expected, const unsigned char *given,
     exit(EXIT_FAILURE);
 }
 
-
 void
 equalchr(const char expected, const char given) {
     SUCCESS(given == expected);
@@ -82,7 +76,6 @@ equalchr(const char expected, const char given) {
 
     exit(EXIT_FAILURE);
 }
-
 
 void
 equalstr(const char *expected, const char *given) {
@@ -99,7 +92,6 @@ equalstr(const char *expected, const char *given) {
     exit(EXIT_FAILURE);
 }
 
-
 void
 equalnstr(const char *expected, const char *given, u_int32_t len) {
     SUCCESS(strncmp(given, expected, len) == 0);
@@ -114,7 +106,6 @@ equalnstr(const char *expected, const char *given, u_int32_t len) {
 
     exit(EXIT_FAILURE);
 }
-
 
 void
 equalint(int expected, int given) {
@@ -131,7 +122,6 @@ equalint(int expected, int given) {
     exit(EXIT_FAILURE);
 }
 
-
 #define assert(f, ...) \
     pcolor(CYAN, "%s:%d", __FILE__, __LINE__); \
     pcolor(MAGENTA, " [%s] ", __func__); \
@@ -143,6 +133,5 @@ equalint(int expected, int given) {
 #define eqint(...) assert(equalint, __VA_ARGS__)
 #define eqbin(e, g, l) \
     assert(equalbin, (unsigned char*)g, (unsigned char*)e, l)
-
 
 #endif

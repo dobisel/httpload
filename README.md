@@ -26,8 +26,17 @@ sudo make install
 ### Run tests
 
 ```shell
-make test
-make cover
+make clean test
+make clean cover
+```
+
+Single test file:
+
+Use the filename without the prefix `tests/test_` and `*.c` suffix.
+for example, to run `tests/test_logging.c` execute:
+
+```shell
+make clean test UNIT=logging
 ```
 
 ### Indent

@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <http_parser.h>
 
-
 static char url[100];
 static char body[100];
 static size_t bodylen = 0;
@@ -17,7 +16,6 @@ url_cb(http_parser * p, const char *at, size_t len) {
     return 0;
 }
 
-
 int
 body_cb(http_parser * p, const char *at, size_t len) {
     memcpy(body + bodylen, at, len);
@@ -27,15 +25,16 @@ body_cb(http_parser * p, const char *at, size_t len) {
 }
 
 static http_parser p;
+
 static http_parser_settings settings = {
     .on_url = url_cb,
     .on_body = body_cb,
 };
 
-
 size_t
 req_chunk(const char *b) {
     size_t l;
+
     if (b == NULL) {
         l = 0;
     }
@@ -48,7 +47,8 @@ req_chunk(const char *b) {
 int
 reqerr() {
     if (p.http_errno) {
-        DEBUG("http-parser: %d: %s", p.http_errno, http_errno_name(p.http_errno));
+        DEBUG("http-parser: %d: %s", p.http_errno,
+              http_errno_name(p.http_errno));
         return p.http_errno;
     }
     return OK;
@@ -59,6 +59,7 @@ req(const char *b) {
     url[0] = body[0] = 0;
     bodylen = 0;
     size_t rl = req_chunk(b);
+
     eqint(0, reqerr());
     req_chunk(NULL);
     eqint(0, reqerr());
@@ -74,7 +75,7 @@ test_httpparser_get() {
     req("GET /" RN RN);
     eqstr("", body);
 
-    bodylen = 0; 
+    bodylen = 0;
     req_chunk("GET / HT");
     req_chunk("TP/1.1" RN "Conten");
     req_chunk("t-Length: 5" RN RN "123");
@@ -82,7 +83,6 @@ test_httpparser_get() {
     req_chunk(NULL);
     eqstr("12345", body);
 }
-
 
 int
 main() {

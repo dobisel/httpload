@@ -17,6 +17,8 @@
 #include <sys/socket.h>
 #include <sys/prctl.h>
 #include <netinet/in.h>
+
+/* Third party */
 #include <http_parser.h>
 
 #define MAXFDS              1024
@@ -32,6 +34,8 @@
 #define ERR_FORK            -7
 #define ERR_ARGS            -8
 
+// TODO: EPOLLRDHUP
+
 // Must be power of 2
 #define RESPRB_SIZE          1024 * 64  // 2 ** 16
 
@@ -41,10 +45,8 @@
     "Content-Length: %ld" RN \
     "Connection: %s" RN
 
-
 static char *tmp;
 static int epollfd;
-
 
 struct client {
     int fd;
@@ -54,14 +56,12 @@ struct client {
     http_parser hp;
 };
 
-// TODO: EPOLLRDHUP
-
-
 static int
 want_close(struct client *c) {
     DEBUG("Peer Closed: %d", c->fd);
     int fd = c->fd;
     int err = epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
+
     if (err) {
         ERROR("Cannot DEL EPOLL for: %d", fd);
         return err;
@@ -69,7 +69,6 @@ want_close(struct client *c) {
     free(c);
     return close(fd);
 }
-
 
 static int
 want(struct client *c, int op, uint32_t e) {
@@ -79,7 +78,6 @@ want(struct client *c, int op, uint32_t e) {
     return epoll_ctl(epollfd, op, c->fd, &ev);
 }
 
-
 #define WANT_READ(c, add) ({ \
     DEBUG("WANT: READ"); \
     want((c), (add)? EPOLL_CTL_ADD: EPOLL_CTL_MOD, EPOLLIN); })
@@ -88,25 +86,22 @@ want(struct client *c, int op, uint32_t e) {
     DEBUG("WANT: WRITE") \
     want((c), EPOLL_CTL_MOD, EPOLLOUT); })
 
-
 static int
 headercomplete_cb(http_parser * p) {
     int err;
     size_t tmplen;
     long clen = p->content_length;
-    struct client *c = (struct client *)p->data;
+    struct client *c = (struct client *) p->data;
     int keep = http_should_keep_alive(&c->hp);
 
-    tmplen = sprintf(tmp, HTTPRESP, 
-            200, "OK", 
-            clen > 0? clen: 15,
-            keep? "keep-alive": "close"
-        );
+    tmplen = sprintf(tmp, HTTPRESP,
+                     200, "OK",
+                     clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
     err = rb_write(&c->resprb, tmp, tmplen);
     if (err) {
         return err;
     }
-    
+
     /* Write more headers */
     // ....
 
@@ -124,16 +119,19 @@ headercomplete_cb(http_parser * p) {
 
 static int
 complete_cb(http_parser * p) {
-    struct client *c = (struct client *)p->data;
+    struct client *c = (struct client *) p->data;
+
     DEBUG("Complete: %s", tmp);
     return WANT_WRITE(c);
 }
 
 static int
 body_cb(http_parser * p, const char *at, size_t len) {
-    struct client *c = (struct client *)p->data;
-    DEBUG("BODY: %.*s", (int)len, at);
+    struct client *c = (struct client *) p->data;
+
+    DEBUG("BODY: %.*s", (int) len, at);
     int err = rb_write(&c->resprb, at, len);
+
     if (err) {
         ERROR("Buffer full");
         return err;
@@ -141,13 +139,11 @@ body_cb(http_parser * p, const char *at, size_t len) {
     return WANT_WRITE(c);
 }
 
-
 static http_parser_settings hpconf = {
     .on_headers_complete = headercomplete_cb,
     .on_body = body_cb,
     .on_message_complete = complete_cb,
 };
-
 
 static int
 io(struct epoll_event ev) {
@@ -155,6 +151,7 @@ io(struct epoll_event ev) {
     size_t tmplen = 0;
     ssize_t bytes = 0;
     struct client *c = (struct client *) ev.data.ptr;
+
     if (ev.events & EPOLLRDHUP) {
         /* Closed */
         err = want_close(c);
@@ -171,12 +168,12 @@ io(struct epoll_event ev) {
                 DEBUG("AGAIN, TOT: %lu", tmplen);
                 errno = 0;
                 if (http_parser_execute(&c->hp, &hpconf, tmp, tmplen) !=
-                        tmplen ) {
+                    tmplen) {
                     want_close(c);
                 }
                 else if (c->hp.http_errno) {
-                    DEBUG("http-parser: %d: %s", c->hp.http_errno, 
-                            http_errno_name(c->hp.http_errno));
+                    DEBUG("http-parser: %d: %s", c->hp.http_errno,
+                          http_errno_name(c->hp.http_errno));
                     want_close(c);
                 }
                 break;
@@ -194,6 +191,7 @@ io(struct epoll_event ev) {
             bytes = rb_readf(&c->resprb, c->fd, RESPRB_SIZE);
             if (bytes == 0) {
                 int k = http_should_keep_alive(&c->hp);
+
                 DEBUG("Keep: %d", k);
                 if (k) {
                     WANT_READ(c, false);
@@ -217,10 +215,10 @@ io(struct epoll_event ev) {
     return OK;
 }
 
-
 static int
 enable_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
+
     if (flags == -1) {
         return ERR_ENNONBLOCK;
     }
@@ -231,11 +229,10 @@ enable_nonblocking(int fd) {
     return OK;
 }
 
-
 static int
 tcp_listen(uint16_t * port) {
     struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
+    socklen_t addrlen = sizeof (addr);
     int err;
     int fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -245,15 +242,16 @@ tcp_listen(uint16_t * port) {
 
     /* Avoid EADDRINUSE. */
     int opt = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0) {
         return ERR_LISTEN;
     }
 
-    memset(&addr, 0, sizeof(addr));
+    memset(&addr, 0, sizeof (addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(*port);
-    err = bind(fd, (struct sockaddr *) &addr, sizeof(addr));
+    err = bind(fd, (struct sockaddr *) &addr, sizeof (addr));
     if (err) {
         ERROR("cannot bind on: %d", addr.sin_port);
         return ERR_LISTEN;
@@ -278,7 +276,6 @@ tcp_listen(uint16_t * port) {
     return fd;
 }
 
-
 static int
 newconnection(struct epoll_event *event) {
     int err;
@@ -286,7 +283,7 @@ newconnection(struct epoll_event *event) {
     socklen_t peeraddr_len;
     int fd;
 
-    peeraddr_len = sizeof(peeraddr);
+    peeraddr_len = sizeof (peeraddr);
     fd = accept(event->data.fd, (struct sockaddr *) &peeraddr, &peeraddr_len);
 
     if (fd < 0) {
@@ -311,16 +308,17 @@ newconnection(struct epoll_event *event) {
         ERROR("fd (%d) >= MAXFDS (%d)", fd, MAXFDS);
         return ERR_MAXFD;
     }
-    
+
     /* Create and allocate new client structure. */
-    struct client *c = malloc(sizeof(struct client));
+    struct client *c = malloc(sizeof (struct client));
+
     c->fd = fd;
     c->len = 0;
-    
+
     /* Initialize the http parser for this connection. */
     http_parser_init(&c->hp, HTTP_REQUEST);
     c->hp.data = c;
-    
+
     /* Initialize ringbuffer. */
     rb_init(&c->resprb, c->buff, RESPRB_SIZE);
 
@@ -333,18 +331,18 @@ newconnection(struct epoll_event *event) {
     return OK;
 }
 
-void sigint(int s) {
+void
+sigint(int s) {
     DEBUG("SIGINT");
     free(tmp);
     exit(EXIT_SUCCESS);
 }
 
-
 static int
 loop(int listenfd) {
     int err;
     struct epoll_event ev;
-  
+
     signal(SIGINT, sigint);
 
     /* Allocate memory for temp buffer. */
@@ -365,7 +363,8 @@ loop(int listenfd) {
         return err;
     }
 
-    struct epoll_event *events = calloc(MAXFDS, sizeof(struct epoll_event));
+    struct epoll_event *events = calloc(MAXFDS, sizeof (struct epoll_event));
+
     if (events == NULL) {
         ERROR("Unable to allocate memory for epoll_events");
         return ERR_MEM;
@@ -402,7 +401,6 @@ loop(int listenfd) {
     return OK;
 }
 
-
 int
 httpd_fork(struct httpd *m) {
     int listenfd;
@@ -422,7 +420,7 @@ httpd_fork(struct httpd *m) {
     }
 
     /* Allocate memory for children pids. */
-    m->children = calloc(m->forks, sizeof(pid_t));
+    m->children = calloc(m->forks, sizeof (pid_t));
     if (m->children == NULL) {
         return ERR_MEM;
     }
@@ -454,6 +452,7 @@ httpd_fork(struct httpd *m) {
 void
 httpd_terminate(struct httpd *m) {
     int i;
+
     for (i = 0; i < m->forks; i++) {
         kill(m->children[i], SIGINT);
     }
