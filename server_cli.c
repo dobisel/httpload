@@ -59,23 +59,29 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 
 int
 servercli_run(int argc, char **argv) {
-    int err = argp_parse(&argp, argc, argv, 0, 0, NULL);
+    int err;
 
-    if (err) {
-        return err;
-    }
+    argp_parse(&argp, argc, argv, 0, 0, NULL);
 
+    /* Configure HTTP server */
     struct httpd m = {.port = settings.port,.forks = settings.forks };
+
+    /* Start it */
     err = httpd_fork(&m);
     if (err) {
         FATAL("Cannot start http mock server");
     }
+
+    /* This is because GCC will not capture results for fork(2) parent. */
+    // LCOV_EXCL_START
     INFO("Listening on port: %d", m.port);
 
+    return EXIT_SUCCESS;
     err = httpd_join(&m);
     if (err) {
         ERROR("Cannot kill chilren!");
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
+    // LCOV_EXCL_END
 }

@@ -45,17 +45,6 @@ test_fork() {
 }
 
 static void
-test_port() {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-
-    eqint(0, fcapttime(1, (char *[]) { "-p8080" }, out, err));
-    eqstr("Info: Listening on port: 8080"N, out);
-    eqstr("", err);
-}
-
-
-static void
 test_invalidargument() {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
@@ -63,24 +52,39 @@ test_invalidargument() {
 
     /* Invalid optional argument. */
     status = fcapttime(2, (char *[]) { "--invalidargument", "0" }, out, err);
-    eqint(64, status);
+    neqint(0, status);
     eqstr("", out);
     eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
 
     /* Extra positional arguments. */
     status = fcapttime(3, (char *[]) { "foo", "bar", "baz" }, out, err);
-    eqint(64, status);
+    neqint(0, status);
     eqstr("", out);
     eqnstr(PROG ": Too many arguments", err, 29);
+
+    /* invalid fork counts. */
+    status = fcapttime(1, (char *[]) { "-c0" }, out, err);
+    neqint(0, status);
+    eqstr("", out);
+    eqnstr("Invalid number of forks", err, 23);
 }
 
+static void
+test_port() {
+    char out[CAPTMAX + 1] = { 0 };
+    char err[CAPTMAX + 1] = { 0 };
+
+    eqint(0, fcapttime(1, (char *[]) { "-p8080" }, out, err));
+    eqstr("Info: Listening on port: 8080" N, out);
+    eqstr("", err);
+}
 
 int
 main() {
     log_setlevel(LL_DEBUG);
     test_version();
     test_fork();
-    test_port();
     test_invalidargument();
+    test_port();
     return EXIT_SUCCESS;
 }

@@ -35,6 +35,7 @@
 #define FAILED() perrln("%s Failed", __func__)
 #define EXPECTED() pcolor(BLUE, "Expected: ")
 #define GIVEN() pcolor(YELLOW, "Given: ")
+#define NOTEXPECTED() pcolor(CYAN, "Not Expected: ")
 
 static void
 printbinary(const unsigned char *buf, int buflen) {
@@ -122,6 +123,21 @@ equalint(int expected, int given) {
     exit(EXIT_FAILURE);
 }
 
+void
+notequalint(int expected, int given) {
+    SUCCESS(given != expected);
+
+    /* Error */
+    FAILED();
+    NOTEXPECTED();
+    pdataln("%d", expected);
+
+    GIVEN();
+    pdataln("%d", given);
+
+    exit(EXIT_FAILURE);
+}
+
 #define assert(f, ...) \
     pcolor(CYAN, "%s:%d", __FILE__, __LINE__); \
     pcolor(MAGENTA, " [%s] ", __func__); \
@@ -131,6 +147,7 @@ equalint(int expected, int given) {
 #define eqstr(...) assert(equalstr, __VA_ARGS__)
 #define eqnstr(...) assert(equalnstr, __VA_ARGS__)
 #define eqint(...) assert(equalint, __VA_ARGS__)
+#define neqint(...) assert(notequalint, __VA_ARGS__)
 #define eqbin(e, g, l) \
     assert(equalbin, (unsigned char*)g, (unsigned char*)e, l)
 
