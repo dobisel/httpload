@@ -2,6 +2,7 @@
 #include "logging.h"
 #include "server_cli.h"
 #include "fixtures/capture.h"
+#include "fixtures/curl.h"
 
 #define T   1
 #define PROG    "httploads"
@@ -19,10 +20,12 @@ test_version() {
     status = fcapt(1, (char *[]) { "--version" }, out, err);
     eqint(0, status);
     eqstr(HTTPLOAD_VERSION N, out);
+    eqstr("", err);
 
     status = fcapt(1, (char *[]) { "-V" }, out, err);
     eqint(0, status);
     eqstr(HTTPLOAD_VERSION N, out);
+    eqstr("", err);
 }
 
 static void
@@ -33,10 +36,22 @@ test_fork() {
 
     status = fcapttime(1, (char *[]) { "-c2" }, out, err);
     eqint(0, status);
+    eqstr("", err);
 
     status = fcapttime(1, (char *[]) { "-V" }, out, err);
     eqint(0, status);
     eqstr(HTTPLOAD_VERSION N, out);
+    eqstr("", err);
+}
+
+static void
+test_port() {
+    char out[CAPTMAX + 1] = { 0 };
+    char err[CAPTMAX + 1] = { 0 };
+
+    eqint(0, fcapttime(1, (char *[]) { "-p8080" }, out, err));
+    eqstr("Info: Listening on port: 8080"N, out);
+    eqstr("", err);
 }
 
 int
@@ -44,5 +59,6 @@ main() {
     log_setlevel(LL_DEBUG);
     test_version();
     test_fork();
+    test_port();
     return EXIT_SUCCESS;
 }

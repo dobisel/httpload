@@ -15,24 +15,22 @@ Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 
 ```shell
 apt install build-essential make indent libcurl4-gnutls-dev
-sudo snap install ruby --classic
 ```
+
+##### cpp-coveralls
+
+This tool is required to submit coverage result to `coveralls.io`.
+
+```shell
+python -m pip install git+https://github.com/pylover/cpp-coveralls.git
+```
+
+##### HTTP parser
 
 ```shell
 git clone https://github.com/pylover/http-parser.git
-cd http-parser
-sudo make install
+sudo make -C http-parser install
 ```
-
-### Coding style
-
-Run:
-
-```shell
-make indent
-```
-
-to reformat the entire project.
 
 ### Running tests
 
@@ -50,11 +48,14 @@ for example, to run `tests/test_logging.c` execute:
 make clean test UNIT=logging
 ```
 
-### Indent
+### Coding style
 
 Run make indent to uniform the code with `GNU indent` tool before commit.
+
+Run:
 
 ```shell
 make indent
 ```
 
+to reformat the entire project.
