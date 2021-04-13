@@ -1,5 +1,5 @@
 #include "logging.h"
-#include "testing.h"
+#include "fixtures/assert.h"
 #include "fixtures/httpdmock.h"
 
 void
@@ -57,7 +57,8 @@ bodyopts(CURL * curl) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, TESTBODY);
 }
 
-void test_body() {
+void
+test_body() {
     struct httpdmock m;
 
     httpdmock_start(&m);

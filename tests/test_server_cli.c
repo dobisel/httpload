@@ -1,6 +1,6 @@
-#include "testing.h"
 #include "logging.h"
 #include "server_cli.h"
+#include "fixtures/assert.h"
 #include "fixtures/capture.h"
 #include "fixtures/curl.h"
 

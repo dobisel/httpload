@@ -1,8 +1,7 @@
 #include "common.h"
 #include "ringbuffer.h"
 #include "logging.h"
-#include "testing.h"
-
+#include "fixtures/assert.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>

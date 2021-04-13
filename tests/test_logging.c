@@ -1,7 +1,6 @@
 #include "logging.h"
-#include "testing.h"
+#include "fixtures/assert.h"
 #include "fixtures/capture.h"
-
 #include <stdlib.h>
 
 #define PROG    "httploadc"
@@ -29,7 +28,7 @@ test_logging_verbosity() {
     status = fcapt(out, err);
     eqint(0, status);
     eqstr("e" N, err);
-    eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:14] d" N, out);
+    eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:13] d" N, out);
 
     /* Info */
     log_setlevel(LL_INFO);

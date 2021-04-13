@@ -113,7 +113,9 @@ headercomplete_cb(http_parser * p) {
 
     tmplen = sprintf(tmp, HTTPRESP,
                      200, "OK",
-                     clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
+                     clen > 0 ? clen : 15, 
+                     keep ? "keep-alive" : "close"
+                     );
     err = rb_write(&c->resprb, tmp, tmplen);
     if (err) {
         return err;

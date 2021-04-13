@@ -1,6 +1,6 @@
-#include "testing.h"
 #include "logging.h"
 #include "client_cli.h"
+#include "fixtures/assert.h"
 #include "fixtures/capture.h"
 
 #define PROG    "httploadc"

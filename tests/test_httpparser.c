@@ -1,7 +1,6 @@
 #include "common.h"
 #include "logging.h"
-#include "testing.h"
-
+#include "fixtures/assert.h"
 #include <stdio.h>
 #include <http_parser.h>
 
