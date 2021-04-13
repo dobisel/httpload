@@ -4,7 +4,7 @@
 #include "fixtures/capture.h"
 #include "fixtures/curl.h"
 
-#define T   1
+#define T   2
 #define PROG    "httploads"
 #define fcapttimeout(t, ...) \
     fcapture_timeout((t), servercli_run, PROG, ## __VA_ARGS__)
@@ -62,7 +62,7 @@ test_invalidargument() {
     eqstr("", out);
     eqnstr(PROG ": Too many arguments", err, 29);
 
-    /* invalid fork counts. */
+    /* Invalid fork counts. */
     status = fcapttime(1, (char *[]) { "-c0" }, out, err);
     neqint(0, status);
     eqstr("", out);

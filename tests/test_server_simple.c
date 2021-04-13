@@ -15,7 +15,6 @@ test_single_packet() {
 
 static void
 http10opts(CURL * curl) {
-    DEBUG("C OPTS");
     curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 }
 
@@ -52,11 +51,29 @@ test_http11_connection() {
     curl_slist_free_all(headers);
 }
 
+#define TESTBODY "foo=bar&baz=qux"
+static void
+bodyopts(CURL * curl) {
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, TESTBODY);
+}
+
+void test_body() {
+    struct httpdmock m;
+
+    httpdmock_start(&m);
+    m.optcb = bodyopts;
+    eqint(200, httpdmock_get(&m));
+    eqstr(TESTBODY, m.out);
+    eqstr("", m.err);
+    httpdmock_stop(&m);
+}
+
 int
 main() {
     log_setlevel(LL_DEBUG);
     test_single_packet();
     test_http10_connection();
     test_http11_connection();
+    test_body();
     return 0;
 }

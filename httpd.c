@@ -115,18 +115,19 @@ headercomplete_cb(http_parser * p) {
                      200, "OK",
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
     err = rb_write(&c->resprb, tmp, tmplen);
-    if (err) {                  // LCOV_EXCL_START
+    if (err) {
         return err;
-    }                           // LCOV_EXCL_END
+    }
 
     /* Write more headers */
     // ....
 
     /* Terminate headers by `\r\n` */
     err = rb_write(&c->resprb, RN, 2);
-    if (err) {                  // LCOV_EXCL_START
+    if (err) {
         return err;
-    }                           // LCOV_EXCL_END
+    }
+
     if (clen <= 0) {
         tmplen = sprintf(tmp, "Hello HTTPLOAD!");
         return rb_write(&c->resprb, tmp, tmplen);
