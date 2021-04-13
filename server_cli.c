@@ -45,8 +45,6 @@ parse_opt(int key, char *arg, struct argp_state *state) {
         case ARGP_KEY_ARG:
             if (state->arg_num >= 0) {
                 /* Too many arguments. */
-                ERROR("Too many arguments");
-                argp_usage(state);
                 return ARGP_ERR_UNKNOWN;
             }
             break;

@@ -54,11 +54,33 @@ test_port() {
     eqstr("", err);
 }
 
+
+static void
+test_invalidargument() {
+    char out[CAPTMAX + 1] = { 0 };
+    char err[CAPTMAX + 1] = { 0 };
+    int status;
+
+    /* Invalid optional argument. */
+    status = fcapttime(2, (char *[]) { "--invalidargument", "0" }, out, err);
+    eqint(64, status);
+    eqstr("", out);
+    eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
+
+    /* Extra positional arguments. */
+    status = fcapttime(3, (char *[]) { "foo", "bar", "baz" }, out, err);
+    eqint(64, status);
+    eqstr("", out);
+    eqnstr(PROG ": Too many arguments", err, 29);
+}
+
+
 int
 main() {
     log_setlevel(LL_DEBUG);
     test_version();
     test_fork();
     test_port();
+    test_invalidargument();
     return EXIT_SUCCESS;
 }
