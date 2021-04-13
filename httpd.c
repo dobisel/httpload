@@ -62,10 +62,10 @@ want_close(struct client *c) {
     int fd = c->fd;
 
     err = epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);
-    if (err) {                  // nocover-start
+    if (err) {                  // LCOV_EXCL_START
         ERROR("Cannot DEL EPOLL for: %d", fd);
         return err;
-    }                           // nocover-end
+    }                           // LCOV_EXCL_END
     free(c);
     return close(fd);
 }
@@ -115,18 +115,18 @@ headercomplete_cb(http_parser * p) {
                      200, "OK",
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
     err = rb_write(&c->resprb, tmp, tmplen);
-    if (err) {
+    if (err) {                  // LCOV_EXCL_START
         return err;
-    }
+    }                           // LCOV_EXCL_END
 
     /* Write more headers */
     // ....
 
     /* Terminate headers by `\r\n` */
     err = rb_write(&c->resprb, RN, 2);
-    if (err) {
+    if (err) {                  // LCOV_EXCL_START
         return err;
-    }
+    }                           // LCOV_EXCL_END
     if (clen <= 0) {
         tmplen = sprintf(tmp, "Hello HTTPLOAD!");
         return rb_write(&c->resprb, tmp, tmplen);

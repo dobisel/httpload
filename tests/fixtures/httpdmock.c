@@ -7,7 +7,7 @@ int
 httpdmock_get(struct httpdmock *m) {
     m->out[0] = 0;
     m->err[0] = 0;
-    return curl_get(m->url, m->out, m->err);
+    return curl_get(m->url, m->req_headers, m->optcb, m->out, m->err);
 }
 
 void 
@@ -17,6 +17,8 @@ httpdmock_start(struct httpdmock *m) {
 
     m->httpd.forks = 1;
     m->httpd.port = 0;
+    m->optcb = NULL;
+    m->req_headers = NULL;
 
     err = httpd_fork(&m->httpd);
     if (err) {

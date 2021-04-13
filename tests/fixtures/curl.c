@@ -5,7 +5,8 @@
 #include <curl/curl.h>
 
 int
-curl_get(const char *url, char *const outbuff, char *const errbuff) {
+curl_get(const char *url, struct curl_slist *headers, curlhook_t optionscb, 
+         char *const outbuff, char *const errbuff) {
     CURL *curl;
     CURLcode res;
     long status;
@@ -37,6 +38,16 @@ curl_get(const char *url, char *const outbuff, char *const errbuff) {
     }
     
     curl_easy_setopt(curl, CURLOPT_URL, url);
+    
+    /* Hook */
+    if (optionscb != NULL) {
+        optionscb(curl);
+    }
+    
+    if (headers) {
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    }
+
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         ERROR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
