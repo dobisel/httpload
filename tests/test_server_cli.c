@@ -3,11 +3,12 @@
 #include "server_cli.h"
 #include "fixtures/capture.h"
 
+#define T   1
 #define PROG    "httploads"
 #define fcapttimeout(t, ...) \
     fcapture_timeout((t), servercli_run, PROG, ## __VA_ARGS__)
 #define fcapt(...) fcapttimeout(0, ## __VA_ARGS__)
-#define fcapttime(...) fcapttimeout(1, ## __VA_ARGS__)
+#define fcapttime(...) fcapttimeout(T, ## __VA_ARGS__)
 
 static void
 test_version() {

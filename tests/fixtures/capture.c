@@ -27,7 +27,7 @@ execchild(mainfunc_t f, const char *prog, int argc, char **argv) {
 
 
 int
-fcapture_timeout(int timeout, mainfunc_t f, const char *prog, int argc, 
+fcapture_timeout(float timeout, mainfunc_t f, const char *prog, int argc, 
         char **argv, char *const outbuff, char *const errbuff) {
     int outpipe[2];
     int errpipe[2];

@@ -56,13 +56,13 @@ test: $(common_tests) $(client_tests) $(server_tests)
 	for t in $(filter tests/test_$(UNIT), $(client_tests)); do "$${t}"; done
 	for t in $(filter tests/test_$(UNIT), $(server_tests)); do "$${t}"; done
 
+gcov_prefix = $(shell realpath ..)
 
 .PHONY: coverage
 coverage: test
 	gcov $(tocover)
 ifdef COVERALLS 
-	coveralls -n -e tests
-else
+	coveralls -n --prefix httpload -e tests 
 endif
 
 .PHONY: cover

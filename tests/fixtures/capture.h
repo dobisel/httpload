@@ -5,9 +5,8 @@
 
 typedef int (*mainfunc_t)(int argc, char **argv);
 
-
 int
-fcapture_timeout(int timeout, mainfunc_t f, const char *prog, int argc, 
+fcapture_timeout(float timeout, mainfunc_t f, const char *prog, int argc, 
         char **argv, char *const out, char *const err);
 
 #define fcapture(...) fcapture_timeout(0, __VA_ARGS__);
