@@ -30,6 +30,7 @@ python -m pip install git+https://github.com/pylover/cpp-coveralls.git
 ```shell
 git clone https://github.com/pylover/http-parser.git
 sudo make -C http-parser install
+sudo ldconfig /usr/local/lib/
 ```
 
 ### Running tests
