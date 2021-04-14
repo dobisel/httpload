@@ -80,7 +80,7 @@ clean::
 
 .PHONY: indent
 indent::
-	indent $(IFLAGS) tests/*.c tests/*.h 
+	indent $(IFLAGS) tests/*.c 
 
 tindentbk = $(wildcard ./tests/*.[hc]~)
 

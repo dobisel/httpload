@@ -1,16 +1,11 @@
 #ifndef HTTPD_H
 #define HTTPD_H
-#include <sys/types.h>
-#include <inttypes.h>
+
+#include "ev.h"
 
 struct httpd {
-    uint16_t port;
-    uint8_t forks;
-    pid_t *children;
+    struct evs;
 };
 
-int httpd_fork(struct httpd *);
-void httpd_terminate(struct httpd *m);
-int httpd_join(struct httpd *);
-
+int httpd_start(struct httpd *server);
 #endif

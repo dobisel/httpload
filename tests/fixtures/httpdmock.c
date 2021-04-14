@@ -20,19 +20,18 @@ httpdmock_start(struct httpdmock *m) {
     m->optcb = NULL;
     m->req_headers = NULL;
 
-    err = httpd_fork(&m->httpd);
+    err = httpd_start(&m->httpd);
     if (err) {
         FATAL("Cannot start http mock server");
     }
     
     sprintf(tmp, "http://localhost:%d", m->httpd.port);
-    m->url = malloc(strlen(tmp));
-    strcpy(m->url, tmp);
+    m->url = strdup(tmp);
 }
 
 void 
 httpdmock_stop(struct httpdmock *m) {
-    httpd_terminate(&m->httpd);
+    ev_terminate((struct ev*)&m->httpd);
     free(m->url);
-    httpd_join(&m->httpd);
+    ev_join((struct ev*)&m->httpd);
 }
