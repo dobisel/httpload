@@ -46,8 +46,6 @@ req_chunk(const char *b) {
 int
 reqerr() {
     if (p.http_errno) {
-        DEBUG("http-parser: %d: %s", p.http_errno,
-              http_errno_name(p.http_errno));
         return p.http_errno;
     }
     return OK;

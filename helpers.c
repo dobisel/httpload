@@ -23,45 +23,42 @@ int
 tcp_listen(uint16_t * port) {
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof (addr);
-    int err;
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    int opt;
+    int fd;
 
+    /* Create socket. */
+    fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        return ERR;
+        ERRX("Cannot create listen socket.");
     }
 
     /* Avoid EADDRINUSE. */
-    int opt = 1;
-
+    opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0) {
-        return ERR;
+        ERRX("Cannot set socket options.");
     }
 
     memset(&addr, 0, sizeof (addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(*port);
-    err = bind(fd, (struct sockaddr *) &addr, sizeof (addr));
-    if (err) {
-        ERROR("cannot bind on: %d", addr.sin_port);
-        return ERR;
+    if (bind(fd, (struct sockaddr *) &addr, sizeof (addr))) {
+        ERRX("Cannot bind on: %d", addr.sin_port);
     }
 
     if (*port == 0) {
-        err = getsockname(fd, (struct sockaddr *) &addr, &addrlen);
-        if (err) {
-            ERROR("cannot get socketinfo: %d", fd);
-            return ERR;
+        if (getsockname(fd, (struct sockaddr *) &addr, &addrlen)) {
+            ERRX("Cannot get socketinfo: %d", fd);
         }
         *port = ntohs(addr.sin_port);
     }
 
     if (listen(fd, TCP_BACKLOG) < 0) {
-        return ERR;
+        ERRX("Cannot listen on fd: %d and backlog: %d.", fd, TCP_BACKLOG);
     }
 
     if (enable_nonblocking(fd)) {
-        return ERR;
+        ERRX("Cannot enable nonblocking mode for listen fd: %d", fd);
     }
     return fd;
 }

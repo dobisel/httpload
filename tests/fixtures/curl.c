@@ -50,7 +50,7 @@ curl_get(const char *url, struct curl_slist *headers, curlhook_t optionscb,
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-        ERROR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        WARN("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         return ERR;
     }
 

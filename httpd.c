@@ -31,26 +31,24 @@ should_keepalive(const http_parser * parser) {
 
 static int
 req_complete_cb(http_parser * p) {
-    struct peer *c = (struct peer *) p->data;
-
-    return EV_MOD_WRITE(c);
+    EV_MOD_WRITE((struct peer *) p->data);
+    return OK;
 }
 
 static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
-    int err = rb_write(&c->resprb, at, len);
 
-    if (err) {
-        ERROR("Buffer full");
-        return err;
+    if (rb_write(&c->resprb, at, len)) {
+        WARN("Buffer full");
+        return ERR;
     }
-    return EV_MOD_WRITE(c);
+    EV_MOD_WRITE(c);
+    return OK;
 }
 
 static int
 headercomplete_cb(http_parser * p) {
-    int err;
     char tmp[2048];
     size_t tmplen;
     long clen = p->content_length;
@@ -60,18 +58,18 @@ headercomplete_cb(http_parser * p) {
     tmplen = sprintf(tmp, HTTPRESP,
                      200, "OK",
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
-    err = rb_write(&c->resprb, tmp, tmplen);
-    if (err) {
-        return err;
+    if (rb_write(&c->resprb, tmp, tmplen)) {
+        WARN("Buffer full");
+        return ERR;
     }
 
     /* Write more headers */
     // ....
 
     /* Terminate headers by `\r\n` */
-    err = rb_write(&c->resprb, RN, 2);
-    if (err) {
-        return err;
+    if (rb_write(&c->resprb, RN, 2)) {
+        WARN("Buffer full");
+        return ERR;
     }
 
     if (clen <= 0) {
@@ -107,8 +105,8 @@ data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     }
 
     if (p->http_errno) {
-        ERROR("http-parser: %d: %s", p->http_errno,
-              http_errno_name(p->http_errno));
+        WARN("http-parser: %d: %s", p->http_errno,
+             http_errno_name(p->http_errno));
         return ERR;
     }
     return OK;
@@ -124,7 +122,7 @@ write_finish(struct ev *ev, struct peer *c) {
     return OK;
 }
 
-int
+void
 httpd_start(struct httpd *server) {
     server->on_recvd = data_recvd;
     server->on_writefinish = write_finish;

@@ -70,16 +70,9 @@ servercli_run(int argc, char **argv) {
     };
 
     /* Start it */
-    if (httpd_start(&server)) {
-        ERROR("Cannot start http server");
-        return ERR;
-    }
+    httpd_start(&server);
 
     INFO("Listening on port: %d", server.port);
 
-    if (ev_join((struct ev *) &server)) {
-        ERROR("Cannot kill chilren!");
-        return ERR;
-    }
-    return OK;
+    return ev_join((struct ev *) &server);
 }

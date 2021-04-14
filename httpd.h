@@ -7,5 +7,5 @@ struct httpd {
     struct evs;
 };
 
-int httpd_start(struct httpd *server);
+void httpd_start(struct httpd *server);
 #endif

@@ -41,8 +41,7 @@ fcapture_timeout(float timeout, mainfunc_t f, const char *prog, int argc,
 
         /* Prepare stdout pipe. */
         if (pipe(outpipe)) {
-            ERROR("stdout pipe");
-            return EXIT_FAILURE;
+            ERRX("stdout pipe");
         }
     }
     if (errbuff) {
@@ -51,8 +50,7 @@ fcapture_timeout(float timeout, mainfunc_t f, const char *prog, int argc,
 
         /* Prepare stderr pipe. */
         if (pipe(errpipe)) {
-            ERROR("stderr pipe");
-            return EXIT_FAILURE;
+            ERRX("stderr pipe");
         }
     }
 
@@ -63,7 +61,7 @@ fcapture_timeout(float timeout, mainfunc_t f, const char *prog, int argc,
     /* Fork */
     pid = fork();
     if (pid == -1) {
-        ERROR("fork");
+        ERRX("fork");
         return EXIT_FAILURE;
     }
     else if (pid > 0) {

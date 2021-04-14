@@ -12,18 +12,14 @@ httpdmock_get(struct httpdmock *m) {
 
 void 
 httpdmock_start(struct httpdmock *m) {
-    int err;
     char tmp[128];
 
     m->httpd.forks = 1;
     m->httpd.port = 0;
     m->optcb = NULL;
     m->req_headers = NULL;
-
-    err = httpd_start(&m->httpd);
-    if (err) {
-        FATAL("Cannot start http mock server");
-    }
+    
+    httpd_start(&m->httpd);
     
     sprintf(tmp, "http://localhost:%d", m->httpd.port);
     m->url = strdup(tmp);

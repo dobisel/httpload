@@ -16,7 +16,7 @@ struct ev {
 
 struct peer {
     int fd;
-    char buff[EV_WRITEBUFF_SIZE];
+    char buff[EV_WRITE_BUFFSIZE];
     size_t len;
     // TODO: rename to wrb
     struct ringbuffer resprb;
@@ -37,15 +37,15 @@ struct evs {
 /* Common */
 void ev_terminate(struct ev *m);
 int ev_join(struct ev *);
-int ev_want(struct peer *c, int op, uint32_t e);
+void ev_ctl(struct peer *c, int op, uint32_t e);
+void ev_del_close(struct peer *c);
 
 /* Server */
-int evs_fork(struct evs *);
+void evs_fork(struct evs *);
 
 /* Event control macros. */
-#define EV_ADD_READ(c) ev_want((c), EPOLL_CTL_ADD, EPOLLIN)
-#define EV_MOD_READ(c) ev_want((c), EPOLL_CTL_MOD, EPOLLIN)
-#define EV_MOD_WRITE(c) ev_want((c), EPOLL_CTL_MOD, EPOLLOUT)
-#define EV_MOD_CLOSE(c) ev_want_close(c)
+#define EV_ADD_READ(c) ev_ctl((c), EPOLL_CTL_ADD, EPOLLIN)
+#define EV_MOD_READ(c) ev_ctl((c), EPOLL_CTL_MOD, EPOLLIN)
+#define EV_MOD_WRITE(c) ev_ctl((c), EPOLL_CTL_MOD, EPOLLOUT)
 
 #endif

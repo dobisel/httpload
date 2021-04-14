@@ -66,7 +66,7 @@ test_invalidargument() {
     status = fcapttime(1, (char *[]) { "-c0" }, out, err);
     neqint(0, status);
     eqstr("", out);
-    eqnstr("Invalid number of forks", err, 23);
+    eqnstr("test_server_cli: Invalid number of forks: 0", err, 42);
 }
 
 static void
@@ -75,7 +75,7 @@ test_port() {
     char err[CAPTMAX + 1] = { 0 };
 
     eqint(0, fcapttime(1, (char *[]) { "-p8080" }, out, err));
-    eqstr("Info: Listening on port: 8080" N, out);
+    eqstr("Listening on port: 8080" N, out);
     eqstr("", err);
 }
 

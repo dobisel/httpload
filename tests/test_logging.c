@@ -7,11 +7,11 @@
 
 int
 monkeymain(int argc, char **argv) {
-    ERROR("e");
     WARN("w");
     INFO("i");
-    DEBUG("d");
-    return EXIT_SUCCESS;
+    DBUG("d");
+    errno = 1;
+    ERRX("e");
 }
 
 #define fcapt(...) fcapture(monkeymain, PROG, 0, NULL, ## __VA_ARGS__)
@@ -26,29 +26,32 @@ test_logging_verbosity() {
     log_setlevel(LL_DEBUG);
     errno = 0;
     status = fcapt(out, err);
-    eqint(0, status);
-    eqstr("e" N, err);
-    eqstr("Warning: w" N "Info: i" N "Debug: [monkeymain:13] d" N, out);
+    eqint(1, status);
+    eqstr("test_logging: w: Success" N
+          "test_logging: e: Operation not permitted" N, err);
+    eqstr("i" N "012:monkeymain d" N, out);
 
     /* Info */
     log_setlevel(LL_INFO);
     status = fcapt(out, err);
-    eqint(0, status);
-    eqstr("e" N, err);
-    eqstr("Warning: w" N "Info: i" N, out);
+    eqint(1, status);
+    eqstr("test_logging: w: Success" N
+          "test_logging: e: Operation not permitted" N, err);
+    eqstr("i" N, out);
 
     /* Warning */
     log_setlevel(LL_WARN);
     status = fcapt(out, err);
-    eqint(0, status);
-    eqstr("e" N, err);
-    eqstr("Warning: w" N, out);
+    eqint(1, status);
+    eqstr("test_logging: w: Success" N
+          "test_logging: e: Operation not permitted" N, err);
+    eqstr("", out);
 
     /* ERROR */
     log_setlevel(LL_ERROR);
     status = fcapt(out, err);
-    eqint(0, status);
-    eqstr("e" N, err);
+    eqint(1, status);
+    eqstr("test_logging: e: Operation not permitted" N, err);
     eqstr("", out);
 }
 
