@@ -21,6 +21,18 @@ int write_headers(const int fd, char* headers[], const int header_count) {
     return sum;
 }
 
+int write_body(const int fd, const char* body) {
+    int err, sum = 0;
+    err = dprintf(fd, "Content-Length: %ld\r\n\r\n", strlen(body));
+    if (err < 0)
+        return -1;
+    sum += err;
+    err = write(fd, body, strlen(body));
+    if (err < 0)
+        return -1;
+    return sum + err;
+}
+
 int send_request(
         int fd,
         char* host,
