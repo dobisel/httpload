@@ -31,6 +31,23 @@ test_write_verb_path() {
     clean_fd();
 }
 
+void
+test_write_host() {
+    int fd, len;
+    char* host = "google.com";
+    char *response, *expected;
+    fd = mock_fd();
+    len = write_host(fd, host);
+    notequalint(-1, len);
+    expected = (char*) malloc(len * sizeof(char));
+    sprintf(expected, "HOST: %s\r\n", host);
+    response = (char*) malloc(len * sizeof(char));
+    lseek(fd, 0, SEEK_SET);
+    read(fd, response, len);
+    eqstr(expected, response);
+    clean_fd();
+}
+
 int
 main() {
     test_write_verb_path();
