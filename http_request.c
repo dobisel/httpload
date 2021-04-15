@@ -6,6 +6,10 @@ int write_verb_path(const int fd, const char* verb, const char* path) {
     return dprintf(fd, "%s %s %s\r\n", verb, path, HTTP_VERSION);
 }
 
+int write_host(const int fd, const char* host) {
+    return dprintf(fd, "HOST: %s\r\n", host);
+}
+
 int send_request(
         int fd,
         char* host,
