@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+typedef void (*callback)(int status, char* body, void* arg);
+
 int send_request(
         int fd,
         char* host,
