@@ -76,8 +76,29 @@ test_write_headers() {
     clean_fd();
 }
 
+void
+test_write_body() {
+    int fd, len;
+    char* response;
+    char* expected;
+    char* body = "{\"name\": \"Dennis\", \"lastname\": \"Ritchie\"}";
+    fd = mock_fd();
+    len = write_body(fd, body);
+    notequalint(-1, len);
+    lseek(fd, 0, SEEK_SET);
+    response = (char*) malloc(len * sizeof(char));
+    expected = (char*) malloc(len * sizeof(char));
+    sprintf(expected, "Content-Length: %ld\r\n\r\n%s", strlen(body), body);
+    read(fd, response, len);
+    eqstr(expected, response);
+    clean_fd();
+}
+
 int
 main() {
     test_write_verb_path();
+    test_write_host();
+    test_write_headers();
+    test_write_body();
     return EXIT_SUCCESS;
 }
