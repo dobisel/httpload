@@ -9,6 +9,7 @@
 
 struct ev {
     uint8_t forks;
+    uint8_t id;
     pid_t *children;
     void *on_recvd;
     void *on_writefinish;
@@ -47,5 +48,10 @@ void evs_fork(struct evs *);
 #define EV_ADD_READ(c) ev_ctl((c), EPOLL_CTL_ADD, EPOLLIN)
 #define EV_MOD_READ(c) ev_ctl((c), EPOLL_CTL_MOD, EPOLLIN)
 #define EV_MOD_WRITE(c) ev_ctl((c), EPOLL_CTL_MOD, EPOLLOUT)
+
+#define EV_ADD_READ_FD(fd) ev_ctlfd((fd), EPOLL_CTL_ADD, EPOLLIN)
+#define EV_MOD_READ_FD(fd) ev_ctlfd((fd), EPOLL_CTL_MOD, EPOLLIN)
+#define EV_MOD_WRITE_FD(fd) ev_ctlfd((fd), EPOLL_CTL_MOD, EPOLLOUT)
+
 
 #endif

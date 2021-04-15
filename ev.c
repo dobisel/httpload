@@ -31,18 +31,53 @@ ev_del_close(struct peer *c) {
 }
 
 void
+ev_ctlfd(int fd, int op, uint32_t e) {
+    struct epoll_event ev = { 0 };
+    ev.data.fd = fd;
+    ev.events = EPOLLONESHOT | EPOLLET | e;
+    if (epoll_ctl(epollfd, op, fd, &ev)) {
+        ERRX("epol_ctl error, op: %d fd: %d", op, fd);
+    }
+}
+
+
+void
 ev_ctl(struct peer *c, int op, uint32_t e) {
     struct epoll_event ev = { 0 };
     ev.data.ptr = c;
     ev.events = EPOLLONESHOT | EPOLLET | e;
     if (epoll_ctl(epollfd, op, c->fd, &ev)) {
-        ERRX("epol_ctl error, fd: %d", c->fd);
+        ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);
+    }
+}
+
+static void
+readfd(struct ev *ev, struct peer *c) {
+    size_t tmplen = 0;
+    ssize_t bytes = 0;
+
+    for (;;) {
+        bytes = read(c->fd, tmp, EV_READ_CHUNKSIZE);
+        if (bytes <= 0) {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+                errno = 0;
+                /* RED: %d EAGAIN: %d */
+                if (((ev_recvcb_t) ev->on_recvd) (ev, c, tmp, tmplen)) {
+                    /* del: %d %d */
+                    ev_del_close(c);
+                }
+                return;
+            }
+            /* del: %d %d */
+            ev_del_close(c);
+            return;
+        }
+        tmplen += bytes;
     }
 }
 
 static void
 io(struct ev *ev, struct epoll_event e) {
-    size_t tmplen = 0;
     ssize_t bytes = 0;
     struct peer *c = (struct peer *) e.data.ptr;
 
@@ -50,39 +85,29 @@ io(struct ev *ev, struct epoll_event e) {
         ev_del_close(c);
     }
     else if (e.events & EPOLLIN) {
-        /* Read */
-        for (;;) {
-            bytes = read(c->fd, tmp, EV_READ_CHUNKSIZE);
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                errno = 0;
-                if (((ev_recvcb_t) ev->on_recvd) (ev, c, tmp, tmplen)) {
-                    ev_del_close(c);
-                    return;
-                }
-                return;
-            }
-            if (bytes <= 0) {
-                ev_del_close(c);
-                return;
-            }
-            tmplen += bytes;
-        }
+        /* Read: %d */
+        readfd(ev, c);
     }
     else if (e.events & EPOLLOUT) {
-        /* Write */
+        /* Write %d */
         for (;;) {
             bytes = rb_readf(&c->resprb, c->fd, EV_WRITE_CHUNKSIZE);
             if (bytes == 0) {
                 if (((ev_cb_t) ev->on_writefinish) (ev, c)) {
                     ev_del_close(c);
                 }
-                EV_MOD_READ(c);
+                else {
+                    EV_MOD_READ(c);
+                }
+                return;
             }
-            else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                 EV_MOD_WRITE(c);
+                return;
             }
-            else if (bytes <= 0) {
+            if (bytes <= 0) {
                 ev_del_close(c);
+                return;
             }
         }
     }
@@ -96,18 +121,15 @@ newconnection(struct evs *evs) {
     struct peer *c;
 
     peeraddr_len = sizeof (peeraddr);
-    fd = accept(evs->listenfd, (struct sockaddr *) &peeraddr, &peeraddr_len);
+    fd = accept4(evs->listenfd, (struct sockaddr *) &peeraddr, &peeraddr_len,
+            SOCK_NONBLOCK);
     if (fd < 0) {
         /* Accept error */
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            DBUG("accept returned EAGAIN or EWOULDBLOCK");
+            /* Accept returned EAGAIN or EWOULDBLOCK %d */
             return;
         }
-        ERRX("Accepting new connection");
-    }
-
-    if (enable_nonblocking(fd)) {
-        ERRX("Cannot enable nonblocking mode for fd: %d", fd);
+        ERRX("Error Accepting new connection %d", evs->id);
     }
 
     if (fd >= EV_MAXFDS) {
@@ -123,12 +145,12 @@ newconnection(struct evs *evs) {
     rb_init(&c->resprb, c->buff, EV_WRITE_BUFFSIZE);
 
     if (((ev_cb_t) evs->on_connect) (evs, c)) {
-        /* Callback returned error, free memory and return. */
+        CHK("Callback returned error, free memory and return.");
         free(c);
         return;
     }
 
-    /* Register new peer into event loop. */
+    /* Register new peer into event loop. %d */
     EV_ADD_READ(c);
 }
 
@@ -140,7 +162,6 @@ sigint(int s) {
 
 static int
 loop(struct evs *evs) {
-    struct epoll_event epv;
     struct epoll_event *events;
 
     signal(SIGINT, sigint);
@@ -155,11 +176,7 @@ loop(struct evs *evs) {
     }
 
     /* Register accept event */
-    epv.data.fd = evs->listenfd;
-    epv.events = EPOLLIN;
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, evs->listenfd, &epv)) {
-        ERRX("epoll_ctl EPOLL_CTL_ADD.");
-    }
+    EV_ADD_READ_FD(evs->listenfd);
 
     events = calloc(EV_BATCHSIZE, sizeof (struct epoll_event));
     if (events == NULL) {
@@ -170,13 +187,15 @@ loop(struct evs *evs) {
         int nready = epoll_wait(epollfd, events, EV_BATCHSIZE, -1);
 
         for (int i = 0; i < nready; i++) {
-            if (events[i].events & EPOLLERR) {
-                DBUG("epoll_wait returned EPOLLERR");
-            }
-
             if (events[i].data.fd == evs->listenfd) {
-                /* New connection */
-                newconnection(evs);
+                if (events[i].events & EPOLLERR) {
+                    DBUG("epoll_wait returned EPOLLERR");
+                }
+                else {
+                    /* New connection: %d fork: %d */
+                    newconnection(evs);
+                }
+                EV_MOD_READ_FD(evs->listenfd);
             }
             else {
                 /* A peer socket is ready. */
@@ -187,31 +206,31 @@ loop(struct evs *evs) {
 }
 
 void
-evs_fork(struct evs *m) {
+evs_fork(struct evs *evs) {
     int i;
     pid_t pid;
 
     /* Create and listen tcp socket */
-    m->listenfd = tcp_listen(&(m->port));
+    evs->listenfd = tcp_listen(&(evs->port));
 
-    if (m->forks == 0) {
-        ERRX("Invalid number of forks: %d", m->forks);
+    if (evs->forks == 0) {
+        ERRX("Invalid number of forks: %d", evs->forks);
     }
 
     /* Allocate memory for children pids. */
-    m->children = calloc(m->forks, sizeof (pid_t));
-    if (m->children == NULL) {
-        ERRX("Insifficient memory for %d forks.", m->forks);
+    evs->children = calloc(evs->forks, sizeof (pid_t));
+    if (evs->children == NULL) {
+        ERRX("Insifficient memory for %d forks.", evs->forks);
     }
 
-    for (i = 0; i < m->forks; i++) {
+    for (i = 0; i < evs->forks; i++) {
         pid = fork();
         if (pid == -1) {
             ERRX("Cannot fork");
         }
         if (pid > 0) {
             /* Parent */
-            m->children[i] = pid;
+            evs->children[i] = pid;
         }
         else if (pid == 0) {
             /* Child */
@@ -219,32 +238,32 @@ evs_fork(struct evs *m) {
 
             /* Set no buffer for stdout */
             //setvbuf(stdout, NULL, _IONBF, 0);
-
-            loop(m);
+            evs->id = i;
+            loop(evs);
         }
     }
 }
 
 void
-ev_terminate(struct ev *m) {
+ev_terminate(struct ev *ev) {
     int i;
 
-    for (i = 0; i < m->forks; i++) {
-        kill(m->children[i], SIGINT);
+    for (i = 0; i < ev->forks; i++) {
+        kill(ev->children[i], SIGINT);
     }
 }
 
 int
-ev_join(struct ev *m) {
+ev_join(struct ev *ev) {
     int status;
     int ret = 0;
     int i;
 
-    for (i = 0; i < m->forks; i++) {
-        waitpid(m->children[i], &status, 0);
+    for (i = 0; i < ev->forks; i++) {
+        waitpid(ev->children[i], &status, 0);
         ret |= WEXITSTATUS(status);
     }
 
-    free(m->children);
+    free(ev->children);
     return ret;
 }

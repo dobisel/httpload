@@ -29,7 +29,7 @@ extern const char *log_levelnames[];
 #define WARN( ... ) if LOG_OK(LL_WARN) warn( __VA_ARGS__ )
 #define INFO(fmt, ... ) if LOG_OK(LL_INFO) printf(fmt N, ## __VA_ARGS__ )
 #define DBUG(fmt, ...) if LOG_OK(LL_DEBUG) \
-    printf("%03d:%s " fmt N, __LINE__, __FUNCTION__, ## __VA_ARGS__)
+    printf("%03d:%s -- " fmt N, __LINE__, __FUNCTION__, ## __VA_ARGS__)
 #define CHK( ... ) DBUG( __VA_ARGS__ )
 
 typedef uint8_t loglevel_t;
