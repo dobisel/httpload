@@ -7,6 +7,8 @@ typedef void (*callback)(int status, char* body, void* arg);
 
 #define HTTP_VERSION "HTTP/1.0"
 
+#define CR "\r\n"
+
 #define VERB_PATH_VERSION(V, P) #V " "  #P " "  HTTP_VERSION CR
 
 int write_verb_path(const int fd, const char* verb, const char* path);

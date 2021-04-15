@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define PATH "/tmp/http_request.txt"
+
 int 
 mock_fd() {
     return open(PATH, O_RDWR | O_CREAT, S_IRWXU);
