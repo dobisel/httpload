@@ -48,6 +48,34 @@ test_write_host() {
     clean_fd();
 }
 
+void
+test_write_headers() {
+    int fd, len, header_count, i;
+    char* response;
+    char* expected;
+    char* headers[] = {
+        "Accept-Language: en-US,en;q=0.5",
+        "Accept-Encoding: gzip, deflate, br",
+        "Referer: https://developer.mozilla.org/testpage.html",
+        "Connection: keep-alive",
+        "Upgrade-Insecure-Requests: 1"
+    };
+    header_count = 5;
+    fd = mock_fd();
+    len = write_headers(fd, headers, header_count);
+    notequalint(-1, len);
+    lseek(fd, 0, SEEK_SET);
+    response = (char*) malloc(len * sizeof(char));
+    expected = (char*) malloc(len * sizeof(char));
+    read(fd, response, len);
+    for (i = 0; i < header_count; i++) {
+        strcat(expected, headers[i]);
+        strcat(expected, "\r\n");
+    }
+    eqstr(expected, response);
+    clean_fd();
+}
+
 int
 main() {
     test_write_verb_path();
