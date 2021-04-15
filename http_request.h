@@ -3,31 +3,21 @@
 
 #include <string.h>
 
-typedef void (*callback)(int status, char* body, void* arg);
+typedef void (*callback)(int status, char *body, void *arg);
 
-#define HTTP_VERSION "HTTP/1.0"
+#define HTTP_V1_0 "HTTP/1.0"
+#define HTTP_V1_1 "HTTP/1.1"
 
-#define CR "\r\n"
+int write_verb_path_version(const int fd, const char *verb, const char *path,
+        const char* httpv);
 
-#define VERB_PATH_VERSION(V, P) #V " "  #P " "  HTTP_VERSION CR
+int write_host(const int fd, const char *host);
 
-int write_verb_path(const int fd, const char* verb, const char* path);
+int write_headers(const int fd, char *headers[], const int header_len);
 
-int write_host(const int fd, const char* host);
+int write_body(const int fd, const char *body, const int body_len);
 
-int write_headers(const int fd, char* headers[], const int header_len);
-
-int write_body(const int fd, const char* body);
-
-int send_request(
-        int fd,
-        char* host,
-        char* verb,
-        char* path,
-        char* headers[],
-        int header_count,
-        char* body,
-        callback cb
-    );
+int send_request(int fd, char *host, char *verb, char *path, char *headers[],
+        int header_count, char *body, int body_len, callback cb, char *httpv);
 
 #endif
