@@ -2,6 +2,10 @@
 #include <unistd.h>
 #include <stdio.h>
 
+int write_verb_path(const int fd, const char* verb, const char* path) {
+    return dprintf(fd, "%s %s %s\r\n", verb, path, HTTP_VERSION);
+}
+
 int send_request(
         int fd,
         char* host,
