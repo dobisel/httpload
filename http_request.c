@@ -10,6 +10,17 @@ int write_host(const int fd, const char* host) {
     return dprintf(fd, "HOST: %s\r\n", host);
 }
 
+int write_headers(const int fd, char* headers[], const int header_count) {
+    int i, err, sum = 0;
+    for (i = 0; i < header_count; i++) {
+        err = dprintf(fd, "%s\r\n", headers[i]);
+        if (err < 0)
+            return -1;
+        sum += err;
+    }
+    return sum;
+}
+
 int send_request(
         int fd,
         char* host,
