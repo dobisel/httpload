@@ -100,6 +100,27 @@ test_write_body() {
     CLEANFD;
 }
 
+void
+test_send_request() {
+    int fd;
+    int len;
+    char *response;
+    char *expected = "GET /foo/baz HTTP/1.1\r\nHOST: google.com\r\n"
+        "Connection: keep-alive\r\nContent-Length: 15\r\n\r\nfoo baz bar cux";
+    char *headers[] = {
+        "Connection: keep-alive",
+    };
+    fd = MOCKFD;
+    len = send_request(fd, "google.com", "GET", "/foo/baz", headers, 1, "foo baz bar cux", 15, NULL, HTTP_V1_1);
+    notequalint(ERR, len);
+    lseek(fd, 0, SEEK_SET);
+    response = (char*) malloc(len * sizeof(char));
+    read(fd, response, len);
+    eqstr(expected, response);
+    free(response);
+    CLEANFD;
+}
+
 int
 main() {
     log_setlevel(LL_DEBUG);
@@ -107,5 +128,6 @@ main() {
     test_write_host();
     test_write_headers();
     test_write_body();
+    test_send_request();
     return EXIT_SUCCESS;
 }
