@@ -8,7 +8,7 @@ void ev_terminate(struct ev *m);
 int ev_join(struct ev *);
 void ev_ctl(struct peer *c, int op, uint32_t e);
 void ev_del_close(struct peer *c);
-
+void ev_epoll_server_start(struct evs *evs);
 /* Server */
 void evs_fork(struct evs *);
 

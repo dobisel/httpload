@@ -29,7 +29,7 @@ test_logging_verbosity() {
     eqint(1, status);
     eqstr("test_logging: w: Success" N
           "test_logging: e: Operation not permitted" N, err);
-    eqstr("i" N "012:monkeymain d" N, out);
+    eqstr("i" N "012:monkeymain -- d" N, out);
 
     /* Info */
     log_setlevel(LL_INFO);

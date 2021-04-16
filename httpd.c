@@ -31,19 +31,22 @@ should_keepalive(const http_parser * parser) {
 
 static int
 req_complete_cb(http_parser * p) {
-    EV_MOD_WRITE((struct peer *) p->data);
+    struct peer *c = (struct peer *) p->data;
+    /* Req complete */
+    c->state = PS_WRITE;
     return OK;
 }
 
 static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
-
+    
+    /* Request body */
     if (rb_write(&c->writerb, at, len)) {
         WARN("Buffer full");
+        p->state = PS_CLOSE;
         return ERR;
     }
-    EV_MOD_WRITE(c);
     return OK;
 }
 
@@ -60,6 +63,7 @@ headercomplete_cb(http_parser * p) {
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
     if (rb_write(&c->writerb, tmp, tmplen)) {
         WARN("Buffer full");
+        p->state = PS_CLOSE;
         return ERR;
     }
 
@@ -68,14 +72,22 @@ headercomplete_cb(http_parser * p) {
 
     /* Terminate headers by `\r\n` */
     if (rb_write(&c->writerb, RN, 2)) {
-        WARN("Buffer full");
+        p->state = PS_CLOSE;
         return ERR;
     }
 
+    /* Parse header done, clen: %ld */
     if (clen <= 0) {
         tmplen = sprintf(tmp, "Hello HTTPLOAD!");
-        return rb_write(&c->writerb, tmp, tmplen);
+        if (rb_write(&c->writerb, tmp, tmplen)) {
+            /* rbwrite error */
+            p->state = PS_CLOSE;
+            return ERR;
+        }
+        return OK;
     }
+
+    p->state = PS_READ;
     return OK;
 }
 
@@ -85,47 +97,60 @@ static http_parser_settings hpconf = {
     .on_message_complete = req_complete_cb,
 };
 
-static int
+static void
 client_connected(struct ev *ev, struct peer *c) {
     /* Initialize the http parser for this connection. */
     struct http_parser *p = malloc(sizeof (struct http_parser));
 
-    c->handler = p;
     http_parser_init(p, HTTP_REQUEST);
+    c->handler = p;
+    c->state = PS_READ;
     p->data = c;
-    return OK;
 }
 
-static int
+static void
 data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     struct http_parser *p = (struct http_parser *) c->handler;
-
+    
+    /* Parse */
     if (http_parser_execute(p, &hpconf, data, len) != len) {
-        return ERR;
+        c->state = PS_CLOSE;
+        return;
     }
 
     if (p->http_errno) {
         WARN("http-parser: %d: %s", p->http_errno,
              http_errno_name(p->http_errno));
-        return ERR;
+        c->state = PS_CLOSE;
+        return;
     }
-    return OK;
 }
 
-static int
-write_finish(struct ev *ev, struct peer *c) {
+static void
+writefinish(struct ev *ev, struct peer *c) {
     struct http_parser *p = (struct http_parser *) c->handler;
 
     if (!http_should_keep_alive(p)) {
-        return ERR;
+        c->state = PS_CLOSE;
+        return;
     }
-    return OK;
+    c->state = PS_READ;
 }
 
 void
 httpd_start(struct httpd *server) {
     server->on_recvd = data_recvd;
-    server->on_writefinish = write_finish;
+    server->on_writefinish = writefinish;
     server->on_connect = client_connected;
-    return evs_fork((struct evs *) server);
+    ev_epoll_server_start((struct evs *) server);
+}
+
+void
+httpd_terminate(struct httpd *server) {
+    ev_terminate((struct ev*) server);
+}
+
+int 
+httpd_join(struct httpd *server) {
+    return ev_join((struct ev*) server);
 }

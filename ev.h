@@ -3,11 +3,12 @@
 
 /*
 
-                           +---------------+
-                           | struct peer   |
-                           +---------------+
-                           |  fd           |
-                           |  writebuff[]  |
+                           +---------------+           +------------------+
+                           | struct peer   |   +------>| enum peer_state  |
+                           +---------------+   |       +------------------+
+                           |  fd           |   |       |  PS_READ         |
+                           |  state        >---+       |  PS_WRITE        |
+                           |  writebuff[]  |           +------------------+
                            |  writerb      |
                            | *handler      |           +------------------+
                            +---------------+       +-->| struct ev_epoll  |
@@ -39,7 +40,6 @@
 
 */
 
-
 #include "options.h"
 #include "ringbuffer.h"
 #include <sys/types.h>
@@ -54,16 +54,25 @@ struct ev {
     void *on_writefinish;
 };
 
+enum peer_state {
+    PS_UNKNOWN,
+    PS_CLOSE,
+    PS_READ,
+    PS_WRITE
+};
+
 struct peer {
     int fd;
+    enum peer_state state;
     char writebuff[EV_WRITE_BUFFSIZE];
     struct ringbuffer writerb;
     void *handler;
 };
 
-typedef int (*ev_cb_t)(struct ev * ev, struct peer * c);
-typedef int (*ev_recvcb_t)(struct ev * ev, struct peer * c, const char *data,
+typedef void (*ev_cb_t)(struct ev * ev, struct peer * c);
+typedef void (*ev_recvcb_t)(struct ev * ev, struct peer * c, const char *data,
                            size_t len);
+typedef int (*ev_loop_t)(struct ev* ev);
 
 struct evs {
     struct ev;
@@ -71,5 +80,17 @@ struct evs {
     uint16_t bind;
     ev_cb_t on_connect;
 };
+
+struct peer *
+ev_newconn(struct evs *evs);
+
+void
+ev_fork(struct ev *ev, ev_loop_t loop);
+
+void
+ev_read(struct ev *ev, struct peer *c);
+
+void
+ev_write(struct ev *ev, struct peer *c);
 
 #endif

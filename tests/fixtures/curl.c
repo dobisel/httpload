@@ -56,7 +56,7 @@ curl_get(const char *url, struct curl_slist *headers, curlhook_t optionscb,
 
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
     curl_easy_cleanup(curl);
-    sleep(.5F);
+    sleep(.3F);
 
     if (outbuff) {
         fclose(fout);

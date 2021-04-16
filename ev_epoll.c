@@ -2,172 +2,58 @@
 #include "ringbuffer.h"
 #include "helpers.h"
 #include "ev_epoll.h"
-#include <unistd.h>
 #include <stdbool.h>
-#include <signal.h>
-#include <sys/wait.h>
+#include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/prctl.h>
 
-// TODO: EPOLLRDHUP
+#define EPCOMM (EPOLLONESHOT | EPOLLET)
 
-static char *tmp;
-static int epollfd;
+#define opname(o) ({ \
+    char *n; \
+    switch (o) {  \
+    case EPOLL_CTL_ADD: \
+        n = "ADD"; \
+        break; \
+    case EPOLL_CTL_DEL: \
+        n = "DEL"; \
+        break; \
+    case EPOLL_CTL_MOD: \
+        n = "MOD"; \
+        break; \
+    default: \
+        n = "UNKNOWN"; \
+        break; \
+    }; n;})
 
-void
-ev_del_close(struct peer *c) {
-    int fd = c->fd;
-
-    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL)) {
-        ERRX("Cannot DEL EPOLL for fd: %d", fd);
-    }
-
-    free(c);
-    if (close(fd)) {
-        ERRX("Cannot close fd: %d", fd);
-    }
-}
-
-void
-ev_ctlfd(int fd, int op, uint32_t e) {
-    struct epoll_event ev = { 0 };
-    ev.data.fd = fd;
-    ev.events = EPOLLONESHOT | EPOLLET | e;
-    if (epoll_ctl(epollfd, op, fd, &ev)) {
-        ERRX("epol_ctl error, op: %d fd: %d", op, fd);
-    }
-}
-
-
-void
-ev_ctl(struct peer *c, int op, uint32_t e) {
-    struct epoll_event ev = { 0 };
-    ev.data.ptr = c;
-    ev.events = EPOLLONESHOT | EPOLLET | e;
-    if (epoll_ctl(epollfd, op, c->fd, &ev)) {
-        ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);
-    }
-}
-
-static void
-readfd(struct ev *ev, struct peer *c) {
-    size_t tmplen = 0;
-    ssize_t bytes = 0;
-
-    for (;;) {
-        bytes = read(c->fd, tmp, EV_READ_CHUNKSIZE);
-        if (bytes <= 0) {
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                errno = 0;
-                /* RED: %d EAGAIN: %d */
-                if (((ev_recvcb_t) ev->on_recvd) (ev, c, tmp, tmplen)) {
-                    /* del: %d %d */
-                    ev_del_close(c);
-                }
-                return;
-            }
-            /* del: %d %d */
-            ev_del_close(c);
-            return;
-        }
-        tmplen += bytes;
-    }
-}
-
-static void
-io(struct ev *ev, struct epoll_event e) {
-    ssize_t bytes = 0;
-    struct peer *c = (struct peer *) e.data.ptr;
-
-    if (e.events & EPOLLRDHUP) {
-        ev_del_close(c);
-    }
-    else if (e.events & EPOLLIN) {
-        /* Read: %d */
-        readfd(ev, c);
-    }
-    else if (e.events & EPOLLOUT) {
-        /* Write %d */
-        for (;;) {
-            bytes = rb_readf(&c->writerb, c->fd, EV_WRITE_CHUNKSIZE);
-            if (bytes == 0) {
-                if (((ev_cb_t) ev->on_writefinish) (ev, c)) {
-                    ev_del_close(c);
-                }
-                else {
-                    EV_MOD_READ(c);
-                }
-                return;
-            }
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                EV_MOD_WRITE(c);
-                return;
-            }
-            if (bytes <= 0) {
-                ev_del_close(c);
-                return;
-            }
-        }
-    }
-}
-
-static void
-newconnection(struct evs *evs) {
-    struct sockaddr_in peeraddr;
-    socklen_t peeraddr_len;
-    int fd;
-    struct peer *c;
-
-    peeraddr_len = sizeof (peeraddr);
-    fd = accept4(evs->listenfd, (struct sockaddr *) &peeraddr, &peeraddr_len,
-            SOCK_NONBLOCK);
-    if (fd < 0) {
-        /* Accept error */
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            /* Accept returned EAGAIN or EWOULDBLOCK %d */
-            return;
-        }
-        ERRX("Error Accepting new connection %d", evs->id);
-    }
-
-    if (fd >= EV_MAXFDS) {
-        ERRX("fd %d >= EV_MAXFDS (%d)", fd, EV_MAXFDS);
-    }
-
-    /* Create and allocate new peer structure. */
-    c = malloc(sizeof (struct peer));
-    c->fd = fd;
-
-    /* Initialize ringbuffer. */
-    rb_init(&c->writerb, c->writebuff, EV_WRITE_BUFFSIZE);
-
-    if (((ev_cb_t) evs->on_connect) (evs, c)) {
-        CHK("Callback returned error, free memory and return.");
-        free(c);
-        return;
-    }
-
-    /* Register new peer into event loop. %d */
-    EV_ADD_READ(c);
-}
-
-void
-sigint(int s) {
-    free(tmp);
-    exit(EXIT_SUCCESS);
-}
+#define statename(s) ({ \
+    char *n; \
+    switch (s) {  \
+    case PS_CLOSE: \
+        n = "CLOSE"; \
+        break; \
+    case PS_READ: \
+        n = "READ"; \
+        break; \
+    case PS_WRITE: \
+        n = "WRITE"; \
+        break; \
+    default: \
+        n = "UNKNOWN"; \
+        break; \
+    }; n;})
 
 static int
-loop(struct evs *evs) {
+server_loop(struct evs *evs) {
     struct epoll_event *events;
+    struct epoll_event ev = { 0 };
+    struct peer *c;
+    int nready;
+    int epollfd;
+    int op;
 
-    signal(SIGINT, sigint);
-
-    /* Allocate memory for temp buffer. */
-    tmp = malloc(EV_READ_BUFFSIZE);
-
+    // TODO: Share epollfd between processes or not?
     /* Create epoll. */
     epollfd = epoll_create1(0);
     if (epollfd < 0) {
@@ -175,7 +61,11 @@ loop(struct evs *evs) {
     }
 
     /* Register accept event */
-    EV_ADD_READ_FD(evs->listenfd);
+    ev.data.fd = evs->listenfd;
+    ev.events = EPCOMM | EPOLLIN;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, evs->listenfd, &ev)) {
+        ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);
+    }
 
     events = calloc(EV_BATCHSIZE, sizeof (struct epoll_event));
     if (events == NULL) {
@@ -183,86 +73,83 @@ loop(struct evs *evs) {
     }
 
     for (;;) {
-        int nready = epoll_wait(epollfd, events, EV_BATCHSIZE, -1);
+        nready = epoll_wait(epollfd, events, EV_BATCHSIZE, -1);
 
         for (int i = 0; i < nready; i++) {
             if (events[i].data.fd == evs->listenfd) {
                 if (events[i].events & EPOLLERR) {
-                    DBUG("epoll_wait returned EPOLLERR");
+                    WARN("epoll_wait returned EPOLLERR");
+                    continue;
                 }
-                else {
-                    /* New connection: %d fork: %d */
-                    newconnection(evs);
+
+                /* Register listenfd for the next connection. */
+                ev.data.fd = evs->listenfd;
+                ev.events = EPCOMM | EPOLLIN;
+                if (epoll_ctl(epollfd, EPOLL_CTL_MOD, evs->listenfd, &ev)) {
+                    ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);
                 }
-                EV_MOD_READ_FD(evs->listenfd);
+
+                /* New connection */
+                c = ev_newconn(evs);
+                if (c == NULL) {
+                    continue;
+                }
+                op = EPOLL_CTL_ADD;
             }
             else {
-                /* A peer socket is ready. */
-                io(evs, events[i]);
+                /* A peer socket is ready for IO. */
+                c = (struct peer *) events[i].data.ptr;
+                op = EPOLL_CTL_MOD;
+
+                if (events[i].events & EPOLLRDHUP) {
+                    op = EPOLL_CTL_DEL;
+                }
+                else if (events[i].events & EPOLLOUT) {
+                    /* Write: %d */
+                    ev_write((struct ev*)evs, c);
+                }
+                else if (events[i].events & EPOLLIN) {
+                    /* Read */
+                    ev_read((struct ev*)evs, c);
+                }
+
+                if (c->state == PS_CLOSE) {
+                    op = EPOLL_CTL_DEL;
+                }
+            }
+
+            //DBUG("CTL: %s %s fd: %d", opname(op), statename(c->state), c->fd);
+            if (op == EPOLL_CTL_DEL) {
+                if (epoll_ctl(epollfd, EPOLL_CTL_DEL, c->fd, NULL)) {
+                    ERRX("Cannot DEL EPOLL for fd: %d", c->fd);
+                }
+
+                if (close(c->fd)) {
+                    WARN("Cannot close fd: %d", c->fd);
+                }
+                free(c);
+            }
+            else {
+                
+                if (c->state == PS_UNKNOWN) {
+                    ERRX("Invalid peer state: %s", statename(c->state));
+                }
+                ev.data.ptr = c;
+                ev.events = EPCOMM | 
+                    (c->state == PS_WRITE ? EPOLLOUT: EPOLLIN);
+                if (epoll_ctl(epollfd, op, c->fd, &ev)) {
+                    ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);
+                }
             }
         }
     }
+    return OK;
 }
 
 void
-evs_fork(struct evs *evs) {
-    int i;
-    pid_t pid;
-
+ev_epoll_server_start(struct evs *evs) {
     /* Create and listen tcp socket */
     evs->listenfd = tcp_listen(&(evs->bind));
 
-    if (evs->forks == 0) {
-        ERRX("Invalid number of forks: %d", evs->forks);
-    }
-
-    /* Allocate memory for children pids. */
-    evs->children = calloc(evs->forks, sizeof (pid_t));
-    if (evs->children == NULL) {
-        ERRX("Insifficient memory for %d forks.", evs->forks);
-    }
-
-    for (i = 0; i < evs->forks; i++) {
-        pid = fork();
-        if (pid == -1) {
-            ERRX("Cannot fork");
-        }
-        if (pid > 0) {
-            /* Parent */
-            evs->children[i] = pid;
-        }
-        else if (pid == 0) {
-            /* Child */
-            prctl(PR_SET_PDEATHSIG, SIGHUP);
-
-            /* Set no buffer for stdout */
-            //setvbuf(stdout, NULL, _IONBF, 0);
-            evs->id = i;
-            loop(evs);
-        }
-    }
-}
-
-void
-ev_terminate(struct ev *ev) {
-    int i;
-
-    for (i = 0; i < ev->forks; i++) {
-        kill(ev->children[i], SIGINT);
-    }
-}
-
-int
-ev_join(struct ev *ev) {
-    int status;
-    int ret = 0;
-    int i;
-
-    for (i = 0; i < ev->forks; i++) {
-        waitpid(ev->children[i], &status, 0);
-        ret |= WEXITSTATUS(status);
-    }
-
-    free(ev->children);
-    return ret;
+    ev_fork(evs, (ev_loop_t)server_loop); 
 }

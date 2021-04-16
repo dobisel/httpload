@@ -7,14 +7,14 @@
 #include <argp.h>
 #include <stdlib.h>
 
-#define SERVER_DEFAULT_PORT     8080
+#define SERVER_DEFAULT_BIND     8080
 #define SERVER_DEFAULT_FORKS    1
 
 static struct {
     uint16_t bind;
     uint8_t forks;
 } settings = {
-    SERVER_DEFAULT_PORT,
+    SERVER_DEFAULT_BIND,
     SERVER_DEFAULT_FORKS,
 };
 
@@ -74,5 +74,5 @@ servercli_run(int argc, char **argv) {
 
     INFO("Listening on port: %d", server.bind);
 
-    return ev_join((struct ev *) &server);
+    return httpd_join(&server);
 }
