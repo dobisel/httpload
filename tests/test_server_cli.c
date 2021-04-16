@@ -75,8 +75,8 @@ test_port() {
     char err[CAPTMAX + 1] = { 0 };
 
     eqint(0, fcapttime(1, (char *[]) { "-b8080" }, out, err));
-    eqstr("Listening on port: 8080" N, out);
     eqstr("", err);
+    eqstr("Listening on port: 8080" N, out);
 }
 
 int

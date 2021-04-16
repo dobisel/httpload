@@ -26,8 +26,7 @@ nocover := $(subst $(eval) ,;,$(nocover))
 
 ifdef GCOV
 CFLAGS += \
-	-fprofile-arcs \
-	-ftest-coverage \
+	--coverage \
 	-fprofile-exclude-files="$(nocover)" \
 	-g
 
@@ -56,10 +55,12 @@ test: $(common_tests) $(client_tests) $(server_tests)
 	for t in $(filter tests/test_$(UNIT), $(client_tests)); do "$${t}"; done
 	for t in $(filter tests/test_$(UNIT), $(server_tests)); do "$${t}"; done
 
-
 .PHONY: coverage
 coverage: test
-	gcov $(tocover)
+	lcov --capture \
+		--directory . \
+		--no-external \
+		--output-file coverage.info
 ifdef COVERALLS 
 	coveralls -n -e tests 
 endif

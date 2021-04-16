@@ -73,8 +73,8 @@ int
 main() {
     log_setlevel(LL_DEBUG);
     test_single_packet();
-    //test_http10_connection();
-    //test_http11_connection();
-    //test_body();
+    test_http10_connection();
+    test_http11_connection();
+    test_body();
     return 0;
 }

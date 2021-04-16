@@ -59,6 +59,9 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 
 int
 servercli_run(int argc, char **argv) {
+    /* Set no buffer for stdout */
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 
     /* Parse CLI arguments. */
     argp_parse(&argp, argc, argv, 0, 0, NULL);

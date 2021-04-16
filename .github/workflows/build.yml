@@ -18,13 +18,15 @@ jobs:
         git clone https://github.com/pylover/http-parser.git
         sudo make -C http-parser install
         sudo ldconfig /usr/local/lib
-        sudo apt install libcurl4-gnutls-dev
+        sudo apt install libcurl4-gnutls-dev lcov
     - name: Checkout
       uses: actions/checkout@v2.0.0
     - name: Build, Run tests, Submit coverage result
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      run: |
-        make clean
-        make coveralls
-
+      run: make clean cover
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: coverage.info

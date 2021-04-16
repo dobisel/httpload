@@ -2,7 +2,7 @@
 httpload[sc]
 tests/*
 !tests/*.*
-
+coverage.info
 build
 
 # Prerequisites
