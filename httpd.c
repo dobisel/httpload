@@ -1,6 +1,6 @@
 #include "common.h"
 #include "logging.h"
-#include "ev.h"
+#include "ev_epoll.h"
 #include "httpd.h"
 
 /* Third party */
@@ -39,7 +39,7 @@ static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
 
-    if (rb_write(&c->resprb, at, len)) {
+    if (rb_write(&c->writerb, at, len)) {
         WARN("Buffer full");
         return ERR;
     }
@@ -58,7 +58,7 @@ headercomplete_cb(http_parser * p) {
     tmplen = sprintf(tmp, HTTPRESP,
                      200, "OK",
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
-    if (rb_write(&c->resprb, tmp, tmplen)) {
+    if (rb_write(&c->writerb, tmp, tmplen)) {
         WARN("Buffer full");
         return ERR;
     }
@@ -67,14 +67,14 @@ headercomplete_cb(http_parser * p) {
     // ....
 
     /* Terminate headers by `\r\n` */
-    if (rb_write(&c->resprb, RN, 2)) {
+    if (rb_write(&c->writerb, RN, 2)) {
         WARN("Buffer full");
         return ERR;
     }
 
     if (clen <= 0) {
         tmplen = sprintf(tmp, "Hello HTTPLOAD!");
-        return rb_write(&c->resprb, tmp, tmplen);
+        return rb_write(&c->writerb, tmp, tmplen);
     }
     return OK;
 }

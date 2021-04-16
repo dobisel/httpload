@@ -15,13 +15,13 @@ httpdmock_start(struct httpdmock *m) {
     char tmp[128];
 
     m->httpd.forks = 1;
-    m->httpd.port = 0;
+    m->httpd.bind = 0;
     m->optcb = NULL;
     m->req_headers = NULL;
     
     httpd_start(&m->httpd);
     
-    sprintf(tmp, "http://localhost:%d", m->httpd.port);
+    sprintf(tmp, "http://localhost:%d", m->httpd.bind);
     m->url = strdup(tmp);
 }
 

@@ -11,7 +11,7 @@
 #define SERVER_DEFAULT_FORKS    1
 
 static struct {
-    uint16_t port;
+    uint16_t bind;
     uint8_t forks;
 } settings = {
     SERVER_DEFAULT_PORT,
@@ -25,8 +25,8 @@ static char args_doc[] = "";
 static struct argp_option options[] = {
     ARG_VERBOSITY,
     ARG_CONCURRENCY,
-    { "port", 'p', "PORT", 0,
-     "TCP Port to bind, default: " STR(SERVER_DEFAULT_PORT) "." },
+    { "bind", 'b', "PORT", 0,
+     "TCP Port to bind, default: " STR(SERVER_DEFAULT_BIND) "." },
     { 0 }
 };
 
@@ -38,8 +38,8 @@ parse_opt(int key, char *arg, struct argp_state *state) {
             settings.forks = atoi(arg);
             break;
 
-        case 'p':
-            settings.port = atoi(arg);
+        case 'b':
+            settings.bind = atoi(arg);
             break;
 
         case ARGP_KEY_ARG:
@@ -66,13 +66,13 @@ servercli_run(int argc, char **argv) {
     /* Configure HTTP server */
     struct httpd server = {
         .forks = settings.forks,
-        .port = settings.port
+        .bind = settings.bind
     };
 
     /* Start it */
     httpd_start(&server);
 
-    INFO("Listening on port: %d", server.port);
+    INFO("Listening on port: %d", server.bind);
 
     return ev_join((struct ev *) &server);
 }

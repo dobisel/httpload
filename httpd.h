@@ -1,7 +1,7 @@
 #ifndef HTTPD_H
 #define HTTPD_H
 
-#include "ev.h"
+#include "ev_epoll.h"
 
 struct httpd {
     struct evs;
