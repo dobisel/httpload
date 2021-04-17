@@ -10,5 +10,5 @@ struct httpd {
 void httpd_start(struct httpd *server);
 void httpd_terminate(struct httpd *server);
 int httpd_join(struct httpd *server);
- 
+
 #endif

@@ -32,6 +32,7 @@ should_keepalive(const http_parser * parser) {
 static int
 req_complete_cb(http_parser * p) {
     struct peer *c = (struct peer *) p->data;
+
     /* Req complete */
     c->state = PS_WRITE;
     return OK;
@@ -40,7 +41,7 @@ req_complete_cb(http_parser * p) {
 static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
-    
+
     /* Request body */
     if (rb_write(&c->writerb, at, len)) {
         WARN("Buffer full");
@@ -111,7 +112,7 @@ client_connected(struct ev *ev, struct peer *c) {
 static void
 data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     struct http_parser *p = (struct http_parser *) c->handler;
-    
+
     /* Parse */
     if (http_parser_execute(p, &hpconf, data, len) != len) {
         c->state = PS_CLOSE;
@@ -147,10 +148,10 @@ httpd_start(struct httpd *server) {
 
 void
 httpd_terminate(struct httpd *server) {
-    ev_terminate((struct ev*) server);
+    ev_terminate((struct ev *) server);
 }
 
-int 
+int
 httpd_join(struct httpd *server) {
-    return ev_join((struct ev*) server);
+    return ev_join((struct ev *) server);
 }

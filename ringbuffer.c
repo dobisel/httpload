@@ -75,19 +75,25 @@ rb_readf(struct ringbuffer *b, int fd, size_t len) {
 
     bytes = MIN(RB_USED_TOEND(b), len);
     if (bytes) {
-        write(fd, b->blob + b->reader, bytes);
+        if (write(fd, b->blob + b->reader, bytes) < 0) {
+            return ERR;
+        }
         len -= bytes;
     }
 
     if (len) {
         len = MIN(RB_USED(b) - bytes, len);
         if (len) {
-            write(fd, b->blob, len);
+            if (write(fd, b->blob, len) < 0) {
+                return ERR;
+            }
             bytes += len;
         }
     }
 
-    RB_READER_SKIP(b, bytes);
+    if (bytes) {
+        RB_READER_SKIP(b, bytes);
+    }
     return bytes;
 }
 

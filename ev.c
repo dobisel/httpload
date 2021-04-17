@@ -67,7 +67,7 @@ ev_newconn(struct evs *evs) {
 
     peeraddr_len = sizeof (peeraddr);
     fd = accept4(evs->listenfd, (struct sockaddr *) &peeraddr, &peeraddr_len,
-            SOCK_NONBLOCK);
+                 SOCK_NONBLOCK);
     if (fd < 0) {
         /* Accept error */
         if (errno == EAGAIN || errno == EWOULDBLOCK) {

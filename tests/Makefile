@@ -32,11 +32,6 @@ CFLAGS += \
 
 endif
 
-show:
-	@echo '$(nocover)'
-	@echo $(tocover)
-
-
 $(fixture_objects): %.o: %.c %.h
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $< -c $(LDFLAGS) $(TEST_LDFLAGS)
 
@@ -68,6 +63,14 @@ endif
 .PHONY: cover
 cover:
 	$(MAKE) coverage GCOV=1
+
+.PHONY: cover-html
+cover-html: cover
+	genhtml coverage.info --output-directory covout
+
+.PHONY: show-html
+show-html: cover-html
+	xdg-open covout/index.html
 
 .PHONY: coveralls
 coveralls: 

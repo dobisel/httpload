@@ -4,7 +4,7 @@ tests/*
 !tests/*.*
 coverage.info
 build
-
+covout
 # Prerequisites
 *.d
 

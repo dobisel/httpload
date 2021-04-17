@@ -106,11 +106,11 @@ server_loop(struct evs *evs) {
                 }
                 else if (events[i].events & EPOLLOUT) {
                     /* Write: %d */
-                    ev_write((struct ev*)evs, c);
+                    ev_write((struct ev *) evs, c);
                 }
                 else if (events[i].events & EPOLLIN) {
                     /* Read */
-                    ev_read((struct ev*)evs, c);
+                    ev_read((struct ev *) evs, c);
                 }
 
                 if (c->state == PS_CLOSE) {
@@ -130,13 +130,13 @@ server_loop(struct evs *evs) {
                 free(c);
             }
             else {
-                
+
                 if (c->state == PS_UNKNOWN) {
                     ERRX("Invalid peer state: %s", statename(c->state));
                 }
                 ev.data.ptr = c;
-                ev.events = EPCOMM | 
-                    (c->state == PS_WRITE ? EPOLLOUT: EPOLLIN);
+                ev.events = EPCOMM |
+                    (c->state == PS_WRITE ? EPOLLOUT : EPOLLIN);
                 if (epoll_ctl(epollfd, op, c->fd, &ev)) {
                     ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);
                 }
@@ -151,5 +151,5 @@ ev_epoll_server_start(struct evs *evs) {
     /* Create and listen tcp socket */
     evs->listenfd = tcp_listen(&(evs->bind));
 
-    ev_fork(evs, (ev_loop_t)server_loop); 
+    ev_fork(evs, (ev_loop_t) server_loop);
 }

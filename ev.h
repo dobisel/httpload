@@ -71,8 +71,8 @@ struct peer {
 
 typedef void (*ev_cb_t)(struct ev * ev, struct peer * c);
 typedef void (*ev_recvcb_t)(struct ev * ev, struct peer * c, const char *data,
-                           size_t len);
-typedef int (*ev_loop_t)(struct ev* ev);
+                            size_t len);
+typedef int (*ev_loop_t)(struct ev * ev);
 
 struct evs {
     struct ev;
@@ -81,16 +81,15 @@ struct evs {
     ev_cb_t on_connect;
 };
 
-struct peer *
-ev_newconn(struct evs *evs);
+struct peer *ev_newconn(struct evs *evs);
 
 void
-ev_fork(struct ev *ev, ev_loop_t loop);
+    ev_fork(struct ev *ev, ev_loop_t loop);
 
 void
-ev_read(struct ev *ev, struct peer *c);
+    ev_read(struct ev *ev, struct peer *c);
 
 void
-ev_write(struct ev *ev, struct peer *c);
+    ev_write(struct ev *ev, struct peer *c);
 
 #endif
