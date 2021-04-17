@@ -14,9 +14,18 @@ Take a look at [Code of conduct](CODE_OF_CONDUCT.md).
 ### Install development prerequicites:
 
 ```shell
-apt install build-essential make indent libcurl4-gnutls-dev lcov
+apt install build-essential make cmake indent libcurl4-gnutls-dev lcov
 ```
 
+##### Mimick
+
+```shell
+git clone https://github.com/Snaipe/Mimick.git
+mkdir Mimick/build
+cd Mimick/build
+cmake ..
+sudo make install
+```
 ##### cpp-coveralls
 
 This tool is required to submit coverage result to `coveralls.io`.

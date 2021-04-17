@@ -1,5 +1,5 @@
 TEST_CFLAGS = -I./tests
-TEST_LDFLAGS = -lcurl
+TEST_LDFLAGS = -lcurl -lmimick
 UNIT = % 
 
 fixture_headers := $(wildcard tests/fixtures/*.h)

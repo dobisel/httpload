@@ -29,6 +29,7 @@
 	  ssize_t n = (end + ((b)->reader)) & (((b)->size)-1); \
 	  n <= end ? n : end+1;})
 
+// TODO: make opaque
 struct ringbuffer {
     size_t size;
     int reader;

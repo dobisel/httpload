@@ -17,6 +17,10 @@ jobs:
         python -m pip install git+https://github.com/pylover/cpp-coveralls.git
         git clone https://github.com/pylover/http-parser.git
         sudo make -C http-parser install
+        git clone https://github.com/Snaipe/Mimick.git mimick
+        mkdir mimick/build
+        cmake -S mimick -B mimick/build ..
+        sudo make -C mimick/build install
         sudo ldconfig /usr/local/lib
         sudo apt install libcurl4-gnutls-dev lcov
     - name: Checkout

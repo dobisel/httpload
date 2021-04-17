@@ -1,10 +1,16 @@
+/* local */
 #include "common.h"
 #include "ringbuffer.h"
 #include "logging.h"
 #include "fixtures/assert.h"
+
+/* system */
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+
+/* third-party */
+#include <mimick.h>
 
 #define S   8
 
@@ -226,22 +232,61 @@ test_read_intofile() {
     int p[2];
     struct ringbuffer b;
 
+    pipe(p);
+
     rb_init(&b, buff, S);
 
     eqint(RB_OK, rb_write(&b, "abcdefg", 7));
 
-    pipe(p);
     eqint(3, rb_readf(&b, p[1], 3));
     eqint(3, b.reader);
     eqint(RB_OK, rb_write(&b, "hij", 3));
     eqint(7, rb_readf(&b, p[1], 7));
-    close(p[1]);
 
     eqint(10, read(p[0], tmp, 10));
     eqnstr("abcdefghij", tmp, 10);
 
     eqint(0, rb_readf(&b, p[1], 1));
+    close(p[1]);
+    close(p[0]);
 }
+
+mmk_mock_define (write_mock_t, ssize_t, int, const void *, size_t);
+
+void
+test_read_intofile_errors() {
+    char buff[S];
+    int p[2];
+    struct ringbuffer b;
+    ssize_t wret;
+    write_mock_t w = mmk_mock("write", write_mock_t);
+
+    pipe(p);
+    rb_init(&b, buff, S);
+    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+
+    wret = -1;
+    mmk_when(w(mmk_eq(int, p[1]), mmk_any(void *), mmk_any(size_t)),
+        .then_return = &wret,
+        .then_errno = EAGAIN);
+    
+    eqint(ERR, rb_readf(&b, p[1], 3));
+    eqint(EAGAIN, errno);
+    eqint(0, b.reader);
+    eqint(7, b.writer);
+  
+    b.reader = 8;
+    b.writer = 5;
+    eqint(ERR, rb_readf(&b, p[1], 3));
+    eqint(EAGAIN, errno);
+    eqint(8, b.reader);
+    eqint(5, b.writer);
+    
+    close(p[1]);
+    close(p[0]);
+    mmk_reset(w);
+}
+
 
 int
 main() {
@@ -252,4 +297,5 @@ main() {
     test_read_until();
     test_read_until_chr();
     test_read_intofile();
+    test_read_intofile_errors();
 }
