@@ -1,6 +1,6 @@
 #include "logging.h"
 
-char log_level = LL_INFO;
+loglevel_t log_level = LL_INFO;
 
 const char *log_levelnames[] = {
     "Unknown",                  // 0

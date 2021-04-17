@@ -115,10 +115,6 @@ void
 ev_common_fork(struct ev *ev, ev_cb_t loop) {
     pid_t pid;
 
-    if (ev->forks == 0) {
-        ERRX("Invalid number of forks: %d", ev->forks);
-    }
-
     /* Allocate memory for children pids. */
     ev->children = calloc(ev->forks, sizeof (pid_t));
     if (ev->children == NULL) {

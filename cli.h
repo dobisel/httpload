@@ -18,9 +18,11 @@
     "It's recommented to use (CPU_COUNT - 1). " \
     "default: " STR(SERVER_DEFAULT_FORKS) "." }
 
-int
-    verbosity_parse(struct argp_state *state, const char *val);
+#define ARG_DRYRUN_KEY  -1
+#define ARG_DRYRUN { "dry", ARG_DRYRUN_KEY, NULL, 0, \
+    "Do not run, only print configuration end exit." }
 
-int
-    parse_common_opts(int key, char *arg, struct argp_state *state);
+
+int verbosity_parse(struct argp_state *state, const char *val);
+int parse_common_opts(int key, char *arg, struct argp_state *state);
 #endif

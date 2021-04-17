@@ -2,6 +2,7 @@
 #include "fixtures/httpdmock.h"
 #include "fixtures/curl.h"
 #include "httpd.h"
+#include "ev.h"
 
 int
 httpdmock_get(struct httpdmock *m) {
@@ -27,7 +28,7 @@ httpdmock_start(struct httpdmock *m) {
 
 void 
 httpdmock_stop(struct httpdmock *m) {
-    ev_common_terminate((struct ev*)&m->httpd);
+    ev_server_terminate((struct evs*)&m->httpd);
     free(m->url);
     httpd_join(&m->httpd);
 }

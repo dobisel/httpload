@@ -34,11 +34,11 @@ test_fork() {
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
-    status = fcapttime(1, (char *[]) { "-c2" }, out, err);
+    status = fcapt(2, (char *[]) { "--dry", "-c2" }, out, err);
     eqint(0, status);
     eqstr("", err);
 
-    status = fcapttime(1, (char *[]) { "-V" }, out, err);
+    status = fcapt(2, (char *[]) { "--dry", "-V" }, out, err);
     eqint(0, status);
     eqstr(HTTPLOAD_VERSION N, out);
     eqstr("", err);
@@ -51,19 +51,19 @@ test_invalidargument() {
     int status;
 
     /* Invalid optional argument. */
-    status = fcapttime(2, (char *[]) { "--invalidargument", "0" }, out, err);
+    status = fcapt(3, (char *[]) { "--dry", "--invalidargument", "0" }, out, err);
     neqint(0, status);
     eqstr("", out);
     eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
 
     /* Extra positional arguments. */
-    status = fcapttime(3, (char *[]) { "foo", "bar", "baz" }, out, err);
+    status = fcapt(4, (char *[]) { "--dry", "foo", "bar", "baz" }, out, err);
     neqint(0, status);
     eqstr("", out);
     eqnstr(PROG ": Too many arguments", err, 29);
 
     /* Invalid fork counts. */
-    status = fcapttime(1, (char *[]) { "-c0" }, out, err);
+    status = fcapt(2, (char *[]) { "--dry", "-c0" }, out, err);
     neqint(0, status);
     eqstr("", out);
     eqnstr("test_server_cli: Invalid number of forks: 0", err, 42);
@@ -74,9 +74,9 @@ test_port() {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
 
-    eqint(0, fcapttime(1, (char *[]) { "-b8080" }, out, err));
+    eqint(0, fcapt(2, (char *[]) { "--dry", "-b888" }, out, err));
     eqstr("", err);
-    eqstr("Listening on port: 8080" N, out);
+    eqstr("forks:\t\t1" N "bind:\t\t888" N "verbosity:\tDebug(4)" N, out);
 }
 
 int

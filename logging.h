@@ -21,7 +21,8 @@ enum loglevel {
 
 #define LOG_LEVEL_ISVALID(l) ((l <= LL_DEBUG) && (l >= LL_ERROR))
 
-extern char log_level;
+typedef uint8_t loglevel_t;
+extern loglevel_t log_level;
 extern const char *log_levelnames[];
 
 #define LOG_OK( level ) ((level) <= log_level)
@@ -32,7 +33,6 @@ extern const char *log_levelnames[];
     printf("%03d:%s -- " fmt N, __LINE__, __FUNCTION__, ## __VA_ARGS__)
 #define CHK( ... ) DBUG( __VA_ARGS__ )
 
-typedef uint8_t loglevel_t;
 
 void log_setlevel(loglevel_t level);
 
