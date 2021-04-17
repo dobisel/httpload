@@ -1,7 +1,11 @@
+/* local */
 #include "logging.h"
 #include "ringbuffer.h"
 #include "helpers.h"
+#include "ev_common.h"
 #include "ev_epoll.h"
+
+/* system */
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/epoll.h>
@@ -44,18 +48,22 @@
         break; \
     }; n;})
 
-static int
-server_loop(struct evs *evs) {
+struct ev_epoll {
+    int fd;
+};
+
+static void
+_epoll_server_loop(struct evs *evs) {
     struct epoll_event *events;
     struct epoll_event ev = { 0 };
     struct peer *c;
-    int nready;
     int epollfd;
+    int nready;
     int op;
 
     // TODO: Share epollfd between processes or not?
     /* Create epoll. */
-    epollfd = epoll_create1(0);
+    evs->epoll->fd = epollfd = epoll_create1(0);
     if (epollfd < 0) {
         ERRX("Cannot create epoll.");
     }
@@ -90,7 +98,7 @@ server_loop(struct evs *evs) {
                 }
 
                 /* New connection */
-                c = ev_newconn(evs);
+                c = ev_common_newconn(evs);
                 if (c == NULL) {
                     continue;
                 }
@@ -106,11 +114,11 @@ server_loop(struct evs *evs) {
                 }
                 else if (events[i].events & EPOLLOUT) {
                     /* Write: %d */
-                    ev_write((struct ev *) evs, c);
+                    ev_common_write((struct ev *) evs, c);
                 }
                 else if (events[i].events & EPOLLIN) {
                     /* Read */
-                    ev_read((struct ev *) evs, c);
+                    ev_common_read((struct ev *) evs, c);
                 }
 
                 if (c->state == PS_CLOSE) {
@@ -143,7 +151,6 @@ server_loop(struct evs *evs) {
             }
         }
     }
-    return OK;
 }
 
 void
@@ -151,5 +158,17 @@ ev_epoll_server_start(struct evs *evs) {
     /* Create and listen tcp socket */
     evs->listenfd = tcp_listen(&(evs->bind));
 
-    ev_fork(evs, (ev_loop_t) server_loop);
+    /* Allocate memory for epoll private data. */
+    evs->epoll = malloc(sizeof(struct ev_epoll));
+    
+    /* Fork and start multiple instance of server. */
+    ev_common_fork(evs, (ev_cb_t) _epoll_server_loop);
 }
+
+int
+ev_epoll_server_join(struct evs *evs) {
+    free(evs->epoll);
+    close(evs->listenfd);
+    return ev_common_join((struct ev*) evs);
+}
+

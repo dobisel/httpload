@@ -1,6 +1,6 @@
 #include "common.h"
 #include "logging.h"
-#include "ev_epoll.h"
+#include "ev.h"
 #include "httpd.h"
 
 /* Third party */
@@ -143,15 +143,15 @@ httpd_start(struct httpd *server) {
     server->on_recvd = data_recvd;
     server->on_writefinish = writefinish;
     server->on_connect = client_connected;
-    ev_epoll_server_start((struct evs *) server);
+    ev_server_start((struct evs *) server);
 }
 
 void
-httpd_terminate(struct httpd *server) {
-    ev_terminate((struct ev *) server);
+httpd_stop(struct httpd *server) {
+    ev_server_terminate((struct evs *) server);
 }
 
 int
 httpd_join(struct httpd *server) {
-    return ev_join((struct ev *) server);
+    return ev_server_join((struct evs *) server);
 }

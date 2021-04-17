@@ -287,7 +287,6 @@ test_read_intofile_errors() {
     mmk_reset(w);
 }
 
-
 int
 main() {
     log_setlevel(LL_DEBUG);
