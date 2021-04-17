@@ -40,7 +40,7 @@ client_objects := $(client_headers:.h=.o)
 server_headers := $(wildcard server*.h)
 server_objects := $(server_headers:.h=.o)
 
-headers_exclude := options.h common.h
+headers_exclude := options.h common.h ansicolors.h
 common_headers := $(filter-out $(headers_exclude), $(wildcard *.h))
 common_headers := $(filter-out $(server_headers), $(common_headers))
 common_headers := $(filter-out $(client_headers), $(common_headers))

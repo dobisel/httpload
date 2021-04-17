@@ -1,3 +1,4 @@
+
 /* local */
 #include "logging.h"
 #include "ringbuffer.h"
@@ -159,8 +160,8 @@ ev_epoll_server_start(struct evs *evs) {
     evs->listenfd = tcp_listen(&(evs->bind));
 
     /* Allocate memory for epoll private data. */
-    evs->epoll = malloc(sizeof(struct ev_epoll));
-    
+    evs->epoll = malloc(sizeof (struct ev_epoll));
+
     /* Fork and start multiple instance of server. */
     ev_common_fork(evs, (ev_cb_t) _epoll_server_loop);
 }
@@ -169,6 +170,5 @@ int
 ev_epoll_server_join(struct evs *evs) {
     free(evs->epoll);
     close(evs->listenfd);
-    return ev_common_join((struct ev*) evs);
+    return ev_common_join((struct ev *) evs);
 }
-

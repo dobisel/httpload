@@ -2,14 +2,16 @@
 #include "fixtures/assert.h"
 #include "fixtures/httpdmock.h"
 
+#include <stdlib.h>
+
 void
-test_single_packet() {
+test_single_packet(struct test *t) {
     struct httpdmock m;
 
     httpdmock_start(&m);
-    eqint(200, httpdmock_get(&m));
-    eqstr("Hello HTTPLOAD!", m.out);
-    eqstr("", m.err);
+    EQI(httpdmock_get(&m), 200);
+    EQS(m.out, "Hello HTTPLOAD!");
+    EQS(m.err, "");
     httpdmock_stop(&m);
 }
 
@@ -19,7 +21,7 @@ http10opts(CURL * curl) {
 }
 
 void
-test_http10_connection() {
+test_http10_connection(struct test *t) {
     struct curl_slist *headers = NULL;
     struct httpdmock m = { };
 
@@ -28,15 +30,15 @@ test_http10_connection() {
     headers = curl_slist_append(headers, "Connection: close");
     m.req_headers = headers;
     m.optcb = http10opts;
-    eqint(200, httpdmock_get(&m));
-    eqstr("Hello HTTPLOAD!", m.out);
-    eqstr("", m.err);
+    EQI(httpdmock_get(&m), 200);
+    EQS(m.out, "Hello HTTPLOAD!");
+    EQS(m.err, "");
     httpdmock_stop(&m);
     curl_slist_free_all(headers);
 }
 
 void
-test_http11_connection() {
+test_http11_connection(struct test *t) {
     struct curl_slist *headers = NULL;
     struct httpdmock m = { };
 
@@ -44,9 +46,9 @@ test_http11_connection() {
 
     headers = curl_slist_append(headers, "Connection: close");
     m.req_headers = headers;
-    eqint(200, httpdmock_get(&m));
-    eqstr("Hello HTTPLOAD!", m.out);
-    eqstr("", m.err);
+    EQI(httpdmock_get(&m), 200);
+    EQS(m.out, "Hello HTTPLOAD!");
+    EQS(m.err, "");
     httpdmock_stop(&m);
     curl_slist_free_all(headers);
 }
@@ -58,23 +60,24 @@ bodyopts(CURL * curl) {
 }
 
 void
-test_body() {
+test_body(struct test *t) {
     struct httpdmock m;
 
     httpdmock_start(&m);
     m.optcb = bodyopts;
-    eqint(200, httpdmock_get(&m));
-    eqstr(TESTBODY, m.out);
-    eqstr("", m.err);
+    EQI(httpdmock_get(&m), 200);
+    EQS(m.out, TESTBODY);
+    EQS(m.err, "");
     httpdmock_stop(&m);
 }
 
 int
 main() {
-    log_setlevel(LL_DEBUG);
-    test_single_packet();
-    test_http10_connection();
-    test_http11_connection();
-    test_body();
-    return 0;
+    struct test t;
+    SETUP(&t);
+    test_single_packet(&t);
+    test_http10_connection(&t);
+    test_http11_connection(&t);
+    test_body(&t);
+    return TEARDOWN(&t);
 }

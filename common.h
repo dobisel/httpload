@@ -10,8 +10,4 @@
 #define OK  0
 #define ERR -1
 
-/* Check here: https://stackoverflow.com/a/5459929/680372 */
-#define STR_(x) #x
-#define STR(x) STR_(x)
-
 #endif

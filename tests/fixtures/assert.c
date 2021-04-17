@@ -1,106 +1,131 @@
+#include "logging.h"
+#include "ansicolors.h"
 #include "fixtures/assert.h"
-#include <stdlib.h>
-#include <string.h>
+
 #include <stdio.h>
+#include <stdarg.h>
+
+#define TEST_TEMP_BUFFSIZE      1024 * 8
+#define PASS()  printf(GRN "." RST)
+#define FAIL_HEADER() \
+    printf(N HYEL "%s" HBLU ":" HGRN "%lu" HBLU ": " MAG "%s Failed" RST N, \
+                t->filename, t->line, t->func)
+#define FAIL(fmt, not, g, e) ({ FAIL_HEADER(); \
+    if (not) printf("NOT "); \
+    printf("EXPECTED:\t" fmt N, e); \
+    printf("GIVEN:\t\t" fmt N, g); \
+    exit(EXIT_FAILURE); \
+    })
 
 static void
-printbinary(const unsigned char *buf, int buflen) {
-    int i;
-
-    for (i = 0; i < buflen; i++) {
+printbinary(const char *buf, int buflen) {
+    for (int i = 0; i < buflen; i++) {
         printf("\\%02X", buf[i]);
     }
-    printf("\n");
+    printf(N);
 }
 
-void
-equalbin(const unsigned char *expected, const unsigned char *given,
-         uint32_t len) {
-    SUCCESS(memcmp(given, expected, len) == 0);
-
-    /* Error */
-    FAILED();
-    EXPECTED();
+void 
+eqbin(struct test *t, bool not, size_t len, const char *given, 
+        const char *expected) {
+    
+    if (not ^ (memcmp(given, expected, len) == 0)) {
+        PASS();
+        return;
+    }
+    FAIL_HEADER();
+    if (not) {
+        printf("NOT ");
+    }
+    printf("EXPECTED:\t"); 
     printbinary(expected, len);
-
-    GIVEN();
+    printf("GIVEN:\t\t"); 
     printbinary(given, len);
-
     exit(EXIT_FAILURE);
+}
+
+void 
+eqnstr(struct test *t, bool not, size_t len, const char *given, 
+        const char *expfmt, ...) {
+    va_list args;
+    
+    va_start(args, expfmt);
+    t->tmplen = vsnprintf(t->tmp, len + 1, expfmt, args);
+    if (t->tmplen < 0) {
+        ERRX("invalid format string: %s", expfmt);
+    }
+    va_end(args);
+    
+    if (t->tmplen > len) {
+        t->tmplen = len;
+        t->tmp[len] = 0;
+    }
+    if (not ^ (strncmp(t->tmp, given, len) == 0)) {
+        PASS();
+        return;
+    }
+    FAIL("%s", not, given, t->tmp);
+}
+
+
+void 
+eqstr(struct test *t, bool not, const char *given, 
+        const char *expfmt, ...) {
+    va_list args;
+    
+    va_start(args, expfmt);
+    t->tmplen = vsprintf(t->tmp, expfmt, args);
+    if (t->tmplen < 0) {
+        ERRX("invalid format string: %s", expfmt);
+    }
+    va_end(args);
+    
+    if (not ^ (strcmp(given, t->tmp) == 0)) {
+        PASS();
+        return;
+    }
+    FAIL("%s", not, given, t->tmp);
+}
+
+
+void 
+eqint(struct test *t, bool not, int given, int expected) {
+    if (not ^ (given == expected)) {
+        PASS();
+        return;
+    }
+    FAIL("%d", not, given, expected);
+}
+
+void 
+pre_assert(struct test *t, const char *func, size_t line) {
+    if (t->func == NULL) {
+        printf("[");
+    }
+    else if (strcmp(func, t->func) != 0) {
+        printf("] [");
+    }
+    t->func = func;
+    t->line = line;
 }
 
 void
-equalchr(const char expected, const char given) {
-    SUCCESS(given == expected);
-
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%c", expected);
-
-    GIVEN();
-    pdataln("%c", given);
-
-    exit(EXIT_FAILURE);
+test_setup(struct test *t, const char *filename) {
+    t->func = NULL;
+    t->line = 0;
+    t->filename = filename;
+    t->tmp = malloc(TEST_TEMP_BUFFSIZE);
+    t->tmplen = 0;
+    log_setlevel(LL_DEBUG);
+    printf(CYN "%s" BLU ": " RST, t->filename);
 }
 
-void
-equalstr(const char *expected, const char *given) {
-    SUCCESS(strcmp(given, expected) == 0);
-
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%s", expected);
-
-    GIVEN();
-    pdataln("%s", given);
-
-    exit(EXIT_FAILURE);
+int
+test_teardown(struct test *t) {
+    free(t->tmp);
+    if (t->func != NULL) {
+        printf("]");
+    }
+    printf(N);
+    return EXIT_SUCCESS;
 }
-
-void
-equalnstr(const char *expected, const char *given, uint32_t len) {
-    SUCCESS(strncmp(given, expected, len) == 0);
-
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%.*s", len, expected);
-
-    GIVEN();
-    pdataln("%.*s", len, given);
-
-    exit(EXIT_FAILURE);
-}
-
-void
-equalint(int expected, int given) {
-    SUCCESS(given == expected);
-
-    /* Error */
-    FAILED();
-    EXPECTED();
-    pdataln("%d", expected);
-
-    GIVEN();
-    pdataln("%d", given);
-
-    exit(EXIT_FAILURE);
-}
-
-void
-notequalint(int expected, int given) {
-    SUCCESS(given != expected);
-
-    /* Error */
-    FAILED();
-    NOTEXPECTED();
-    pdataln("%d", expected);
-
-    GIVEN();
-    pdataln("%d", given);
-
-    exit(EXIT_FAILURE);
-}
-

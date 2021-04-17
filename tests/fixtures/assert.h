@@ -1,63 +1,46 @@
 #ifndef FIXTURES_ASSERT_H
 #define FIXTURES_ASSERT_H
 
-#include <stdint.h>
+#include <sys/types.h>
+#include <stdbool.h>
 
-#define RED     "\e[0;31m"
-#define GREEN   "\e[0;32m"
-#define YELLOW  "\e[0;33m"
-#define BLUE    "\e[0;34m"
-#define MAGENTA "\e[0;35m"
-#define CYAN    "\e[0;36m"
-#define WHITE   "\e[0;37m"
+struct test {
+    const char *filename;
+    const char *func;
+    size_t line;
+    char *tmp;
+    size_t tmplen;
+};
 
-#define CLR     "\33[0m"
+void eqbin(struct test *t, bool not, size_t len, const char *given, 
+        const char *expected);
+void eqstr(struct test *t, bool not, const char *given, const char *expfmt, 
+        ...);
+void eqnstr(struct test *t, bool not, size_t len, const char *given, 
+        const char *expfmt, ...);
+void eqint(struct test *t, bool not, int given, int expected);
+void pre_assert(struct test *t, const char *func, size_t line);
+void test_setup(struct test *t, const char *filename);
+int test_teardown(struct test *t);
 
-#define pcolor(c_, f_, ...) \
-    printf(c_); \
-    printf((f_), ##__VA_ARGS__); \
-    printf(CLR)
+/* Private macro functions. */
+#define __PA() pre_assert(t, __func__, __LINE__)
 
-#define pok(f_, ...) pcolor(GREEN, f_, ##__VA_ARGS__)
-#define perr(f_, ...) pcolor(RED, f_, ##__VA_ARGS__)
+/* Public macro functions. */
+#define SETUP(t) test_setup(t, __FILE__)
+#define TEARDOWN(t) test_teardown(t)
 
-#define pokln(f_, ...) pok(f_, ##__VA_ARGS__); printf("\r\n")
-#define perrln(f_, ...) perr(f_, ##__VA_ARGS__); printf("\r\n")
-#define pcolorln(c_, f_, ...) pcolor(c_, f_, ##__VA_ARGS__); printf("\r\n")
+/** Equal int */
+#define  EQI(g, e) __PA(); eqint(t, false, g, e)
+#define NEQI(g, e) __PA(); eqint(t, true, g, e)
 
-#define pdataln(f_, ...) pcolorln(WHITE, f_, ##__VA_ARGS__);
+/** Equal str */
+#define  EQS(g, e, ...)     __PA(); eqstr (t, false,    g, e, ## __VA_ARGS__)
+#define NEQS(g, e, ...)     __PA(); eqstr (t, true,     g, e, ## __VA_ARGS__)
+#define  EQNS(n, g, e, ...) __PA(); eqnstr(t, false, n, g, e, ## __VA_ARGS__)
+#define NEQNS(n, g, e, ...) __PA(); eqnstr(t, true,  n, g, e, ## __VA_ARGS__)
 
-#define SUCCESS(c) if (c) {pokln("%s Ok", __func__); return; }
-#define FAILED() perrln("%s Failed", __func__)
-#define EXPECTED() pcolor(BLUE, "Expected: ")
-#define GIVEN() pcolor(YELLOW, "Given: ")
-#define NOTEXPECTED() pcolor(CYAN, "Not Expected: ")
-
-#define assert(f, ...) \
-    pcolor(CYAN, "%s:%d", __FILE__, __LINE__); \
-    pcolor(MAGENTA, " [%s] ", __func__); \
-    f(__VA_ARGS__)
-
-#define eqchr(...) assert(equalchr, __VA_ARGS__)
-#define eqstr(...) assert(equalstr, __VA_ARGS__)
-#define eqnstr(...) assert(equalnstr, __VA_ARGS__)
-#define eqint(...) assert(equalint, __VA_ARGS__)
-#define neqint(...) assert(notequalint, __VA_ARGS__)
-#define eqbin(e, g, l) \
-    assert(equalbin, (unsigned char*)g, (unsigned char*)e, l)
-
-void
-equalbin(const unsigned char *expected, const unsigned char *given,
-         uint32_t len);
-void
-equalchr(const char expected, const char given);
-void
-equalstr(const char *expected, const char *given);
-void
-equalnstr(const char *expected, const char *given, uint32_t len);
-void
-equalint(int expected, int given);
-void
-notequalint(int expected, int given);
- 
+/** Equal binary */
+#define  EQB(n, g, e, ...)  __PA(); eqbin (t, false, n, g, e, ## __VA_ARGS__)
+#define NEQB(n, g, e, ...)  __PA(); eqbin (t, true,  n, g, e, ## __VA_ARGS__)
 #endif

@@ -2,6 +2,7 @@
 #define CLI_H
 
 #include "logging.h"
+#include "helpers.h"
 
 #include <argp.h>
 
@@ -21,7 +22,6 @@
 #define ARG_DRYRUN_KEY  -1
 #define ARG_DRYRUN { "dry", ARG_DRYRUN_KEY, NULL, 0, \
     "Do not run, only print configuration end exit." }
-
 
 int verbosity_parse(struct argp_state *state, const char *val);
 int parse_common_opts(int key, char *arg, struct argp_state *state);

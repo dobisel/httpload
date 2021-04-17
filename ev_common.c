@@ -9,7 +9,6 @@
 #include <sys/prctl.h>
 #include <netinet/in.h>
 
-
 static char *tmp;
 
 void

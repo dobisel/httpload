@@ -1,11 +1,11 @@
-#include "common.h"
-#include "logging.h"
-#include "fixtures/assert.h"
-#include <stdio.h>
-#include <http_parser.h>
+#include "common.h" 
+#include "logging.h" 
+#include "fixtures/assert.h" 
+#include <stdio.h> 
+#include <http_parser.h> 
 
-static char url[100];
-static char body[100];
+static char url[100]; 
+static char body[100]; 
 static size_t bodylen = 0;
 
 int
@@ -23,6 +23,7 @@ body_cb(http_parser * p, const char *at, size_t len) {
     return 0;
 }
 
+static struct test test;
 static http_parser p;
 
 static http_parser_settings settings = {
@@ -56,21 +57,22 @@ req(const char *b) {
     url[0] = body[0] = 0;
     bodylen = 0;
     size_t rl = req_chunk(b);
+    struct test *t = &test;
 
-    eqint(0, reqerr());
+    EQI(reqerr(), 0);
     req_chunk(NULL);
-    eqint(0, reqerr());
+    EQI(reqerr(), 0);
     return rl;
 }
 
 void
-test_httpparser_get() {
+test_httpparser_get(struct test *t) {
     http_parser_init(&p, HTTP_REQUEST);
     req("GET / HTTP/1.1" RN "Content-Length: 5" RN RN "12345");
-    eqstr("12345", body);
+    EQS(body, "12345");
 
     req("GET /" RN RN);
-    eqstr("", body);
+    EQS(body, "");
 
     bodylen = 0;
     req_chunk("GET / HT");
@@ -78,12 +80,12 @@ test_httpparser_get() {
     req_chunk("t-Length: 5" RN RN "123");
     req_chunk("45");
     req_chunk(NULL);
-    eqstr("12345", body);
+    EQS(body, "12345");
 }
 
 int
 main() {
-    log_setlevel(LL_DEBUG);
-    test_httpparser_get();
-    return EXIT_SUCCESS;
+    SETUP(&test);
+    test_httpparser_get(&test);
+    return TEARDOWN(&test);
 }

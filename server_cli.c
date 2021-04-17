@@ -91,7 +91,7 @@ servercli_run(int argc, char **argv) {
         .forks = settings.forks,
         .bind = settings.bind
     };
-    
+
     if (settings.dryrun) {
         return _dryrun();
     }

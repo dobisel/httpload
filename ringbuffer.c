@@ -1,11 +1,10 @@
 #include "common.h"
+#include "helpers.h"
 #include "ringbuffer.h"
 #include "logging.h"
 
 #include <string.h>
 #include <unistd.h>
-
-#define MIN(x, y) (((x) > (y))? (y): (x))
 
 int
 rb_write(struct ringbuffer *b, const char *data, size_t len) {

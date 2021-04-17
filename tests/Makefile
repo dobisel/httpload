@@ -46,9 +46,9 @@ $(common_tests): %: %.c $(common_objects) $(fixture_objects)
 
 .PHONY: test
 test: $(common_tests) $(client_tests) $(server_tests)
-	for t in $(filter tests/test_$(UNIT), $(common_tests)); do "$${t}"; done
-	for t in $(filter tests/test_$(UNIT), $(client_tests)); do "$${t}"; done
-	for t in $(filter tests/test_$(UNIT), $(server_tests)); do "$${t}"; done
+	@for t in $(filter tests/test_$(UNIT), $(common_tests)); do "$${t}"; done
+	@for t in $(filter tests/test_$(UNIT), $(client_tests)); do "$${t}"; done
+	@for t in $(filter tests/test_$(UNIT), $(server_tests)); do "$${t}"; done
 
 .PHONY: coverage
 coverage: test

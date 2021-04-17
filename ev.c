@@ -9,7 +9,7 @@ ev_server_start(struct evs *evs) {
 
 void
 ev_server_terminate(struct evs *evs) {
-    ev_common_terminate((struct ev *)evs);
+    ev_common_terminate((struct ev *) evs);
 }
 
 int

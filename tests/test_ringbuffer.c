@@ -15,7 +15,7 @@
 #define S   8
 
 void
-test_write_read() {
+test_write_read(struct test *t) {
     char tmp[256];
     int tmplen = 0;
     char buff[S];
@@ -23,45 +23,45 @@ test_write_read() {
 
     rb_init(&b, buff, S);
 
-    eqint(RB_ERR_INSUFFICIENT, rb_write(&b, "abcdefgh", 8));
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqnstr("abcdefg", buff, 7);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefgh", 8), RB_ERR_INSUFFICIENT);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQNS(7, buff, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
     /* Write & Read */
     RB_RESET(&b);
-    eqint(0, b.writecounter);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(7, b.writer);
+    EQI(b.writecounter, 0);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(b.writer, 7);
     tmplen += rb_read(&b, tmp + tmplen, 10);
-    eqint(7, tmplen);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(7, b.reader);
-    eqint(7, RB_AVAILABLE(&b));
-    eqint(7, b.writecounter);
+    EQI(tmplen, 7);
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 7);
+    EQI(RB_AVAILABLE(&b), 7);
+    EQI(b.writecounter, 7);
 
-    eqint(RB_OK, rb_write(&b, "hi", 2));
+    EQI(rb_write(&b, "hi", 2), RB_OK);
     tmplen += rb_read(&b, tmp + tmplen, 10);
-    eqint(9, tmplen);
-    eqint(9, b.writecounter);
+    EQI(tmplen, 9);
+    EQI(b.writecounter, 9);
 
-    eqint(RB_OK, rb_write(&b, "jklm", 4));
+    EQI(rb_write(&b, "jklm", 4), RB_OK);
     tmplen += rb_read(&b, tmp + tmplen, 2);
     tmplen += rb_read(&b, tmp + tmplen, 2);
-    eqint(13, tmplen);
-    eqnstr("abcdefghijklm", tmp, 13);
-    eqint(13, b.writecounter);
+    EQI(tmplen, 13);
+    EQNS(13, tmp, "abcdefghijklm");
+    EQI(b.writecounter, 13);
 
     /* Read when no data available */
-    eqint(0, rb_read(&b, tmp, 2));
-    eqint(13, b.writecounter);
+    EQI(rb_read(&b, tmp, 2), 0);
+    EQI(b.writecounter, 13);
 }
 
 void
-test_dryread() {
+test_dryread(struct test *t) {
     char tmp[256];
     int tmplen = 0;
     char buff[S];
@@ -70,33 +70,33 @@ test_dryread() {
     rb_init(&b, buff, S);
 
     /* Dry Read */
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
     tmplen += rb_dryread(&b, tmp + tmplen, 2);
-    eqint(2, tmplen);
-    eqnstr("abcdefg", buff, 7);
-    eqnstr("ab", tmp, 2);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(tmplen, 2);
+    EQNS(7, buff, "abcdefg");
+    EQNS(2, tmp, "ab");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
     RB_READER_SKIP(&b, 2);
     tmplen += rb_dryread(&b, tmp + tmplen, 10);
-    eqint(7, tmplen);
-    eqnstr("abcdefg", buff, 7);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(2, b.reader);
-    eqint(7, b.writecounter);
+    EQI(tmplen, 7);
+    EQNS(7, buff, "abcdefg");
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 2);
+    EQI(b.writecounter, 7);
 
     /* Skip */
     RB_READER_SKIP(&b, 4);
-    eqint(6, b.reader);
-    eqint(6, RB_AVAILABLE(&b));
-    eqint(7, b.writecounter);
+    EQI(b.reader, 6);
+    EQI(RB_AVAILABLE(&b), 6);
+    EQI(b.writecounter, 7);
 }
 
 void
-test_read_until() {
+test_read_until(struct test *t) {
     char tmp[256];
     size_t tmplen = 0;
     char buff[S];
@@ -104,43 +104,43 @@ test_read_until() {
 
     rb_init(&b, buff, S);
 
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_OK, rb_read_until(&b, tmp, 7, "de", 2, &tmplen));
-    eqint(5, tmplen);
-    eqnstr("abc", tmp, 3);
-    eqint(7, b.writer);
-    eqint(5, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_read_until(&b, tmp, 7, "de", 2, &tmplen), RB_OK);
+    EQI(tmplen, 5);
+    EQNS(3, tmp, "abc");
+    EQI(b.writer, 7);
+    EQI(b.reader, 5);
+    EQI(b.writecounter, 7);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_ERR_NOTFOUND, rb_read_until(&b, tmp, 7, "ed", 2, &tmplen));
-    eqint(7, tmplen);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_read_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 7);
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_ERR_NOTFOUND, rb_read_until(&b, tmp, 8, "ed", 2, &tmplen));
-    eqint(7, tmplen);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_read_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 7);
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
-    eqint(RB_OK, rb_read_until(&b, tmp, 8, "fg", 2, &tmplen));
-    eqint(7, tmplen);
+    EQI(rb_read_until(&b, tmp, 8, "fg", 2, &tmplen), RB_OK);
+    EQI(tmplen, 7);
 
-    eqint(RB_ERR_NOTFOUND, rb_read_until(&b, tmp, 8, "yz", 2, &tmplen));
-    eqint(0, tmplen);
+    EQI(rb_read_until(&b, tmp, 8, "yz", 2, &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 0);
 }
 
 void
-test_read_until_chr() {
+test_read_until_chr(struct test *t) {
     char tmp[256];
     size_t tmplen = 0;
     char buff[S];
@@ -148,42 +148,42 @@ test_read_until_chr() {
 
     rb_init(&b, buff, S);
 
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_OK, rb_read_until_chr(&b, tmp, 7, 'd', &tmplen));
-    eqint(4, tmplen);
-    eqnstr("abcd", tmp, 4);
-    eqint(7, b.writer);
-    eqint(4, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_read_until_chr(&b, tmp, 7, 'd', &tmplen), RB_OK);
+    EQI(tmplen, 4);
+    EQNS(4, tmp, "abcd");
+    EQI(b.writer, 7);
+    EQI(b.reader, 4);
+    EQI(b.writecounter, 7);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_ERR_NOTFOUND, rb_read_until_chr(&b, tmp, 8, 'z', &tmplen));
-    eqint(7, tmplen);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_read_until_chr(&b, tmp, 8, 'z', &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 7);
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_ERR_NOTFOUND, rb_read_until_chr(&b, tmp, 4, 'z', &tmplen));
-    eqint(4, tmplen);
-    eqnstr("abcd", tmp, 4);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_read_until_chr(&b, tmp, 4, 'z', &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 4);
+    EQNS(4, tmp, "abcd");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
-    eqint(RB_OK, rb_read_until_chr(&b, tmp, 7, 'g', &tmplen));
-    eqint(7, tmplen);
-    eqint(RB_ERR_NOTFOUND, rb_read_until_chr(&b, tmp, 7, 'z', &tmplen));
-    eqint(0, tmplen);
+    EQI(rb_read_until_chr(&b, tmp, 7, 'g', &tmplen), RB_OK);
+    EQI(tmplen, 7);
+    EQI(rb_read_until_chr(&b, tmp, 7, 'z', &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 0);
 }
 
 void
-test_dryread_until() {
+test_dryread_until(struct test *t) {
     char tmp[256];
     size_t tmplen = 0;
     char buff[S];
@@ -191,42 +191,42 @@ test_dryread_until() {
 
     rb_init(&b, buff, S);
 
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_OK, rb_dryread_until(&b, tmp, 7, "de", 2, &tmplen));
-    eqint(5, tmplen);
-    eqnstr("abc", tmp, 3);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_dryread_until(&b, tmp, 7, "de", 2, &tmplen), RB_OK);
+    EQI(tmplen, 5);
+    EQNS(3, tmp, "abc");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_ERR_NOTFOUND, rb_dryread_until(&b, tmp, 7, "ed", 2, &tmplen));
-    eqint(7, tmplen);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_dryread_until(&b, tmp, 7, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 7);
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
     tmplen = 0;
     RB_RESET(&b);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
-    eqint(RB_ERR_NOTFOUND, rb_dryread_until(&b, tmp, 8, "ed", 2, &tmplen));
-    eqint(7, tmplen);
-    eqnstr("abcdefg", tmp, 7);
-    eqint(7, b.writer);
-    eqint(0, b.reader);
-    eqint(7, b.writecounter);
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
+    EQI(rb_dryread_until(&b, tmp, 8, "ed", 2, &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 7);
+    EQNS(7, tmp, "abcdefg");
+    EQI(b.writer, 7);
+    EQI(b.reader, 0);
+    EQI(b.writecounter, 7);
 
-    eqint(RB_OK, rb_read_until(&b, tmp, 8, "fg", 2, &tmplen));
-    eqint(7, tmplen);
-    eqint(RB_ERR_NOTFOUND, rb_dryread_until(&b, tmp, 8, "yz", 2, &tmplen));
-    eqint(0, tmplen);
+    EQI(rb_read_until(&b, tmp, 8, "fg", 2, &tmplen), RB_OK);
+    EQI(tmplen, 7);
+    EQI(rb_dryread_until(&b, tmp, 8, "yz", 2, &tmplen), RB_ERR_NOTFOUND);
+    EQI(tmplen, 0);
 }
 
 void
-test_read_intofile() {
+test_read_intofile(struct test *t) {
     char tmp[256];
     char buff[S];
     int p[2];
@@ -236,25 +236,25 @@ test_read_intofile() {
 
     rb_init(&b, buff, S);
 
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
 
-    eqint(3, rb_readf(&b, p[1], 3));
-    eqint(3, b.reader);
-    eqint(RB_OK, rb_write(&b, "hij", 3));
-    eqint(7, rb_readf(&b, p[1], 7));
+    EQI(rb_readf(&b, p[1], 3), 3);
+    EQI(b.reader, 3);
+    EQI(rb_write(&b, "hij", 3), RB_OK);
+    EQI(rb_readf(&b, p[1], 7), 7);
 
-    eqint(10, read(p[0], tmp, 10));
-    eqnstr("abcdefghij", tmp, 10);
+    EQI(read(p[0], tmp, 10), 10);
+    EQNS(10, tmp, "abcdefghij");
 
-    eqint(0, rb_readf(&b, p[1], 1));
+    EQI(rb_readf(&b, p[1], 1), 0);
     close(p[1]);
     close(p[0]);
 }
 
-mmk_mock_define (write_mock_t, ssize_t, int, const void *, size_t);
+mmk_mock_define(write_mock_t, ssize_t, int, const void *, size_t);
 
 void
-test_read_intofile_errors() {
+test_read_intofile_errors(struct test *t) {
     char buff[S];
     int p[2];
     struct ringbuffer b;
@@ -263,25 +263,25 @@ test_read_intofile_errors() {
 
     pipe(p);
     rb_init(&b, buff, S);
-    eqint(RB_OK, rb_write(&b, "abcdefg", 7));
+    EQI(rb_write(&b, "abcdefg", 7), RB_OK);
 
     wret = -1;
-    mmk_when(w(mmk_eq(int, p[1]), mmk_any(void *), mmk_any(size_t)),
-        .then_return = &wret,
-        .then_errno = EAGAIN);
-    
-    eqint(ERR, rb_readf(&b, p[1], 3));
-    eqint(EAGAIN, errno);
-    eqint(0, b.reader);
-    eqint(7, b.writer);
-  
+    mmk_when(w
+             (mmk_eq(int, p[1]), mmk_any(void *),
+              mmk_any(size_t)),.then_return = &wret,.then_errno = EAGAIN);
+
+    EQI(rb_readf(&b, p[1], 3), ERR);
+    EQI(errno, EAGAIN);
+    EQI(b.reader, 0);
+    EQI(b.writer, 7);
+
     b.reader = 8;
     b.writer = 5;
-    eqint(ERR, rb_readf(&b, p[1], 3));
-    eqint(EAGAIN, errno);
-    eqint(8, b.reader);
-    eqint(5, b.writer);
-    
+    EQI(rb_readf(&b, p[1], 3), ERR);
+    EQI(errno, EAGAIN);
+    EQI(b.reader, 8);
+    EQI(b.writer, 5);
+
     close(p[1]);
     close(p[0]);
     mmk_reset(w);
@@ -289,12 +289,14 @@ test_read_intofile_errors() {
 
 int
 main() {
-    log_setlevel(LL_DEBUG);
-    test_write_read();
-    test_dryread();
-    test_dryread_until();
-    test_read_until();
-    test_read_until_chr();
-    test_read_intofile();
-    test_read_intofile_errors();
+    struct test t;
+    SETUP(&t);
+    test_write_read(&t);
+    test_dryread(&t);
+    test_dryread_until(&t);
+    test_read_until(&t);
+    test_read_until_chr(&t);
+    test_read_intofile(&t);
+    test_read_intofile_errors(&t);
+    return TEARDOWN(&t);
 }

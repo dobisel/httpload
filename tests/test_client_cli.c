@@ -7,76 +7,77 @@
 #define fcapt(...) fcapture(clientcli_run, PROG, ## __VA_ARGS__)
 
 static void
-test_version() {
+test_version(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
     status = fcapt(1, (char *[]) { "--version" }, out, err);
-    eqint(0, status);
-    eqstr(HTTPLOAD_VERSION N, out);
+    EQI(status, 0);
+    EQS(out, HTTPLOAD_VERSION N);
 
     status = fcapt(1, (char *[]) { "-V" }, out, err);
-    eqint(0, status);
-    eqstr(HTTPLOAD_VERSION N, out);
+    EQI(status, 0);
+    EQS(out, HTTPLOAD_VERSION N);
 }
 
 static void
-test_verbosity() {
+test_verbosity(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
     status = fcapt(2, (char *[]) { "-v", "1" }, out, err);
-    eqint(0, status);
-    eqstr("", out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, "");
+    EQS(err, "");
 
     status = fcapt(2, (char *[]) { "-v", "2" }, out, err);
-    eqint(0, status);
-    eqstr("", out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, "");
+    EQS(err, "");
 
     status = fcapt(2, (char *[]) { "-v", "3" }, out, err);
-    eqint(0, status);
-    eqstr("", out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, "");
+    EQS(err, "");
 
     status = fcapt(2, (char *[]) { "-v", "4" }, out, err);
-    eqint(0, status);
-    eqstr("", out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, "");
+    EQS(err, "");
 
     status = fcapt(2, (char *[]) { "-v", "5" }, out, err);
-    eqint(64, status);
-    eqstr("", out);
-    eqnstr(PROG ": Invalid verbosity level: 5", err, 29);
+    EQI(status, 64);
+    EQS(out, "");
+    EQNS(29, err, PROG ": Invalid verbosity level: 5");
 }
 
 static void
-test_invalidargument() {
+test_invalidargument(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
     /* Invalid optional argument. */
     status = fcapt(2, (char *[]) { "--invalidargument", "0" }, out, err);
-    eqint(64, status);
-    eqstr("", out);
-    eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
+    EQI(status, 64);
+    EQS(out, "");
+    EQNS(49, err, PROG ": unrecognized option '--invalidargument'");
 
     /* Extra positional arguments. */
     status = fcapt(3, (char *[]) { "foo", "bar", "baz" }, out, err);
-    eqint(64, status);
-    eqstr("", out);
-    eqnstr(PROG ": Too many arguments", err, 29);
+    EQI(status, 64);
+    EQS(out, "");
+    EQNS(29, err, PROG ": Too many arguments");
 }
 
 int
 main() {
-    log_setlevel(LL_DEBUG);
-    test_version();
-    test_verbosity();
-    test_invalidargument();
-    return EXIT_SUCCESS;
+    struct test t;
+    SETUP(&t);
+    test_version(&t);
+    test_verbosity(&t);
+    test_invalidargument(&t);
+    return TEARDOWN(&t);
 }

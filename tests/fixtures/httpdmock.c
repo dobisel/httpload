@@ -19,7 +19,8 @@ httpdmock_start(struct httpdmock *m) {
     m->httpd.bind = 0;
     m->optcb = NULL;
     m->req_headers = NULL;
-    
+    fflush(stdout);    
+    fflush(stderr);    
     httpd_start(&m->httpd);
     
     sprintf(tmp, "http://localhost:%d", m->httpd.bind);

@@ -6,85 +6,85 @@
 
 #define T   2
 #define PROG    "httploads"
-#define fcapttimeout(t, ...) \
-    fcapture_timeout((t), servercli_run, PROG, ## __VA_ARGS__)
+#define fcapttimeout(t, ...) fcapture_timeout((t), servercli_run, PROG, ## __VA_ARGS__)
 #define fcapt(...) fcapttimeout(0, ## __VA_ARGS__)
-#define fcapttime(...) fcapttimeout(T, ## __VA_ARGS__)
 
 static void
-test_version() {
+test_version(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
     status = fcapt(1, (char *[]) { "--version" }, out, err);
-    eqint(0, status);
-    eqstr(HTTPLOAD_VERSION N, out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, HTTPLOAD_VERSION N);
+    EQS(err, "");
 
     status = fcapt(1, (char *[]) { "-V" }, out, err);
-    eqint(0, status);
-    eqstr(HTTPLOAD_VERSION N, out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, HTTPLOAD_VERSION N);
+    EQS(err, "");
 }
 
 static void
-test_fork() {
+test_fork(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
     status = fcapt(2, (char *[]) { "--dry", "-c2" }, out, err);
-    eqint(0, status);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(err, "");
 
     status = fcapt(2, (char *[]) { "--dry", "-V" }, out, err);
-    eqint(0, status);
-    eqstr(HTTPLOAD_VERSION N, out);
-    eqstr("", err);
+    EQI(status, 0);
+    EQS(out, HTTPLOAD_VERSION N);
+    EQS(err, "");
 }
 
 static void
-test_invalidargument() {
+test_invalidargument(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
     int status;
 
     /* Invalid optional argument. */
-    status = fcapt(3, (char *[]) { "--dry", "--invalidargument", "0" }, out, err);
-    neqint(0, status);
-    eqstr("", out);
-    eqnstr(PROG ": unrecognized option '--invalidargument'", err, 49);
+    status =
+        fcapt(3, (char *[]) { "--dry", "--invalidargument", "0" }, out, err);
+    NEQI(status, 0);
+    EQS(out, "");
+    EQNS(49, err, PROG ": unrecognized option '--invalidargument'");
 
     /* Extra positional arguments. */
     status = fcapt(4, (char *[]) { "--dry", "foo", "bar", "baz" }, out, err);
-    neqint(0, status);
-    eqstr("", out);
-    eqnstr(PROG ": Too many arguments", err, 29);
+    NEQI(status, 0);
+    EQS(out, "");
+    EQNS(29, err, PROG ": Too many arguments");
 
     /* Invalid fork counts. */
     status = fcapt(2, (char *[]) { "--dry", "-c0" }, out, err);
-    neqint(0, status);
-    eqstr("", out);
-    eqnstr("test_server_cli: Invalid number of forks: 0", err, 42);
+    NEQI(status, 0);
+    EQS(out, "");
+    EQNS(42, err, "test_server_cli: Invalid number of forks: 0");
 }
 
 static void
-test_port() {
+test_port(struct test *t) {
     char out[CAPTMAX + 1] = { 0 };
     char err[CAPTMAX + 1] = { 0 };
 
-    eqint(0, fcapt(2, (char *[]) { "--dry", "-b888" }, out, err));
-    eqstr("", err);
-    eqstr("forks:\t\t1" N "bind:\t\t888" N "verbosity:\tDebug(4)" N, out);
+    EQI(fcapt(2, (char *[]) { "--dry", "-b888" }, out, err), 0);
+    EQS(err, "");
+    EQS(out, "forks:\t\t1" N "bind:\t\t888" N "verbosity:\tDebug(4)" N);
 }
 
 int
 main() {
-    log_setlevel(LL_DEBUG);
-    test_version();
-    test_fork();
-    test_invalidargument();
-    test_port();
-    return EXIT_SUCCESS;
+    struct test t;
+    SETUP(&t);
+    test_version(&t);
+    test_fork(&t);
+    test_invalidargument(&t);
+    test_port(&t);
+    return TEARDOWN(&t);
 }
