@@ -60,6 +60,7 @@ enum peer_state {
 };
 
 struct ev;
+struct evs;
 
 struct peer {
     int fd;
@@ -69,7 +70,8 @@ struct peer {
     void *handler;
 };
 
-typedef void (*ev_peercb_t)(struct ev * ev, struct peer * c);
+typedef void (*evs_conncb_t)(struct evs * evs, struct peer * c);
+typedef void (*ev_writecb_t)(struct ev * ev, struct peer * c);
 typedef void (*ev_recvcb_t)(struct ev * ev, struct peer * c, const char *data,
                             size_t len);
 struct ev {
@@ -78,19 +80,20 @@ struct ev {
     pid_t *children;
     union ev_priv;
     ev_recvcb_t on_recvd;
-    ev_peercb_t on_writefinish;
+    ev_writecb_t on_writefinish;
 };
 
 struct evs {
     struct ev;
     int listenfd;
     uint16_t bind;
-    ev_peercb_t on_connect;
+    evs_conncb_t on_connect;
 };
 
 typedef void (*ev_cb_t)(struct ev * ev);
 
 struct peer *ev_common_newconn(struct evs *evs);
+void ev_common_peer_disconn(struct evs *evs, struct peer *c);
 void ev_common_read(struct ev *ev, struct peer *c);
 void ev_common_write(struct ev *ev, struct peer *c);
 void ev_common_terminate(struct ev *ev);
@@ -98,4 +101,5 @@ int ev_common_join(struct ev *ev);
 void ev_common_fork(struct ev *ev, ev_cb_t loop);
 void ev_common_init(struct ev *ev);
 void ev_common_deinit(struct ev *ev);
+ 
 #endif

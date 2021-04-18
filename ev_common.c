@@ -59,6 +59,17 @@ ev_common_read(struct ev *ev, struct peer *c) {
     }
 }
 
+void
+ev_common_peer_disconn(struct evs *evs, struct peer *c) {
+    if (c == NULL) {
+        return;
+    }
+    if (close(c->fd)) {
+        WARN("Cannot close fd: %d", c->fd);
+    }
+    free(c);
+}
+
 struct peer *
 ev_common_newconn(struct evs *evs) {
     struct sockaddr_in peeraddr;

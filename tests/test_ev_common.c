@@ -3,6 +3,7 @@
 #include "fixtures/assert.h"
 #include "ev_common.h"
 
+#include <sys/socket.h>
 #include <unistd.h>
 
 /* third-party */
@@ -10,13 +11,111 @@
 
 static struct test *t;
 
-mmk_mock_define(write_mock_t, ssize_t, int, const void *, size_t);
-mmk_mock_define(read_mock_t, ssize_t, int, void *, size_t);
+/**********************************
+ * Accept
+ *********************************/
+mmk_mock_define(accept4_mock_t, int, int, struct sockaddr *, socklen_t *, 
+        int);
 
 static void
-writefinishcb(struct ev *ev, struct peer *c) {
+newconn(struct evs *evs, struct peer *c) {
     EQI(c->fd, 888);
+    EQI(c->state, PS_UNKNOWN);
+    EQI(evs->listenfd, 777);
 }
+
+
+static void
+test_ev_common_newconn() {
+    int aret;
+    accept4_mock_t a = mmk_mock("accept4@self", accept4_mock_t);
+
+    struct evs evs = {
+        .id = 1,
+        .listenfd = 777,
+        .on_connect = newconn,
+    };
+    struct peer *c;
+    ev_common_init(&evs);
+    
+    /* When accept4 successfull. */
+    aret = 888;
+    mmk_when(a(
+                mmk_eq(int, 777), 
+                mmk_any(struct sockaddr *), 
+                mmk_any(socklen_t *),
+                mmk_eq(int, SOCK_NONBLOCK)),
+             .then_return = &aret,
+             .then_errno = OK
+             );
+
+    c = ev_common_newconn(&evs);
+    EQI(c->fd, 888);
+    EQI(c->state, PS_UNKNOWN);
+    EQI(c->writerb.reader, 0);
+    EQI(c->writerb.writer, 0);
+
+    EQI(mmk_verify(a(
+                mmk_eq(int, 777), 
+                mmk_any(struct sockaddr *), 
+                mmk_any(socklen_t *),
+                mmk_eq(int, SOCK_NONBLOCK)),
+             .times = 1
+             ), 1);
+
+    /* When accept4 raised unhandled error. */
+    aret = ERR;
+    mmk_when(a(
+                mmk_eq(int, 777), 
+                mmk_any(struct sockaddr *), 
+                mmk_any(socklen_t *),
+                mmk_eq(int, SOCK_NONBLOCK)),
+             .then_return = &aret,
+             .then_errno = ENOENT 
+             );
+
+    c = ev_common_newconn(&evs);
+    ISNULL(c);
+
+    EQI(mmk_verify(a(
+                mmk_eq(int, 777), 
+                mmk_any(struct sockaddr *), 
+                mmk_any(socklen_t *),
+                mmk_eq(int, SOCK_NONBLOCK)),
+             .times = 2
+             ), 1);
+
+    /* When accept4 raised EAGAIN. */
+    aret = ERR;
+    mmk_when(a(
+                mmk_eq(int, 777), 
+                mmk_any(struct sockaddr *), 
+                mmk_any(socklen_t *),
+                mmk_eq(int, SOCK_NONBLOCK)),
+             .then_return = &aret,
+             .then_errno = EAGAIN 
+             );
+
+    c = ev_common_newconn(&evs);
+    ISNULL(c);
+
+    EQI(mmk_verify(a(
+                mmk_eq(int, 777), 
+                mmk_any(struct sockaddr *), 
+                mmk_any(socklen_t *),
+                mmk_eq(int, SOCK_NONBLOCK)),
+             .times = 3
+             ), 1);
+
+
+    ev_common_peer_disconn(&evs, c);
+}
+
+/**********************************
+ * Read
+ *********************************/
+
+mmk_mock_define(read_mock_t, ssize_t, int, void *, size_t);
 
 static void
 recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
@@ -110,6 +209,17 @@ test_ev_common_read() {
     ev_common_deinit(&ev);
 }
 
+/**********************************
+ * Write
+ *********************************/
+
+mmk_mock_define(write_mock_t, ssize_t, int, const void *, size_t);
+
+static void
+writefinishcb(struct ev *ev, struct peer *c) {
+    EQI(c->fd, 888);
+}
+
 void
 test_ev_common_write() {
     ssize_t wret;
@@ -175,5 +285,6 @@ main() {
     SETUP(t);
     test_ev_common_write();
     test_ev_common_read();
+    test_ev_common_newconn();
     return TEARDOWN(t);
 }

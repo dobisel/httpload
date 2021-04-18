@@ -99,7 +99,7 @@ static http_parser_settings hpconf = {
 };
 
 static void
-client_connected(struct ev *ev, struct peer *c) {
+client_connected(struct evs *evs, struct peer *c) {
     /* Initialize the http parser for this connection. */
     struct http_parser *p = malloc(sizeof (struct http_parser));
 

@@ -13,8 +13,9 @@
     HMAG "%s" WHT "(" BLU "struct" RST " test *t) " HRED "Failed!" \
             RST N, t->filename, t->line, t->func)
 #define FAIL(fmt, not, g, e) ({ FAIL_HEADER(); \
-    if (not) printf("NOT "); \
-    printf(GRN "EXPECTED:\t" RST fmt N, e); \
+    if (e) { \
+        if (not) printf("NOT "); \
+        printf(GRN "EXPECTED:\t" RST fmt N, e);} \
     printf(YEL "GIVEN:\t\t" RST fmt N, g); \
     exit(EXIT_FAILURE); \
     })
@@ -97,6 +98,14 @@ eqint(struct test *t, bool not, int given, int expected) {
     FAIL("%d", not, given, expected);
 }
 
+void 
+isnull(struct test *t, bool not, void *given) {
+    if (not ^ (given == NULL)) {
+        PASS();
+        return;
+    }
+    FAIL("%p", not, given, NULL);
+}
 
 void 
 pre_assert(struct test *t, const char *func, size_t line) {

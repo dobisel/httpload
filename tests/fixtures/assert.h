@@ -12,6 +12,7 @@ struct test {
     size_t tmplen;
 };
 
+void isnull(struct test *t, bool not, void *given);
 void eqbin(struct test *t, bool not, size_t len, const char *given, 
         const char *expected);
 void eqstr(struct test *t, bool not, const char *given, const char *expfmt, 
@@ -30,9 +31,13 @@ int test_teardown(struct test *t);
 #define SETUP(t) test_setup(t, __FILE__)
 #define TEARDOWN(t) test_teardown(t)
 
+/** Is NULL. */
+#define    ISNULL(g) __PA(); isnull(t, false, g)
+#define ISNOTNULL(g) __PA(); isnull(t, true,  g)
+
 /** Equal int */
 #define  EQI(g, e) __PA(); eqint(t, false, g, e)
-#define NEQI(g, e) __PA(); eqint(t, true, g, e)
+#define NEQI(g, e) __PA(); eqint(t, true,  g, e)
 
 /** Equal str */
 #define  EQS(g, e, ...)     __PA(); eqstr (t, false,    g, e, ## __VA_ARGS__)

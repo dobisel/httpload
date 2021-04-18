@@ -133,10 +133,7 @@ _epoll_server_loop(struct evs *evs) {
                     ERRX("Cannot DEL EPOLL for fd: %d", c->fd);
                 }
 
-                if (close(c->fd)) {
-                    WARN("Cannot close fd: %d", c->fd);
-                }
-                free(c);
+                ev_common_peer_disconn(evs, c);
             }
             else {
 

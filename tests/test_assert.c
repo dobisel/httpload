@@ -1,5 +1,7 @@
 #include "fixtures/assert.h"
 
+#include <stdlib.h>
+
 void
 test_eqint(struct test *t) {
     EQI(1, 1);
@@ -29,6 +31,12 @@ test_eqbin(struct test *t) {
     NEQB(3, "foo", "bar");
 }
 
+void
+test_isnull(struct test *t) {
+    ISNULL(NULL);
+    ISNOTNULL(t);
+}
+
 int
 main() {
     struct test t;
@@ -38,5 +46,6 @@ main() {
     test_eqstr(&t);
     test_eqnstr(&t);
     test_eqbin(&t);
+    test_isnull(&t);
     return TEARDOWN(&t);
 }
