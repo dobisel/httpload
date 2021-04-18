@@ -66,6 +66,9 @@ coverage: test
 	lcov --capture \
 		--directory . \
 		--no-external \
+		--output-file .coverage.info
+	lcov --remove .coverage.info \
+		"$(shell readlink -f tests/fixtures)/*" \
 		--output-file coverage.info
 ifdef COVERALLS 
 	coveralls -n -e tests 
@@ -94,6 +97,7 @@ coveralls:
 clean::
 	-cd tests; $(RM) $(CLEAN) bin/*
 	-cd tests/fixtures; $(RM) $(CLEAN) 
+	-$(RM) -r covout/* 
 
 .PHONY: indent
 indent::

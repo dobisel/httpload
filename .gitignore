@@ -2,6 +2,7 @@
 tests/bin/*
 httpload[sc]
 coverage.info
+.coverage.info
 build
 covout
 # Prerequisites
