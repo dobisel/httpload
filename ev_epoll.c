@@ -66,19 +66,19 @@ _epoll_server_loop(struct evs *evs) {
     /* Create epoll. */
     evs->epoll->fd = epollfd = epoll_create1(0);
     if (epollfd < 0) {
-        ERRX("Cannot create epoll.");
+        ERRX("Cannot create epoll."); // LCOV_EXCL_LINE
     }
 
     /* Register accept event */
     ev.data.fd = evs->listenfd;
     ev.events = EPCOMM | EPOLLIN;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, evs->listenfd, &ev)) {
-        ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);
+        ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);  // LCOV_EXCL_LINE
     }
 
     events = calloc(EV_BATCHSIZE, sizeof (struct epoll_event));
     if (events == NULL) {
-        ERRX("Unable to allocate memory for epoll_events.");
+        ERRX("Unable to allocate memory for epoll_events."); // LCOV_EXCL_LINE
     }
 
     for (;;) {
@@ -95,7 +95,7 @@ _epoll_server_loop(struct evs *evs) {
                 ev.data.fd = evs->listenfd;
                 ev.events = EPCOMM | EPOLLIN;
                 if (epoll_ctl(epollfd, EPOLL_CTL_MOD, evs->listenfd, &ev)) {
-                    ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);
+                    ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);  // LCOV_EXCL_LINE
                 }
 
                 /* New connection */
@@ -130,7 +130,7 @@ _epoll_server_loop(struct evs *evs) {
             //DBUG("CTL: %s %s fd: %d", opname(op), statename(c->state), c->fd);
             if (op == EPOLL_CTL_DEL) {
                 if (epoll_ctl(epollfd, EPOLL_CTL_DEL, c->fd, NULL)) {
-                    ERRX("Cannot DEL EPOLL for fd: %d", c->fd);
+                    ERRX("Cannot DEL EPOLL for fd: %d", c->fd);  // LCOV_EXCL_LINE
                 }
 
                 ev_common_peer_disconn(evs, c);
@@ -138,13 +138,13 @@ _epoll_server_loop(struct evs *evs) {
             else {
 
                 if (c->state == PS_UNKNOWN) {
-                    ERRX("Invalid peer state: %s", statename(c->state));
+                    ERRX("Invalid peer state: %s", statename(c->state));  // LCOV_EXCL_LINE
                 }
                 ev.data.ptr = c;
                 ev.events = EPCOMM |
                     (c->state == PS_WRITE ? EPOLLOUT : EPOLLIN);
                 if (epoll_ctl(epollfd, op, c->fd, &ev)) {
-                    ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);
+                    ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);  // LCOV_EXCL_LINE
                 }
             }
         }
