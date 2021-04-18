@@ -45,23 +45,15 @@ req_chunk(const char *b) {
 }
 
 int
-reqerr() {
-    if (p.http_errno) {
-        return p.http_errno;
-    }
-    return OK;
-}
-
-int
 req(const char *b) {
     url[0] = body[0] = 0;
     bodylen = 0;
     size_t rl = req_chunk(b);
     struct test *t = &test;
 
-    EQI(reqerr(), 0);
+    EQI(p.http_errno, 0);
     req_chunk(NULL);
-    EQI(reqerr(), 0);
+    EQI(p.http_errno, 0);
     return rl;
 }
 
