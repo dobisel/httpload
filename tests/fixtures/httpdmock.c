@@ -29,7 +29,7 @@ httpdmock_start(struct httpdmock *m) {
 
 void 
 httpdmock_stop(struct httpdmock *m) {
-    ev_server_terminate((struct evs*)&m->httpd);
+    httpd_stop(&m->httpd);
     free(m->url);
     httpd_join(&m->httpd);
 }
