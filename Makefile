@@ -30,7 +30,8 @@ IFLAGS = \
 		 -bbb \
 		 -sc \
 		 -slc \
-		 -sob
+		 -sob \
+		 -par
 
 PREFIX = /usr/local
 CLEAN = httploadc httploads *.o *.gcda *.gcno *.gcov *.c~ *.h~ coverage.info

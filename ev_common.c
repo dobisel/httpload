@@ -156,7 +156,7 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
         else if (pid == 0) {
             /* Child */
             prctl(PR_SET_PDEATHSIG, SIGHUP);
-            
+
             /* Initialize ev loop. */
             ev_common_init(ev);
 

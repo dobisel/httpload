@@ -116,15 +116,25 @@ pre_assert(struct test *t, const char *func, size_t line) {
     t->line = line;
 }
 
+#define TEST_MAXFILENAME    32
+#define TM_PLUS             23
+#define TM     (TEST_MAXFILENAME + TM_PLUS)
+
 void
 test_setup(struct test *t, const char *filename) {
+    char *fn = basename(filename) + 5;
     t->func = NULL;
     t->line = 0;
     t->filename = filename;
     t->tmp = malloc(TEST_TEMP_BUFFSIZE);
     t->tmplen = 0;
     log_setlevel(LL_DEBUG);
-    printf(CYN "%s" BLU ": " RST, t->filename);
+    char temp[TM + 1];
+    temp[TM] = 0;
+    memset(temp, ' ', TM);
+    sprintf(temp + (TM - (strlen(fn) + TM_PLUS)), 
+            CYN"%.*s" BLU ": " RST, (int)strlen(fn) - 2, fn);
+    printf("%s", temp);
 }
 
 int
