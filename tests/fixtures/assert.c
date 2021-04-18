@@ -6,14 +6,16 @@
 #include <stdarg.h>
 
 #define TEST_TEMP_BUFFSIZE      1024 * 8
-#define PASS()  printf(GRN "." RST)
-#define FAIL_HEADER() \
-    printf(N HYEL "%s" HBLU ":" HGRN "%lu" HBLU ": " MAG "%s Failed" RST N, \
-                t->filename, t->line, t->func)
+#define FUNCSIGN()      printf(BHGRN "." RST)
+#define PASS()          printf(GRN "." RST)
+#define FAIL_HEADER() printf(\
+    N HYEL "%s" HBLU ":" HGRN "%lu" HBLU ": " \
+    HMAG "%s" WHT "(" BLU "struct" RST " test *t) " HRED "Failed!" \
+            RST N, t->filename, t->line, t->func)
 #define FAIL(fmt, not, g, e) ({ FAIL_HEADER(); \
     if (not) printf("NOT "); \
-    printf("EXPECTED:\t" fmt N, e); \
-    printf("GIVEN:\t\t" fmt N, g); \
+    printf(GRN "EXPECTED:\t" RST fmt N, e); \
+    printf(YEL "GIVEN:\t\t" RST fmt N, g); \
     exit(EXIT_FAILURE); \
     })
 
@@ -67,7 +69,6 @@ eqnstr(struct test *t, bool not, size_t len, const char *given,
     FAIL("%s", not, given, t->tmp);
 }
 
-
 void 
 eqstr(struct test *t, bool not, const char *given, 
         const char *expfmt, ...) {
@@ -87,7 +88,6 @@ eqstr(struct test *t, bool not, const char *given,
     FAIL("%s", not, given, t->tmp);
 }
 
-
 void 
 eqint(struct test *t, bool not, int given, int expected) {
     if (not ^ (given == expected)) {
@@ -97,13 +97,11 @@ eqint(struct test *t, bool not, int given, int expected) {
     FAIL("%d", not, given, expected);
 }
 
+
 void 
 pre_assert(struct test *t, const char *func, size_t line) {
-    if (t->func == NULL) {
-        printf("[");
-    }
-    else if (strcmp(func, t->func) != 0) {
-        printf("] [");
+    if (t->func == NULL || strcmp(func, t->func) != 0) {
+        FUNCSIGN();
     }
     t->func = func;
     t->line = line;
@@ -124,7 +122,7 @@ int
 test_teardown(struct test *t) {
     free(t->tmp);
     if (t->func != NULL) {
-        printf("]");
+        FUNCSIGN();
     }
     printf(N);
     return EXIT_SUCCESS;
