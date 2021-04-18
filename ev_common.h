@@ -96,4 +96,6 @@ void ev_common_write(struct ev *ev, struct peer *c);
 void ev_common_terminate(struct ev *ev);
 int ev_common_join(struct ev *ev);
 void ev_common_fork(struct ev *ev, ev_cb_t loop);
+void ev_common_init(struct ev *ev);
+void ev_common_deinit(struct ev *ev);
 #endif

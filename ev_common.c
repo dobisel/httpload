@@ -49,7 +49,7 @@ ev_common_read(struct ev *ev, struct peer *c) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                 errno = 0;
                 /* Calling read callback */
-                ((ev_recvcb_t) ev->on_recvd) (ev, c, tmp, tmplen);
+                ev->on_recvd(ev, c, tmp, tmplen);
                 return;
             }
             c->state = PS_CLOSE;
@@ -106,8 +106,21 @@ ev_common_newconn(struct evs *evs) {
 
 static void
 sigint(int s) {
+    /* Deallocate memory of the temp buffer. */
     free(tmp);
     exit(EXIT_SUCCESS);
+}
+
+void
+ev_common_init(struct ev *ev) {
+    /* Allocate memory for temp buffer. */
+    tmp = malloc(EV_READ_BUFFSIZE);
+}
+
+void
+ev_common_deinit(struct ev *ev) {
+    /* Deallocate memory of the temp buffer. */
+    free(tmp);
 }
 
 void
@@ -132,9 +145,9 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
         else if (pid == 0) {
             /* Child */
             prctl(PR_SET_PDEATHSIG, SIGHUP);
-
-            /* Allocate memory for temp buffer. */
-            tmp = malloc(EV_READ_BUFFSIZE);
+            
+            /* Initialize ev loop. */
+            ev_common_init(ev);
 
             /* Set no buffer for stdout */
             //setvbuf(stdout, NULL, _IONBF, 0);
