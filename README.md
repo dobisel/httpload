@@ -58,6 +58,21 @@ for example, to run `tests/test_logging.c` execute:
 make clean test UNIT=logging
 ```
 
+#### Coverage result
+
+```shell
+make clean cover-html
+```
+
+Or
+
+```shell
+make clean cover-html-show
+```
+
+to automatically open the browser and show the coverage result index html 
+file.
+
 ### Coding style
 
 Run make indent to uniform the code with `GNU indent` tool before commit.

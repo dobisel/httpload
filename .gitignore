@@ -1,7 +1,6 @@
 # Project specific
+tests/bin/*
 httpload[sc]
-tests/*
-!tests/*.*
 coverage.info
 build
 covout
@@ -61,9 +60,10 @@ dkms.conf
 # Vim
 .*.sw[po]
 
-# gcov
+# lcov
 *.gcno
 *.gcda
+*.gcda.info
 *.gcov
 
 # GNU indent

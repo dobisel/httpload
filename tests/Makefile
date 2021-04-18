@@ -1,18 +1,20 @@
 TEST_CFLAGS = -I./tests
 TEST_LDFLAGS = -lcurl -lmimick
+TEST_BIN = tests/bin
 UNIT = % 
 
 fixture_headers := $(wildcard tests/fixtures/*.h)
 fixture_objects := $(fixture_headers:%.h=%.o)
 
 client_tests := $(wildcard tests/test_client_*.c)
-client_tests := $(client_tests:%.c=%)
+client_tests := $(client_tests:tests/%.c=$(TEST_BIN)/%)
 
 server_tests := $(wildcard tests/test_server_*.c)
-server_tests := $(server_tests:%.c=%)
+server_tests := $(server_tests:tests/%.c=$(TEST_BIN)/%)
 
 common_tests := $(wildcard tests/test_*.c)
-common_tests := $(common_tests:%.c=%)
+common_tests := $(common_tests:tests/%.c=$(TEST_BIN)/%)
+
 common_tests := $(filter-out $(client_tests), $(common_tests))
 common_tests := $(filter-out $(server_tests), $(common_tests))
 
@@ -35,22 +37,25 @@ endif
 $(fixture_objects): %.o: %.c %.h
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $< -c $(LDFLAGS) $(TEST_LDFLAGS)
 
-$(client_tests): %: %.c $(common_objects) $(client_objects) $(fixture_objects)
+$(client_tests): $(TEST_BIN)/%: tests/%.c \
+		$(common_objects) $(client_objects) $(fixture_objects)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
-$(server_tests): %: %.c $(common_objects) $(server_objects) $(fixture_objects)
+$(server_tests): $(TEST_BIN)/%: tests/%.c \
+		$(common_objects) $(server_objects) $(fixture_objects)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
-$(common_tests): %: %.c $(common_objects) $(fixture_objects)
+$(common_tests): $(TEST_BIN)/%: tests/%.c \
+		$(common_objects) $(fixture_objects)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 .PHONY: test
 test: $(common_tests) $(client_tests) $(server_tests)
-	@set -e; for t in $(filter tests/test_$(UNIT), $(common_tests)); \
+	@set -e; for t in $(filter $(TEST_BIN)/test_$(UNIT), $(common_tests)); \
 		do "$${t}"; done
-	@set -e; for t in $(filter tests/test_$(UNIT), $(client_tests)); \
+	@set -e; for t in $(filter $(TEST_BIN)/test_$(UNIT), $(client_tests)); \
 		do "$${t}"; done
-	@set -e; for t in $(filter tests/test_$(UNIT), $(server_tests)); \
+	@set -e; for t in $(filter $(TEST_BIN)/test_$(UNIT), $(server_tests)); \
 		do "$${t}"; done
 
 .PHONY: coverage
@@ -67,12 +72,15 @@ endif
 cover:
 	$(MAKE) coverage GCOV=1
 
+coverage_html_index := $(shell readlink -f covout/index.html)
+
 .PHONY: cover-html
 cover-html: cover
 	genhtml coverage.info --output-directory covout
+	@echo "Open file://$(coverage_html_index) to view the coverage result."
 
-.PHONY: show-html
-show-html: cover-html
+.PHONY: cover-html-show
+cover-html-show: cover-html
 	xdg-open covout/index.html
 
 .PHONY: coveralls
@@ -81,8 +89,7 @@ coveralls:
 
 .PHONY: clean
 clean::
-	-$(RM) $(common_tests) $(server_tests) $(client_tests)
-	-cd tests; $(RM) $(CLEAN)  
+	-cd tests; $(RM) $(CLEAN) bin/*
 	-cd tests/fixtures; $(RM) $(CLEAN) 
 
 .PHONY: indent
