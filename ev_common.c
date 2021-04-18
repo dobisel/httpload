@@ -141,13 +141,13 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
     /* Allocate memory for children pids. */
     ev->children = calloc(ev->forks, sizeof (pid_t));
     if (ev->children == NULL) {
-        ERRX("Insifficient memory for %d forks.", ev->forks); // LCOV_EXCL_LINE
+        ERRX("Insifficient memory for %d forks.", ev->forks);   // LCOV_EXCL_LINE
     }
 
     for (int i = 0; i < ev->forks; i++) {
         pid = fork();
         if (pid == -1) {
-            ERRX("Cannot fork");  // LCOV_EXCL_LINE
+            ERRX("Cannot fork");    // LCOV_EXCL_LINE
         }
         if (pid > 0) {
             /* Parent */

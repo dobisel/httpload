@@ -15,7 +15,7 @@ static struct test *t;
  * ev_common_peer_disconn()
  *********************************/
 
-mmk_mock_define(close_mock_t, int, int);
+MMK_DEFINE(close_mock_t, int, int);
 
 #define CLOSEMOCK close_mock(mmk_any(int))
 
@@ -30,31 +30,31 @@ test_ev_common_peer_disconn() {
 
     /* When close successfull. */
     cret = OK;
-    mmk_when(CLOSEMOCK,.then_return = &cret,.then_errno = OK);
+    MMK_WHEN(CLOSEMOCK, &cret, OK);
     ev_common_peer_disconn(&evs, c);
-    EQI(mmk_verify(CLOSEMOCK,.times = 1), 1);
+    MMKOK(CLOSEMOCK, 1);
 
     /* When close raised error. */
     cret = ERR;
     c = malloc(sizeof (struct peer));
     c->fd = 888;
-    mmk_when(CLOSEMOCK,.then_return = &cret,.then_errno = ENOENT);
+    MMK_WHEN(CLOSEMOCK, &cret, ENOENT);
     ev_common_peer_disconn(&evs, c);
-    EQI(mmk_verify(CLOSEMOCK,.times = 2), 1);
+    MMKOK(CLOSEMOCK, 2);
 
     /* When peer is null. */
     c = NULL;
     cret = OK;
-    mmk_when(CLOSEMOCK,.then_return = &cret,.then_errno = OK);
+    MMK_WHEN(CLOSEMOCK, &cret, OK);
     ev_common_peer_disconn(&evs, c);
-    EQI(mmk_verify(CLOSEMOCK,.times = 2), 1);
-    mmk_reset(close);
+    MMKOK(CLOSEMOCK, 2);
+    MMK_RESET(close);
 }
 
 /**********************************
  * ev_common_newconn()
  *********************************/
-mmk_mock_define(accept4_mock_t, int, int, struct sockaddr *, socklen_t *,
+MMK_DEFINE(accept4_mock_t, int, int, struct sockaddr *, socklen_t *,
                 int);
 
 static void
@@ -71,7 +71,6 @@ newconn_close(struct evs *evs, struct peer *c) {
     EQI(evs->listenfd, 777);
     c->state = PS_CLOSE;
 }
-
 
 #define ACCEPT4MOCK \
     accept4_mock(mmk_eq(int, 777), mmk_any(struct sockaddr *), \
@@ -95,7 +94,7 @@ test_ev_common_newconn() {
 
     /* When accept4 successfull. */
     aret = 888;
-    mmk_when(ACCEPT4MOCK,.then_return = &aret,.then_errno = OK);
+    MMK_WHEN(ACCEPT4MOCK, &aret, OK);
 
     c = ev_common_newconn(&evs);
     EQI(c->fd, 888);
@@ -103,49 +102,49 @@ test_ev_common_newconn() {
     EQI(c->writerb.reader, 0);
     EQI(c->writerb.writer, 0);
 
-    EQI(mmk_verify(ACCEPT4MOCK,.times = 1), 1);
+    MMKOK(ACCEPT4MOCK, 1);
 
     /* When accept4 raised unhandled error. */
     aret = ERR;
-    mmk_when(ACCEPT4MOCK,.then_return = &aret,.then_errno = ENOENT);
+    MMK_WHEN(ACCEPT4MOCK, &aret, ENOENT);
 
     c = ev_common_newconn(&evs);
     ISNULL(c);
 
-    EQI(mmk_verify(ACCEPT4MOCK,.times = 2), 1);
+    MMKOK(ACCEPT4MOCK, 2);
 
     /* When accept4 raised EAGAIN. */
     aret = ERR;
-    mmk_when(ACCEPT4MOCK,.then_return = &aret,.then_errno = EAGAIN);
+    MMK_WHEN(ACCEPT4MOCK, &aret, EAGAIN);
 
     c = ev_common_newconn(&evs);
     ISNULL(c);
 
-    EQI(mmk_verify(ACCEPT4MOCK,.times = 3), 1);
+    MMKOK(ACCEPT4MOCK, 3);
 
     /* When MAX_FDS reached. */
     aret = EV_MAXFDS;
     cret = 0;
-    mmk_when(CLOSEMOCK,.then_return = &cret,.then_errno = OK);
-    mmk_when(ACCEPT4MOCK,.then_return = &aret,.then_errno = OK);
+    MMK_WHEN(CLOSEMOCK, &cret, OK);
+    MMK_WHEN(ACCEPT4MOCK, &aret, OK);
     c = ev_common_newconn(&evs);
     ISNULL(c);
-    EQI(mmk_verify(CLOSEMOCK,.times = 1), 1);
-    EQI(mmk_verify(ACCEPT4MOCK,.times = 4), 1);
+    MMKOK(CLOSEMOCK, 1);
+    MMKOK(ACCEPT4MOCK, 4);
 
     /* When newconn callback request to reject connection. */
     aret = 888;
     cret = 0;
-    mmk_when(CLOSEMOCK,.then_return = &cret,.then_errno = OK);
-    mmk_when(ACCEPT4MOCK,.then_return = &aret,.then_errno = OK);
+    MMK_WHEN(CLOSEMOCK, &cret, OK);
+    MMK_WHEN(ACCEPT4MOCK, &aret, OK);
     evs.on_connect = newconn_close;
     c = ev_common_newconn(&evs);
     ISNULL(c);
-    EQI(mmk_verify(CLOSEMOCK,.times = 2), 1);
-    EQI(mmk_verify(ACCEPT4MOCK,.times = 5), 1);
+    MMKOK(CLOSEMOCK, 2);
+    MMKOK(ACCEPT4MOCK, 5);
 
-    mmk_reset(accept4);
-    mmk_reset(close);
+    MMK_RESET(accept4);
+    MMK_RESET(close);
     ev_common_peer_disconn(&evs, c);
 }
 
@@ -153,7 +152,7 @@ test_ev_common_newconn() {
  * ev_common_read
  *********************************/
 
-mmk_mock_define(read_mock_t, ssize_t, int, void *, size_t);
+MMK_DEFINE(read_mock_t, ssize_t, int, void *, size_t);
 
 static void
 recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
@@ -210,40 +209,39 @@ test_ev_common_read() {
     ev_common_init(&ev);
 
     /* When read successfull. */
-    mmk_when(READMOCK,.then_call =
-             (mmk_fn) read_wrapper,.then_return = &rret,.then_errno = OK);
+    MMK_WHEN_CALL(READMOCK, &rret, OK, read_wrapper);
 
     ev_common_read(&ev, c);
     EQI(c->state, PS_CLOSE);
-    EQI(mmk_verify(READMOCK,.times = 3), 1);
+    MMKOK(READMOCK, 3);
 
     /* When read raise EAGAIN. */
     c->state = PS_UNKNOWN;
     rret = ERR;
-    mmk_when(READMOCK,.then_return = &rret,.then_errno = EAGAIN);
+    MMK_WHEN(READMOCK, &rret, EAGAIN);
 
     ev_common_read(&ev, c);
     EQI(c->state, PS_UNKNOWN);
-    EQI(mmk_verify(READMOCK,.times = 4), 1);
+    MMKOK(READMOCK, 4);
 
     /* When read buffer is full. */
     c->state = PS_UNKNOWN;
     rret = EV_READ_CHUNKSIZE;
-    mmk_when(READMOCK,.then_return = &rret,.then_errno = OK);
+    MMK_WHEN(READMOCK, &rret, OK);
 
     ev_common_read(&ev, c);
     EQI(c->state, PS_CLOSE);
-    EQI(mmk_verify(READMOCK,.times = 6), 1);
+    MMKOK(READMOCK, 6);
 
     ev_common_deinit(&ev);
-    mmk_reset(read);
+    MMK_RESET(read);
 }
 
 /**********************************
  * ev_common_write
  *********************************/
 
-mmk_mock_define(write_mock_t, ssize_t, int, const void *, size_t);
+MMK_DEFINE(write_mock_t, ssize_t, int, const void *, size_t);
 
 static void
 writefinishcb(struct ev *ev, struct peer *c) {
@@ -272,34 +270,34 @@ test_ev_common_write() {
 
     /* When write successfull. */
     wret = OK;
-    mmk_when(WRITEMOCK,.then_return = &wret,.then_errno = OK);
+    MMK_WHEN(WRITEMOCK, &wret, OK);
 
     ev_common_write(&ev, c);
     EQI(c->state, PS_UNKNOWN);
     EQI(c->writerb.reader, 7);
     EQI(c->writerb.writer, 7);
-    EQI(mmk_verify(WRITEMOCK,.times = 1), 1);
+    MMKOK(WRITEMOCK, 1);
 
     /* When write raised EAGAIN. */
     wret = ERR;
-    mmk_when(WRITEMOCK,.then_return = &wret,.then_errno = EAGAIN);
+    MMK_WHEN(WRITEMOCK, &wret, EAGAIN);
     EQI(rb_write(&c->writerb, "ijklmn", 6), RB_OK);
     ev_common_write(&ev, c);
     EQI(c->state, PS_WRITE);
     EQI(c->writerb.reader, 7);
     EQI(c->writerb.writer, 13);
-    EQI(mmk_verify(WRITEMOCK,.times = 2), 1);
+    MMKOK(WRITEMOCK, 2);
 
     /* When write raised unhandled errors. */
     wret = ERR;
-    mmk_when(WRITEMOCK,.then_return = &wret,.then_errno = ENOENT);
+    MMK_WHEN(WRITEMOCK, &wret, ENOENT);
     EQI(rb_write(&c->writerb, "opqrs", 5), RB_OK);
     ev_common_write(&ev, c);
     EQI(c->state, PS_CLOSE);
     EQI(c->writerb.reader, 7);
     EQI(c->writerb.writer, 18);
-    EQI(mmk_verify(WRITEMOCK,.times = 3), 1);
-    mmk_reset(write);
+    MMKOK(WRITEMOCK, 3);
+    MMK_RESET(write);
 }
 
 int

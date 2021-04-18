@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <stdbool.h>
 
+/* third-party */
+#include <mimick.h>
+
 struct test {
     const char *filename;
     const char *func;
@@ -48,4 +51,12 @@ int test_teardown(struct test *t);
 /** Equal binary */
 #define  EQB(n, g, e, ...)  __PA(); eqbin (t, false, n, g, e, ## __VA_ARGS__)
 #define NEQB(n, g, e, ...)  __PA(); eqbin (t, true,  n, g, e, ## __VA_ARGS__)
+
+/** Mimick */
+#define MMKOK(m, t)         __PA(); EQI(mmk_verify(m, .times = t), 1)
+#define MMK_WHEN(m, r, e)    mmk_when(m,.then_return = r,.then_errno = e)
+#define MMK_WHEN_CALL(m, r, e, c) \
+    mmk_when(m, .then_return = r, .then_errno = e, .then_call = (mmk_fn)c)
+#define MMK_RESET(f) mmk_reset(f)
+#define MMK_DEFINE(...) mmk_mock_define(__VA_ARGS__)
 #endif
