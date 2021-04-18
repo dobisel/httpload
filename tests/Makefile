@@ -39,14 +39,17 @@ $(fixture_objects): %.o: %.c %.h
 
 $(client_tests): $(TEST_BIN)/%: tests/%.c \
 		$(common_objects) $(client_objects) $(fixture_objects)
+	mkdir -p $(TEST_BIN)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 $(server_tests): $(TEST_BIN)/%: tests/%.c \
 		$(common_objects) $(server_objects) $(fixture_objects)
+	mkdir -p $(TEST_BIN)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 $(common_tests): $(TEST_BIN)/%: tests/%.c \
 		$(common_objects) $(fixture_objects)
+	mkdir -p $(TEST_BIN)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
 .PHONY: test
