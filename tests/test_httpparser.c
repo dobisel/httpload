@@ -1,11 +1,11 @@
-#include "common.h" 
-#include "logging.h" 
-#include "fixtures/assert.h" 
-#include <stdio.h> 
-#include <http_parser.h> 
+#include "common.h"
+#include "logging.h"
+#include "fixtures/assert.h"
+#include <stdio.h>
+#include <http_parser.h>
 
-static char url[100]; 
-static char body[100]; 
+static char url[100];
+static char body[100];
 static size_t bodylen = 0;
 
 int

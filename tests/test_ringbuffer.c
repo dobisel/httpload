@@ -1,3 +1,4 @@
+
 /* local */
 #include "common.h"
 #include "ringbuffer.h"
@@ -290,6 +291,7 @@ test_read_intofile_errors(struct test *t) {
 int
 main() {
     struct test t;
+
     SETUP(&t);
     test_write_read(&t);
     test_dryread(&t);

@@ -75,6 +75,7 @@ test_invalidargument(struct test *t) {
 int
 main() {
     struct test t;
+
     SETUP(&t);
     test_version(&t);
     test_verbosity(&t);

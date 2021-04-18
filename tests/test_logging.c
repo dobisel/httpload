@@ -27,8 +27,8 @@ test_logging_verbosity(struct test *t) {
     errno = 0;
     status = fcapt(out, err);
     EQI(status, 1);
-    EQS(err, 
-        "test_logging: w: Success" N 
+    EQS(err,
+        "test_logging: w: Success" N
         "test_logging: e: Operation not permitted" N);
     EQS(out, "i" N "012:monkeymain -- d" N);
 
@@ -36,14 +36,18 @@ test_logging_verbosity(struct test *t) {
     log_setlevel(LL_INFO);
     status = fcapt(out, err);
     EQI(status, 1);
-    EQS(err, "test_logging: w: Success" N "test_logging: e: Operation not permitted" N);
+    EQS(err,
+        "test_logging: w: Success" N
+        "test_logging: e: Operation not permitted" N);
     EQS(out, "i" N);
 
     /* Warning */
     log_setlevel(LL_WARN);
     status = fcapt(out, err);
     EQI(status, 1);
-    EQS(err, "test_logging: w: Success" N "test_logging: e: Operation not permitted" N);
+    EQS(err,
+        "test_logging: w: Success" N
+        "test_logging: e: Operation not permitted" N);
     EQS(out, "");
 
     /* ERROR */
@@ -57,6 +61,7 @@ test_logging_verbosity(struct test *t) {
 int
 main() {
     struct test t;
+
     SETUP(&t);
     test_logging_verbosity(&t);
     return TEARDOWN(&t);

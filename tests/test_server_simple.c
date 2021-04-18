@@ -74,6 +74,7 @@ test_body(struct test *t) {
 int
 main() {
     struct test t;
+
     SETUP(&t);
     test_single_packet(&t);
     test_http10_connection(&t);
