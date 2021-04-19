@@ -155,6 +155,8 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
         }
         else if (pid == 0) {
             /* Child */
+            
+            /* Kill child if parent exits. */
             prctl(PR_SET_PDEATHSIG, SIGHUP);
 
             /* Initialize ev loop. */
@@ -170,22 +172,28 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
     }
 }
 
-void
+int
 ev_common_terminate(struct ev *ev) {
-    int i;
+    int status;
+    int ret = 0;
 
-    for (i = 0; i < ev->forks; i++) {
+    for (int i = 0; i < ev->forks; i++) {
         kill(ev->children[i], SIGINT);
+        waitpid(ev->children[i], &status, 0);
+        ret |= WEXITSTATUS(status);
     }
+    free(ev->children);
+    return ret;
 }
 
+/** Cannot cover due the GCC will not gather info of fork() parents. */
+// LCOV_EXCL_START
 int
 ev_common_join(struct ev *ev) {
     int status;
     int ret = 0;
-    int i;
 
-    for (i = 0; i < ev->forks; i++) {
+    for (int i = 0; i < ev->forks; i++) {
         waitpid(ev->children[i], &status, 0);
         ret |= WEXITSTATUS(status);
     }
@@ -193,3 +201,4 @@ ev_common_join(struct ev *ev) {
     free(ev->children);
     return ret;
 }
+// LCOV_EXCL_END

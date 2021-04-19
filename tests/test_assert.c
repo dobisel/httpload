@@ -1,3 +1,4 @@
+#include "logging.h"
 #include "fixtures/assert.h"
 
 #include <stdlib.h>
@@ -41,6 +42,7 @@ int
 main() {
     struct test t;
 
+    log_setlevel(LL_DEBUG);
     SETUP(&t);
     test_eqint(&t);
     test_eqstr(&t);

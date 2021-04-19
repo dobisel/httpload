@@ -146,12 +146,15 @@ httpd_start(struct httpd *server) {
     ev_server_start((struct evs *) server);
 }
 
-void
+int
 httpd_stop(struct httpd *server) {
-    ev_server_terminate((struct evs *) server);
+    return ev_server_terminate((struct evs *) server);
 }
 
+/** Cannot cover due the GCC will not gather info of fork() parents. */
+// LCOV_EXCL_START
 int
 httpd_join(struct httpd *server) {
     return ev_server_join((struct evs *) server);
 }
+// LCOV_EXCL_END

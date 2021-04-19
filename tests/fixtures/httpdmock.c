@@ -27,9 +27,9 @@ httpdmock_start(struct httpdmock *m) {
     m->url = strdup(tmp);
 }
 
-void 
+int 
 httpdmock_stop(struct httpdmock *m) {
-    httpd_stop(&m->httpd);
+    int ret = httpd_stop(&m->httpd);
     free(m->url);
-    httpd_join(&m->httpd);
+    return ret;
 }

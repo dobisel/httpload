@@ -304,6 +304,7 @@ int
 main() {
     static struct test test;
 
+    log_setlevel(LL_ERROR);
     t = &test;
     SETUP(t);
     test_ev_common_write();

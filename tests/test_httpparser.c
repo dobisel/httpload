@@ -77,6 +77,7 @@ test_httpparser_get(struct test *t) {
 
 int
 main() {
+    log_setlevel(LL_DEBUG);
     SETUP(&test);
     test_httpparser_get(&test);
     return TEARDOWN(&test);

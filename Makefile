@@ -4,6 +4,7 @@ LDFLAGS = -lhttp_parser
 CFLAGS = \
 		 -I. \
 		 -Wall \
+		 -std=gnu99 \
 		 -fplan9-extensions \
 		 -fms-extensions \
 		 -D_GNU_SOURCE=

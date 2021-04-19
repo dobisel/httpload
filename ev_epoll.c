@@ -64,7 +64,7 @@ _epoll_server_loop(struct evs *evs) {
 
     // TODO: Share epollfd between processes or not?
     /* Create epoll. */
-    evs->epoll->fd = epollfd = epoll_create1(0);
+    evs->epoll->fd = epollfd = epoll_create1(EPOLL_CLOEXEC);
     if (epollfd < 0) {
         ERRX("Cannot create epoll."); // LCOV_EXCL_LINE
     }
@@ -86,6 +86,7 @@ _epoll_server_loop(struct evs *evs) {
 
         for (int i = 0; i < nready; i++) {
             if (events[i].data.fd == evs->listenfd) {
+                /* Listenfd triggered: %d */
                 if (events[i].events & EPOLLERR) {
                     WARN("epoll_wait returned EPOLLERR");
                     continue;
@@ -153,6 +154,7 @@ _epoll_server_loop(struct evs *evs) {
 
 void
 ev_epoll_server_start(struct evs *evs) {
+
     /* Create and listen tcp socket */
     evs->listenfd = tcp_listen(&(evs->bind));
 
@@ -163,9 +165,23 @@ ev_epoll_server_start(struct evs *evs) {
     ev_common_fork(evs, (ev_cb_t) _epoll_server_loop);
 }
 
-int
-ev_epoll_server_join(struct evs *evs) {
+static void
+ev_epoll_server_cleanup(struct evs *evs) {
     free(evs->epoll);
     close(evs->listenfd);
+}
+
+int
+ev_epoll_server_terminate(struct evs *evs) {
+    ev_epoll_server_cleanup(evs);
+    return ev_common_terminate((struct ev *) evs);
+}
+
+/** Cannot cover due the GCC will not gather info of fork() parents. */
+// LCOV_EXCL_START
+int
+ev_epoll_server_join(struct evs *evs) {
+    ev_epoll_server_cleanup(evs);
     return ev_common_join((struct ev *) evs);
 }
+// LCOV_EXCL_END

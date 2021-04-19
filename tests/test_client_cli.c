@@ -1,81 +1,66 @@
 #include "logging.h"
 #include "client_cli.h"
 #include "fixtures/assert.h"
-#include "fixtures/capture.h"
+#include "fixtures/pcapt.h"
 
-#define PROG    "httploadc"
-#define fcapt(...) fcapture(clientcli_run, PROG, ## __VA_ARGS__)
+static struct pcapt p = {.prog = "httploadc"};
+
+#define CCAPTW0(...) PCAPTW0(&p, clientcli_run, __VA_ARGS__)
 
 static void
 test_version(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-    int status;
+    EQI(CCAPTW0("--version"), 0);
+    EQS(p.out, HTTPLOAD_VERSION N);
 
-    status = fcapt(1, (char *[]) { "--version" }, out, err);
-    EQI(status, 0);
-    EQS(out, HTTPLOAD_VERSION N);
-
-    status = fcapt(1, (char *[]) { "-V" }, out, err);
-    EQI(status, 0);
-    EQS(out, HTTPLOAD_VERSION N);
+    EQI(CCAPTW0("-V"), 0);
+    EQS(p.out, HTTPLOAD_VERSION N);
 }
 
 static void
 test_verbosity(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-    int status;
+    EQI(CCAPTW0("-v", "1"), 0);
+    EQS(p.out, "");
+    EQS(p.err, "");
 
-    status = fcapt(2, (char *[]) { "-v", "1" }, out, err);
-    EQI(status, 0);
-    EQS(out, "");
-    EQS(err, "");
+    EQI(CCAPTW0("-v1"), 0);
+    EQS(p.out, "");
+    EQS(p.err, "");
 
-    status = fcapt(2, (char *[]) { "-v", "2" }, out, err);
-    EQI(status, 0);
-    EQS(out, "");
-    EQS(err, "");
+    EQI(CCAPTW0("-v2"), 0);
+    EQS(p.out, "");
+    EQS(p.err, "");
 
-    status = fcapt(2, (char *[]) { "-v", "3" }, out, err);
-    EQI(status, 0);
-    EQS(out, "");
-    EQS(err, "");
+    EQI(CCAPTW0("-v3"), 0);
+    EQS(p.out, "");
+    EQS(p.err, "");
 
-    status = fcapt(2, (char *[]) { "-v", "4" }, out, err);
-    EQI(status, 0);
-    EQS(out, "");
-    EQS(err, "");
+    EQI(CCAPTW0("-v4"), 0);
+    EQS(p.out, "");
+    EQS(p.err, "");
 
-    status = fcapt(2, (char *[]) { "-v", "5" }, out, err);
-    EQI(status, 64);
-    EQS(out, "");
-    EQNS(29, err, PROG ": Invalid verbosity level: 5");
+    EQI(CCAPTW0("-v5"), 64);
+    EQS(p.out, "");
+    EQNS(29, p.err, "httploadc: Invalid verbosity level: 5");
 }
 
 static void
 test_invalidargument(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-    int status;
-
     /* Invalid optional argument. */
-    status = fcapt(2, (char *[]) { "--invalidargument", "0" }, out, err);
-    EQI(status, 64);
-    EQS(out, "");
-    EQNS(49, err, PROG ": unrecognized option '--invalidargument'");
+    EQI(CCAPTW0("--invalidargument", "0"), 64);
+    EQS(p.out, "");
+    EQNS(49, p.err, "httploadc: unrecognized option '--invalidargument'");
 
     /* Extra positional arguments. */
-    status = fcapt(3, (char *[]) { "foo", "bar", "baz" }, out, err);
-    EQI(status, 64);
-    EQS(out, "");
-    EQNS(29, err, PROG ": Too many arguments");
+    EQI(CCAPTW0("foo", "bar", "baz", "0"), 64);
+    EQS(p.out, "");
+    EQNS(29, p.err, "httploadc: Too many arguments");
 }
 
 int
 main() {
     struct test t;
 
+    log_setlevel(LL_DEBUG);
     SETUP(&t);
     test_version(&t);
     test_verbosity(&t);

@@ -12,7 +12,7 @@ test_single_packet(struct test *t) {
     EQI(httpdmock_get(&m), 200);
     EQS(m.out, "Hello HTTPLOAD!");
     EQS(m.err, "");
-    httpdmock_stop(&m);
+    EQI(httpdmock_stop(&m), 0);
 }
 
 static void
@@ -33,7 +33,7 @@ test_http10_connection(struct test *t) {
     EQI(httpdmock_get(&m), 200);
     EQS(m.out, "Hello HTTPLOAD!");
     EQS(m.err, "");
-    httpdmock_stop(&m);
+    EQI(httpdmock_stop(&m), 0);
     curl_slist_free_all(headers);
 }
 
@@ -49,7 +49,7 @@ test_http11_connection(struct test *t) {
     EQI(httpdmock_get(&m), 200);
     EQS(m.out, "Hello HTTPLOAD!");
     EQS(m.err, "");
-    httpdmock_stop(&m);
+    EQI(httpdmock_stop(&m), 0);
     curl_slist_free_all(headers);
 }
 
@@ -68,13 +68,14 @@ test_body(struct test *t) {
     EQI(httpdmock_get(&m), 200);
     EQS(m.out, TESTBODY);
     EQS(m.err, "");
-    httpdmock_stop(&m);
+    EQI(httpdmock_stop(&m), 0);
 }
 
 int
 main() {
     struct test t;
 
+    log_setlevel(LL_DEBUG);
     SETUP(&t);
     test_single_packet(&t);
     test_http10_connection(&t);

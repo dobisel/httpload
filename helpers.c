@@ -33,7 +33,6 @@ tcp_listen(uint16_t * port) {
     opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0) {
         ERRX("Cannot set socket options.");  // LCOV_EXCL_LINE
-
     }
 
     memset(&addr, 0, sizeof (addr));
@@ -48,7 +47,6 @@ tcp_listen(uint16_t * port) {
     if (*port == 0) {
         if (getsockname(fd, (struct sockaddr *) &addr, &addrlen)) {
             ERRX("Cannot get socketinfo: %d", fd);  // LCOV_EXCL_LINE
-
         }
         *port = ntohs(addr.sin_port);
     }

@@ -92,13 +92,22 @@ servercli_run(int argc, char **argv) {
         .bind = settings.bind
     };
 
+    /* Dry Run. */
     if (settings.dryrun) {
         return _dryrun();
     }
+
     /* Start it */
     httpd_start(&server);
+   
+    /** Cannot cover due the GCC will not gather info of fork() parents. */
+    // LCOV_EXCL_START
 
+    /* Prompt listening port. */
     INFO("Listening on port: %d", server.bind);
-
-    return httpd_join(&server);
+    
+    int ret = httpd_join(&server);
+    DBUG("END: %d.", ret);
+    return ret;
+    // LCOV_EXCL_END
 }

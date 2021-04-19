@@ -39,8 +39,8 @@ int test_teardown(struct test *t);
 #define ISNOTNULL(g) __PA(); isnull(t, true,  g)
 
 /** Equal int */
-#define  EQI(g, e) __PA(); eqint(t, false, g, e)
-#define NEQI(g, e) __PA(); eqint(t, true,  g, e)
+#define  EQI(g, e) __PA(); eqint((t), false, (g), (e))
+#define NEQI(g, e) __PA(); eqint((t), true,  (g), (e))
 
 /** Equal str */
 #define  EQS(g, e, ...)     __PA(); eqstr (t, false,    g, e, ## __VA_ARGS__)

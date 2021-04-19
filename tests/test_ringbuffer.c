@@ -292,6 +292,7 @@ int
 main() {
     struct test t;
 
+    log_setlevel(LL_DEBUG);
     SETUP(&t);
     test_write_read(&t);
     test_dryread(&t);

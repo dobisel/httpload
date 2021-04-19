@@ -128,7 +128,6 @@ test_setup(struct test *t, const char *filename) {
     t->filename = filename;
     t->tmp = malloc(TEST_TEMP_BUFFSIZE);
     t->tmplen = 0;
-    log_setlevel(LL_DEBUG);
     char temp[TM + 1];
     temp[TM] = 0;
     memset(temp, ' ', TM);

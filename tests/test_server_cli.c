@@ -1,91 +1,91 @@
 #include "logging.h"
 #include "server_cli.h"
 #include "fixtures/assert.h"
-#include "fixtures/capture.h"
+#include "fixtures/pcapt.h"
 #include "fixtures/curl.h"
+#include <unistd.h>
 
-#define T   2
-#define PROG    "httploads"
-#define fcapttimeout(t, ...) fcapture_timeout((t), servercli_run, PROG, ## __VA_ARGS__)
-#define fcapt(...) fcapttimeout(0, ## __VA_ARGS__)
+static struct pcapt p = {.prog = "httploads"};
+
+#define SCAPTW0(...)    PCAPTW0   (&p, servercli_run, __VA_ARGS__)
+#define SCAPT(...)      PCAPT     (&p, servercli_run, __VA_ARGS__)
+#define SCAPT_KILL()    PCAPT_KILL(&p)
 
 static void
 test_version(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-    int status;
+    EQI(SCAPTW0("--version"), 0);
+    EQS(p.out, HTTPLOAD_VERSION N);
+    EQS(p.err, "");
 
-    status = fcapt(1, (char *[]) { "--version" }, out, err);
-    EQI(status, 0);
-    EQS(out, HTTPLOAD_VERSION N);
-    EQS(err, "");
-
-    status = fcapt(1, (char *[]) { "-V" }, out, err);
-    EQI(status, 0);
-    EQS(out, HTTPLOAD_VERSION N);
-    EQS(err, "");
+    EQI(SCAPTW0("-V"), 0);
+    EQS(p.out, HTTPLOAD_VERSION N);
+    EQS(p.err, "");
 }
 
 static void
 test_fork(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-    int status;
-
-    status = fcapt(2, (char *[]) { "--dry", "-c2" }, out, err);
-    EQI(status, 0);
-    EQS(err, "");
-
-    status = fcapt(2, (char *[]) { "--dry", "-V" }, out, err);
-    EQI(status, 0);
-    EQS(out, HTTPLOAD_VERSION N);
-    EQS(err, "");
+    EQI(SCAPT("-c2"), 0);
+    EQS(p.err, "");
+    EQS(p.out, "");
+    EQI(HTTPGET("http://localhost:8080/"), 200);
+    SCAPT_KILL();
+    EQS(p.err, "");
+    EQS(p.out, "Listening on port: 8080" N);
 }
 
 static void
 test_invalidargument(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
-    int status;
-
     /* Invalid optional argument. */
-    status =
-        fcapt(3, (char *[]) { "--dry", "--invalidargument", "0" }, out, err);
-    NEQI(status, 0);
-    EQS(out, "");
-    EQNS(49, err, PROG ": unrecognized option '--invalidargument'");
+    NEQI(SCAPTW0("--dry", "--invalidargument", "0"), 0);
+    EQS(p.out, "");
+    EQNS(49, p.err, "httploads: unrecognized option '--invalidargument'");
 
     /* Extra positional arguments. */
-    status = fcapt(4, (char *[]) { "--dry", "foo", "bar", "baz" }, out, err);
-    NEQI(status, 0);
-    EQS(out, "");
-    EQNS(29, err, PROG ": Too many arguments");
+    NEQI(SCAPTW0("--dry", "foo", "bar", "baz"), 0);
+    EQS(p.out, "");
+    EQNS(29, p.err, "httploads: Too many arguments");
 
     /* Invalid fork counts. */
-    status = fcapt(2, (char *[]) { "--dry", "-c0" }, out, err);
-    NEQI(status, 0);
-    EQS(out, "");
-    EQNS(42, err, "test_server_cli: Invalid number of forks: 0");
+    NEQI(SCAPTW0("--dry", "-c0"), 0);
+    EQS(p.out, "");
+    EQNS(42, p.err, "test_server_cli: Invalid number of forks: 0");
 }
 
 static void
-test_port(struct test *t) {
-    char out[CAPTMAX + 1] = { 0 };
-    char err[CAPTMAX + 1] = { 0 };
+test_bind(struct test *t) {
+    EQI(SCAPT("-b4444"), 0);
+    EQI(HTTPGET("http://localhost:4444/"), 200);
+    SCAPT_KILL();
+    EQS(p.err, "");
+    EQS(p.out, "Listening on port: 4444" N);
+    
+    /* Listen on port < 1024 */
+    EQI(SCAPTW0("-b888"), 1);
+    EQS(p.out, "");
+    EQS(p.err, "test_server_cli: Cannot bind on: 30723: Permission denied" N);
 
-    EQI(fcapt(2, (char *[]) { "--dry", "-b888" }, out, err), 0);
-    EQS(err, "");
-    EQS(out, "forks:\t\t1" N "bind:\t\t888" N "verbosity:\tDebug(4)" N);
+}
+
+static void
+test_dryrun(struct test *t) {
+    EQI(SCAPTW0("--dry"), 0);
+    EQS(p.err, "");
+    EQS(p.out, 
+        "forks:\t\t1" N 
+        "bind:\t\t8080" N
+        "verbosity:\tDebug(4)" N);
 }
 
 int
 main() {
     struct test t;
 
+    log_setlevel(LL_DEBUG);
     SETUP(&t);
     test_version(&t);
     test_fork(&t);
     test_invalidargument(&t);
-    test_port(&t);
+    test_bind(&t);
+    test_dryrun(&t);
     return TEARDOWN(&t);
 }

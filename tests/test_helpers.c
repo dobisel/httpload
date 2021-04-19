@@ -38,6 +38,7 @@ int
 main() {
     static struct test test;
 
+    log_setlevel(LL_DEBUG);
     t = &test;
     SETUP(t);
     test_enable_nonblocking();

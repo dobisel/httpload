@@ -14,7 +14,7 @@ struct httpdmock {
 };
 
 int httpdmock_get(struct httpdmock *m);
-void httpdmock_stop(struct httpdmock *m);
+int httpdmock_stop(struct httpdmock *m);
 void httpdmock_start(struct httpdmock *m);
 
 

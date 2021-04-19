@@ -7,7 +7,7 @@ struct httpd {
     struct evs;
 };
 
-void httpd_stop(struct httpd *server);
+int httpd_stop(struct httpd *server);
 void httpd_start(struct httpd *server);
 void httpd_terminate(struct httpd *server);
 int httpd_join(struct httpd *server);
