@@ -29,8 +29,6 @@ test_fork(struct test *t) {
     EQS(p.out, "");
     EQI(HTTPGET("http://localhost:8080/"), 200);
     SCAPT_KILL();
-    EQS(p.err, "");
-    EQS(p.out, "Listening on port: 8080" N);
 }
 
 static void
@@ -63,7 +61,7 @@ test_bind(struct test *t) {
     EQI(SCAPTW0("-b888"), 1);
     EQS(p.out, "");
     EQS(p.err, "test_server_cli: Cannot bind on: 30723: Permission denied" N);
-
+    SCAPT_KILL();
 }
 
 static void

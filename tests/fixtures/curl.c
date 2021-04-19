@@ -24,6 +24,7 @@ curl_get(const char *url, struct curl_slist *headers, curlhook_t optionscb,
             return ERR;
         }
         
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fout);
     }

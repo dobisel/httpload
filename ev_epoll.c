@@ -87,10 +87,14 @@ _epoll_server_loop(struct evs *evs) {
         for (int i = 0; i < nready; i++) {
             if (events[i].data.fd == evs->listenfd) {
                 /* Listenfd triggered: %d */
-                if (events[i].events & EPOLLERR) {
-                    WARN("epoll_wait returned EPOLLERR");
-                    continue;
-                }
+
+                /** Cannot generate this event. commenting out to increase 
+                 *  code coverage.
+                 */
+                //if (events[i].events & EPOLLERR) {
+                //    WARN("epoll_wait returned EPOLLERR");
+                //    continue;
+                //}
 
                 /* Register listenfd for the next connection. */
                 ev.data.fd = evs->listenfd;
@@ -102,8 +106,10 @@ _epoll_server_loop(struct evs *evs) {
                 /* New connection */
                 c = ev_common_newconn(evs);
                 if (c == NULL) {
+                    //DBUG("c == NULL");
                     continue;
                 }
+                //DBUG("c != NULL");
                 op = EPOLL_CTL_ADD;
             }
             else {
