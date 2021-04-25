@@ -12,7 +12,7 @@
 #define CLEANFD remove(TMP_F)
 
 void
-test_write_verb_path_version() {
+test_write_verb_path_version(struct test *t) {
     int fd;
     int len;
     char *vpv;
@@ -24,30 +24,30 @@ test_write_verb_path_version() {
     write_verb_path_version(fd, "GET", "/index.html", HTTP_V1_1);
     lseek(fd, 0, SEEK_SET);
     read(fd, response, len);
-    eqstr(vpv, response);
+    EQS(vpv, response);
     free(response);
     CLEANFD;
 }
 
 void
-test_write_host() {
+test_write_host(struct test *t) {
     int fd;
     int len;
     char *host = "google.com";
     char *response;
     fd = MOCKFD;
     len = write_host(fd, host);
-    notequalint(ERR, len);
+    NEQI(ERR, len);
     response = (char*) malloc(len * sizeof(char));
     lseek(fd, 0, SEEK_SET);
     read(fd, response, len);
-    eqstr("HOST: google.com" RN, response);
+    EQS("HOST: google.com" RN, response);
     free(response);
     CLEANFD;
 }
 
 void
-test_write_headers() {
+test_write_headers(struct test *t) {
     int fd;
     int len;
     int header_count;
@@ -64,7 +64,7 @@ test_write_headers() {
     header_count = 5;
     fd = MOCKFD;
     len = write_headers(fd, headers, header_count);
-    notequalint(ERR, len);
+    NEQI(ERR, len);
     lseek(fd, 0, SEEK_SET);
     response = (char*) malloc(len * sizeof(char));
     expected = (char*) malloc(len * sizeof(char));
@@ -73,14 +73,14 @@ test_write_headers() {
         strcat(expected, headers[i]);
         strcat(expected, "\r\n");
     }
-    eqstr(expected, response);
+    EQS(expected, response);
     free(response);
     free(expected);
     CLEANFD;
 }
 
 void
-test_write_body() {
+test_write_body(struct test *t) {
     int fd;
     int len;
     char *response;
@@ -88,20 +88,20 @@ test_write_body() {
     char *body = "foo baz bar cux";
     fd = MOCKFD;
     len = write_body(fd, body, 15);
-    notequalint(ERR, len);
+    NEQI(ERR, len);
     lseek(fd, 0, SEEK_SET);
     response = (char*) malloc(len * sizeof(char));
     expected = (char*) malloc(len * sizeof(char));
     sprintf(expected, "Content-Length: %ld\r\n\r\n%s", strlen(body), body);
     read(fd, response, len);
-    eqstr(expected, response);
+    EQS(expected, response);
     free(response);
     free(expected);
     CLEANFD;
 }
 
 void
-test_send_request() {
+test_send_request(struct test *t) {
     int fd;
     int len;
     char *response;
@@ -112,22 +112,25 @@ test_send_request() {
     };
     fd = MOCKFD;
     len = send_request(fd, "google.com", "GET", "/foo/baz", headers, 1, "foo baz bar cux", 15, NULL, HTTP_V1_1);
-    notequalint(ERR, len);
+    NEQI(ERR, len);
     lseek(fd, 0, SEEK_SET);
     response = (char*) malloc(len * sizeof(char));
     read(fd, response, len);
-    eqstr(expected, response);
+    EQS(expected, response);
     free(response);
     CLEANFD;
 }
 
 int
 main() {
+    struct test t;
+
     log_setlevel(LL_DEBUG);
-    test_write_verb_path_version();
-    test_write_host();
-    test_write_headers();
-    test_write_body();
-    test_send_request();
-    return EXIT_SUCCESS;
+    SETUP(&t);
+    test_write_verb_path_version(&t);
+    test_write_host(&t);
+    test_write_headers(&t);
+    test_write_body(&t);
+    test_send_request(&t);
+    return TEARDOWN(&t);
 }
