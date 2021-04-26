@@ -1,3 +1,32 @@
+/** 
+
+   test             pcap         main            httpd
+    .                .            .               .
+    .                .            .               .
+  START              .            .               .
+    |                .            .               .
+    |________________             .               .
+                     |            .               .
+                    fork          .               .
+     ________________|\___________                .
+    |                             |               .
+   test                           |               .
+    |                             |               .
+   stop                          fork             .
+    |________________             |\______________ 
+                     |            |               |
+                    kill ------> kill ---------> loop 
+                     |            | ______________|    
+                    wait          |/                   
+                     |           join
+                     | ___________|
+                     |/
+                    join
+     ________________|
+    |
+   EXIT
+
+*/
 #include "logging.h"
 #include "fixtures/pcapt.h"
 
@@ -6,10 +35,8 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
-
 #define STDOUT  1
 #define STDERR  2
-
 
 static int
 execchild(pfunc_t f, const char *prog, int argc, char **argv) {
@@ -37,7 +64,7 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
 
         /* Prepare stdout pipe. */
         if (pipe(p->outpipe)) {
-            ERRX("stdout pipe");
+            ERRORX("stdout pipe");
         }
     }
     if (p->err) {
@@ -46,7 +73,7 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
 
         /* Prepare stderr pipe. */
         if (pipe(p->errpipe)) {
-            ERRX("stderr pipe");
+            ERRORX("stderr pipe");
         }
     }
 
@@ -57,7 +84,7 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
     /* Fork */
     pid = fork();
     if (pid == -1) {
-        ERRX("Cannot fork");
+        ERRORX("Cannot fork");
     }
 
     if (pid > 0) {
@@ -68,7 +95,7 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
 
     if (pid != 0) {
         /* fork() returned Something is wrong here! */
-        ERRX("Cannot fork");
+        ERRORX("Cannot fork");
     }
 
     /* Child */
@@ -100,6 +127,8 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
         /* Close the write side of stderr. */
         close(p->errpipe[1]);
     }
+
+    /* exit capt child */
     exit(status);
 }
 

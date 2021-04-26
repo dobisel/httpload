@@ -9,9 +9,9 @@ int
 monkeymain(int argc, char **argv) {
     WARN("w");
     INFO("i");
-    DBUG("d");
+    DEBUG("d");
     errno = 1;
-    ERRX("e");
+    ERRORX("e");
 }
 
 #define LCAPTW0() PCAPTW0(&p, monkeymain)

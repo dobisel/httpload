@@ -27,7 +27,7 @@ test_enable_nonblocking() {
 
     /* When fcntl raise error. */
     ret = ERR;
-    MMK_WHEN(FCNTLMOCK, &ret, ENOENT);
+    MMK_WHEN_RET(FCNTLMOCK, &ret, ENOENT);
     enable_nonblocking(888);
     MMKOK(FCNTLMOCK, 1);
 

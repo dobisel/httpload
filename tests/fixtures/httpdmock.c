@@ -21,7 +21,10 @@ httpdmock_start(struct httpdmock *m) {
     m->req_headers = NULL;
     fflush(stdout);    
     fflush(stderr);    
-    httpd_start(&m->httpd);
+    if (httpd_start(&m->httpd) == ERR) {
+        ERROR("Error starting httpd mock.");
+        return;
+    }
     
     sprintf(tmp, "http://localhost:%d", m->httpd.bind);
     m->url = strdup(tmp);

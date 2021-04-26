@@ -41,7 +41,7 @@ parse_opt(int key, char *arg, struct argp_state *state) {
         case 'c':
             settings.forks = atoi(arg);
             if (settings.forks <= 0) {
-                ERRX("Invalid number of forks: %d", settings.forks);
+                ERRORX("Invalid number of forks: %d", settings.forks);
             }
 
             break;
@@ -98,16 +98,16 @@ servercli_run(int argc, char **argv) {
     }
 
     /* Start it */
-    httpd_start(&server);
+    if (httpd_start(&server)) {
+        ERROR("Cannot start HTTP server.");
+        return EXIT_FAILURE;
+    }
    
-    /** Cannot cover due the GCC will not gather info of fork() parents. */
-    // LCOV_EXCL_START
-
     /* Prompt listening port. */
     INFO("Listening on port: %d", server.bind);
     
+    /* Wait for server to stop. */
     int ret = httpd_join(&server);
-    DBUG("END: %d.", ret);
+    //__gcov_flush();
     return ret;
-    // LCOV_EXCL_END
 }

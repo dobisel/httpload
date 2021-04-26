@@ -13,7 +13,7 @@
     HMAG "%s" WHT "(" BLU "struct" RST " test *t) " HRED "Failed!" \
             RST N, t->filename, t->line, t->func)
 #define FAIL(fmt, not, g, e) ({ FAIL_HEADER(); \
-    if (e) { \
+    if (e != NULL) { \
         if (not) printf("NOT "); \
         printf(GRN "EXPECTED:\t" RST fmt N, e);} \
     printf(YEL "GIVEN:\t\t" RST fmt N, g); \
@@ -55,7 +55,7 @@ eqnstr(struct test *t, bool not, size_t len, const char *given,
     va_start(args, expfmt);
     t->tmplen = vsnprintf(t->tmp, len + 1, expfmt, args);
     if (t->tmplen < 0) {
-        ERRX("invalid format string: %s", expfmt);
+        ERRORX("invalid format string: %s", expfmt);
     }
     va_end(args);
     
@@ -78,7 +78,7 @@ eqstr(struct test *t, bool not, const char *given,
     va_start(args, expfmt);
     t->tmplen = vsprintf(t->tmp, expfmt, args);
     if (t->tmplen < 0) {
-        ERRX("invalid format string: %s", expfmt);
+        ERRORX("invalid format string: %s", expfmt);
     }
     va_end(args);
     

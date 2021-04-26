@@ -9,6 +9,7 @@
 #include <sys/prctl.h>
 #include <netinet/in.h>
 
+static struct ev *_ev;
 static char *tmp;
 
 void
@@ -116,16 +117,26 @@ ev_common_newconn(struct evs *evs) {
 }
 
 static void
-sigint(int s) {
-    /* Deallocate memory of the temp buffer. */
-    free(tmp);
-    exit(EXIT_SUCCESS);
+_parent_sigint(int s) {
+    for (int i = 0; i < _ev->forks; i++) {
+        kill(_ev->children[i], SIGINT);
+    }
+}
+
+static int iii = 0;
+
+static void
+_child_sigint(int s) {
+    DEBUG("Child signal recvd: %d, fork: %d, repeat: %d", s, _ev->id, ++iii);
 }
 
 void
 ev_common_init(struct ev *ev) {
     /* Allocate memory for temp buffer. */
     tmp = malloc(EV_READ_BUFFSIZE);
+
+    /* Set no buffer for stdout */
+    setvbuf(stdout, NULL, _IONBF, 0);
 }
 
 void
@@ -134,42 +145,51 @@ ev_common_deinit(struct ev *ev) {
     free(tmp);
 }
 
-void
+int
 ev_common_fork(struct ev *ev, ev_cb_t loop) {
     pid_t pid;
+    int ret = OK;
 
     /* Allocate memory for children pids. */
     ev->children = calloc(ev->forks, sizeof (pid_t));
     if (ev->children == NULL) {
-        ERRX("Insifficient memory for %d forks.", ev->forks);   // LCOV_EXCL_LINE
+        ERROR("Insifficient memory for %d forks.", ev->forks);   // LCOV_EXCL_LINE
+        return ERR;
     }
+    
+    /* Preserve struct ev for signal handler. */
+    _ev = ev;
 
     for (int i = 0; i < ev->forks; i++) {
         pid = fork();
         if (pid == -1) {
-            ERRX("Cannot fork");    // LCOV_EXCL_LINE
+            ERRORX("Cannot fork");
         }
         if (pid > 0) {
             /* Parent */
             ev->children[i] = pid;
+            signal(SIGINT, _parent_sigint);
         }
         else if (pid == 0) {
             /* Child */
-            
-            /* Kill child if parent exits. */
-            prctl(PR_SET_PDEATHSIG, SIGHUP);
+            ev->id = i;
+
+            /* Kill children by parent. */
+            signal(SIGINT, _child_sigint);
 
             /* Initialize ev loop. */
             ev_common_init(ev);
 
-            /* Set no buffer for stdout */
-            //setvbuf(stdout, NULL, _IONBF, 0);
+            /* Main loop */
+            ret = loop(ev);
 
-            ev->id = i;
-            signal(SIGINT, sigint);
-            loop(ev);
+            /* Deinitialize ev loop. %d */
+            ev_common_deinit(ev);
+
+            exit(ret? EXIT_FAILURE: EXIT_SUCCESS);
         }
     }
+    return ret;
 }
 
 int
@@ -186,8 +206,6 @@ ev_common_terminate(struct ev *ev) {
     return ret;
 }
 
-/** Cannot cover due the GCC will not gather info of fork() parents. */
-// LCOV_EXCL_START
 int
 ev_common_join(struct ev *ev) {
     int status;
@@ -201,4 +219,3 @@ ev_common_join(struct ev *ev) {
     free(ev->children);
     return ret;
 }
-// LCOV_EXCL_END

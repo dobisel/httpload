@@ -1,8 +1,6 @@
-
 /* local */
 #include "logging.h"
 #include "ringbuffer.h"
-#include "helpers.h"
 #include "ev_common.h"
 #include "ev_epoll.h"
 
@@ -51,10 +49,11 @@
 
 struct ev_epoll {
     int fd;
+    struct epoll_event *events;
 };
 
-static void
-_epoll_server_loop(struct evs *evs) {
+int
+ev_epoll_server_loop(struct evs *evs) {
     struct epoll_event *events;
     struct epoll_event ev = { 0 };
     struct peer *c;
@@ -62,54 +61,59 @@ _epoll_server_loop(struct evs *evs) {
     int nready;
     int op;
 
-    // TODO: Share epollfd between processes or not?
     /* Create epoll. */
     evs->epoll->fd = epollfd = epoll_create1(EPOLL_CLOEXEC);
     if (epollfd < 0) {
-        ERRX("Cannot create epoll."); // LCOV_EXCL_LINE
+        return ERR;
     }
 
     /* Register accept event */
     ev.data.fd = evs->listenfd;
     ev.events = EPCOMM | EPOLLIN;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, evs->listenfd, &ev)) {
-        ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);  // LCOV_EXCL_LINE
+        ERROR("epol_ctl error, add listenfd: %d", evs->listenfd);
+        return ERR;
     }
 
-    events = calloc(EV_BATCHSIZE, sizeof (struct epoll_event));
+    evs->epoll->events = events = calloc(EV_BATCHSIZE, 
+            sizeof (struct epoll_event));
     if (events == NULL) {
-        ERRX("Unable to allocate memory for epoll_events."); // LCOV_EXCL_LINE
+        ERROR("Unable to allocate memory for epoll_events.");
+        return ERR;
     }
 
-    for (;;) {
+    while (true) {
         nready = epoll_wait(epollfd, events, EV_BATCHSIZE, -1);
+        if (nready == ERR) {
+            if (errno == EINTR) {
+                return OK;
+            }
+            ERROR("epoll_wait() returned err(%d)", errno);
+            return ERR;
+        }
 
         for (int i = 0; i < nready; i++) {
             if (events[i].data.fd == evs->listenfd) {
                 /* Listenfd triggered: %d */
 
-                /** Cannot generate this event. commenting out to increase 
-                 *  code coverage.
-                 */
-                //if (events[i].events & EPOLLERR) {
-                //    WARN("epoll_wait returned EPOLLERR");
-                //    continue;
-                //}
+                if (events[i].events & EPOLLERR) {
+                    WARN("epoll_wait returned EPOLLERR");
+                    continue;
+                }
 
                 /* Register listenfd for the next connection. */
                 ev.data.fd = evs->listenfd;
                 ev.events = EPCOMM | EPOLLIN;
                 if (epoll_ctl(epollfd, EPOLL_CTL_MOD, evs->listenfd, &ev)) {
-                    ERRX("epol_ctl error, add listenfd: %d", evs->listenfd);  // LCOV_EXCL_LINE
+                    ERROR("epol_ctl error, add listenfd: %d", evs->listenfd);
+                    return ERR;
                 }
 
                 /* New connection */
                 c = ev_common_newconn(evs);
                 if (c == NULL) {
-                    //DBUG("c == NULL");
                     continue;
                 }
-                //DBUG("c != NULL");
                 op = EPOLL_CTL_ADD;
             }
             else {
@@ -137,7 +141,8 @@ _epoll_server_loop(struct evs *evs) {
             //DBUG("CTL: %s %s fd: %d", opname(op), statename(c->state), c->fd);
             if (op == EPOLL_CTL_DEL) {
                 if (epoll_ctl(epollfd, EPOLL_CTL_DEL, c->fd, NULL)) {
-                    ERRX("Cannot DEL EPOLL for fd: %d", c->fd);  // LCOV_EXCL_LINE
+                    WARN("Cannot DEL EPOLL for fd: %d", c->fd); 
+                    continue;
                 }
 
                 ev_common_peer_disconn(evs, c);
@@ -145,49 +150,43 @@ _epoll_server_loop(struct evs *evs) {
             else {
 
                 if (c->state == PS_UNKNOWN) {
-                    ERRX("Invalid peer state: %s", statename(c->state));  // LCOV_EXCL_LINE
+                    ERROR("Invalid peer state: %s", statename(c->state));  
+                    return ERR;
                 }
                 ev.data.ptr = c;
                 ev.events = EPCOMM |
                     (c->state == PS_WRITE ? EPOLLOUT : EPOLLIN);
                 if (epoll_ctl(epollfd, op, c->fd, &ev)) {
-                    ERRX("epol_ctl error, op: %d fd: %d", op, c->fd);  // LCOV_EXCL_LINE
+                    ERROR("epol_ctl error, op: %d fd: %d", op, c->fd); 
+                    return ERR;;
                 }
             }
         }
     }
+    return ERR;
 }
 
-void
-ev_epoll_server_start(struct evs *evs) {
-
-    /* Create and listen tcp socket */
-    evs->listenfd = tcp_listen(&(evs->bind));
+int
+ev_epoll_server_init(struct evs *evs) {
 
     /* Allocate memory for epoll private data. */
     evs->epoll = malloc(sizeof (struct ev_epoll));
-
-    /* Fork and start multiple instance of server. */
-    ev_common_fork(evs, (ev_cb_t) _epoll_server_loop);
+    if (evs->epoll == NULL) {
+        ERROR("Insufficient memory to allocate for eoll data.");
+        return ERR;
+    }
+    return OK;
 }
 
-static void
-ev_epoll_server_cleanup(struct evs *evs) {
-    free(evs->epoll);
-    close(evs->listenfd);
+void
+ev_epoll_server_deinit(struct evs *evs) {
+    if (evs->epoll) {
+        if (evs->epoll->fd > 0) {
+            close(evs->epoll->fd);
+        }
+        if(evs->epoll->events) {
+            free(evs->epoll->events);
+        }
+        free(evs->epoll);
+    }
 }
-
-int
-ev_epoll_server_terminate(struct evs *evs) {
-    ev_epoll_server_cleanup(evs);
-    return ev_common_terminate((struct ev *) evs);
-}
-
-/** Cannot cover due the GCC will not gather info of fork() parents. */
-// LCOV_EXCL_START
-int
-ev_epoll_server_join(struct evs *evs) {
-    ev_epoll_server_cleanup(evs);
-    return ev_common_join((struct ev *) evs);
-}
-// LCOV_EXCL_END

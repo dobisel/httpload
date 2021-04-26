@@ -54,9 +54,9 @@ int test_teardown(struct test *t);
 
 /** Mimick */
 #define MMKOK(m, t)         __PA(); EQI(mmk_verify(m, .times = t), 1)
-#define MMK_WHEN(m, r, e)    mmk_when(m,.then_return = r,.then_errno = e)
-#define MMK_WHEN_CALL(m, r, e, c) \
-    mmk_when(m, .then_return = r, .then_errno = e, .then_call = (mmk_fn)c)
+#define MMK_WHEN_RET(m, r, e) mmk_when(m,.then_return = r,.then_errno = e)
+#define MMK_WHEN_CALL(m, c, e) \
+    mmk_when(m, .then_errno = e, .then_call = (mmk_fn)c)
 #define MMK_RESET(f) mmk_reset(f)
 #define MMK_DEFINE(...) mmk_mock_define(__VA_ARGS__)
 #endif

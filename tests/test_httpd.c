@@ -75,7 +75,7 @@ int
 main() {
     struct test t;
 
-    log_setlevel(LL_DEBUG);
+    log_setlevel(LL_WARN);
     SETUP(&t);
     test_single_packet(&t);
     test_http10_connection(&t);
