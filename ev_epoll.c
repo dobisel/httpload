@@ -172,7 +172,7 @@ ev_epoll_server_init(struct evs *evs) {
     /* Allocate memory for epoll private data. */
     evs->epoll = malloc(sizeof (struct ev_epoll));
     if (evs->epoll == NULL) {
-        ERROR("Insufficient memory to allocate for eoll data.");
+        ERROR("Insufficient memory to allocate for epoll data.");
         return ERR;
     }
     return OK;

@@ -12,8 +12,8 @@
     N HYEL "%s" HBLU ":" HGRN "%lu" HBLU ": " \
     HMAG "%s" WHT "(" BLU "struct" RST " test *t) " HRED "Failed!" \
             RST N, t->filename, t->line, t->func)
-#define FAIL(fmt, not, g, e) ({ FAIL_HEADER(); \
-    if (e != NULL) { \
+#define FAIL(fmt, not, g, e, compare) ({ FAIL_HEADER(); \
+    if (compare) { \
         if (not) printf("NOT "); \
         printf(GRN "EXPECTED:\t" RST fmt N, e);} \
     printf(YEL "GIVEN:\t\t" RST fmt N, g); \
@@ -67,7 +67,7 @@ eqnstr(struct test *t, bool not, size_t len, const char *given,
         PASS();
         return;
     }
-    FAIL("%s", not, given, t->tmp);
+    FAIL("%s", not, given, t->tmp, true);
 }
 
 void 
@@ -86,7 +86,7 @@ eqstr(struct test *t, bool not, const char *given,
         PASS();
         return;
     }
-    FAIL("%s", not, given, t->tmp);
+    FAIL("%s", not, given, t->tmp, true);
 }
 
 void 
@@ -95,7 +95,7 @@ eqint(struct test *t, bool not, int given, int expected) {
         PASS();
         return;
     }
-    FAIL("%d", not, given, expected);
+    FAIL("%d", not, given, expected, true);
 }
 
 void 
@@ -104,7 +104,7 @@ isnull(struct test *t, bool not, void *given) {
         PASS();
         return;
     }
-    FAIL("%p", not, given, NULL);
+    FAIL("%p", not, given, NULL, false);
 }
 
 void 
