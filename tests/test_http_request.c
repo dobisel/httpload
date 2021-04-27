@@ -111,7 +111,8 @@ test_send_request(struct test *t) {
         "Connection: keep-alive",
     };
     fd = MOCKFD;
-    len = send_request(fd, "google.com", "GET", "/foo/baz", headers, 1, "foo baz bar cux", 15, NULL, HTTP_V1_1);
+    len = request_write(fd, "google.com", "GET", "/foo/baz", headers, 1, 
+            "foo baz bar cux", 15, HTTP_V1_1);
     NEQI(ERR, len);
     lseek(fd, 0, SEEK_SET);
     response = (char*) malloc(len * sizeof(char));
