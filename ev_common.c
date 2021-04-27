@@ -153,7 +153,7 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
     /* Allocate memory for children pids. */
     ev->children = calloc(ev->forks, sizeof (pid_t));
     if (ev->children == NULL) {
-        ERROR("Insifficient memory for %d forks.", ev->forks);   // LCOV_EXCL_LINE
+        ERROR("Insifficient memory for %d forks.", ev->forks);
         return ERR;
     }
     

@@ -35,7 +35,7 @@ IFLAGS = \
 		 -par
 
 PREFIX = /usr/local
-CLEAN = httploadc httploads *.o *.gcda *.gcno *.gcov *.c~ *.h~ coverage.info
+CLEAN = httploadc httploads *.o *.gcda *.gcda.info *.gcno *.gcov *.c~ *.h~ coverage.info
 client_headers := $(wildcard client*.h)
 client_objects := $(client_headers:.h=.o)
 

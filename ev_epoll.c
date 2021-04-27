@@ -71,19 +71,19 @@ ev_epoll_server_loop(struct evs *evs) {
     ev.data.fd = evs->listenfd;
     ev.events = EPCOMM | EPOLLIN;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, evs->listenfd, &ev)) {
-        ERROR("epol_ctl error, add listenfd: %d", evs->listenfd);
-        return ERR;
+        ERRORX("epol_ctl error, add listenfd: %d", evs->listenfd); // LCOV_EXCL_LINE
     }
 
+    /* Allocate memory for epoll events. */
     evs->epoll->events = events = calloc(EV_BATCHSIZE, 
             sizeof (struct epoll_event));
     if (events == NULL) {
-        ERROR("Unable to allocate memory for epoll_events.");
-        return ERR;
+        ERRORX("Unable to allocate memory for epoll_events."); // LCOV_EXCL_LINE
     }
 
     while (true) {
         nready = epoll_wait(epollfd, events, EV_BATCHSIZE, -1);
+        /* nready: %d */
         if (nready == ERR) {
             if (errno == EINTR) {
                 return OK;
@@ -93,13 +93,13 @@ ev_epoll_server_loop(struct evs *evs) {
         }
 
         for (int i = 0; i < nready; i++) {
+            if (events[i].events & EPOLLERR) {
+                ERROR("epoll_wait returned EPOLLERR");
+                return ERR;
+            }
+
             if (events[i].data.fd == evs->listenfd) {
                 /* Listenfd triggered: %d */
-
-                if (events[i].events & EPOLLERR) {
-                    WARN("epoll_wait returned EPOLLERR");
-                    continue;
-                }
 
                 /* Register listenfd for the next connection. */
                 ev.data.fd = evs->listenfd;
