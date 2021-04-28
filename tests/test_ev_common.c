@@ -189,7 +189,7 @@ read_wrapper(int fd, void *buf, size_t count) {
     if (readstate.calls == 3) {
         return readstate.third;
     }
-    return -1;
+    return -1;  //LCOV_EXCL_LINE
 }
 
 #define READMOCK read_mock(mmk_eq(int, 888), mmk_any(void *), mmk_any(size_t))

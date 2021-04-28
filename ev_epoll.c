@@ -129,7 +129,6 @@ ev_epoll_server_loop(struct evs *evs) {
                     ev_common_write((struct ev *) evs, c);
                 }
                 else if (events[i].events & EPOLLIN) {
-                    /* Read */
                     ev_common_read((struct ev *) evs, c);
                 }
 
@@ -168,7 +167,6 @@ ev_epoll_server_loop(struct evs *evs) {
 
 int
 ev_epoll_server_init(struct evs *evs) {
-
     /* Allocate memory for epoll private data. */
     evs->epoll = malloc(sizeof (struct ev_epoll));
     if (evs->epoll == NULL) {

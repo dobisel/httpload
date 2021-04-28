@@ -47,7 +47,7 @@ ev_common_read(struct ev *ev, struct peer *c) {
         }
         bytes = read(c->fd, tmp + tmplen, EV_READ_CHUNKSIZE);
         if (bytes <= 0) {
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+            if (errno == EAGAIN) {
                 errno = 0;
                 /* Calling read callback */
                 ev->on_recvd(ev, c, tmp, tmplen);
@@ -123,11 +123,9 @@ _parent_sigint(int s) {
     }
 }
 
-static int iii = 0;
-
 static void
 _child_sigint(int s) {
-    DEBUG("Child signal recvd: %d, fork: %d, repeat: %d", s, _ev->id, ++iii);
+    //DEBUG("Child signal recvd: %d, fork: %d", s, _ev->id);
 }
 
 void
@@ -162,8 +160,8 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
 
     for (int i = 0; i < ev->forks; i++) {
         pid = fork();
-        if (pid == -1) {
-            ERRORX("Cannot fork");
+        if (pid == ERR) {
+            ERRORX("Cannot fork");  // LCOV_EXCL_LINE
         }
         if (pid > 0) {
             /* Parent */
