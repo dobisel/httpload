@@ -12,10 +12,6 @@ ev_server_start(struct evs *evs) {
 
     /* Create and listen tcp socket */
     evs->listenfd = tcp_listen(&(evs->bind));
-    if (evs->listenfd == ERR) {
-        ERROR("Cannot bind on: %d", evs->bind);
-        return ERR;
-    }
     
     /* Initialize event loop. */
     if (ev_epoll_server_init(evs)) {

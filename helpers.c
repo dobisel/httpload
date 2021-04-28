@@ -26,13 +26,13 @@ tcp_listen(uint16_t * port) {
     /* Create socket. */
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        return ERR;
+        ERRORX("Cannot create socket(AF_INET, ...)");  // LCOV_EXCL_LINE
     }
 
     /* Avoid EADDRINUSE. */
     opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt)) < 0) {
-        return ERR;
+        ERRORX("Cannot set socket options for fd: %d", fd);  // LCOV_EXCL_LINE
     }
 
     memset(&addr, 0, sizeof (addr));
@@ -40,22 +40,22 @@ tcp_listen(uint16_t * port) {
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(*port);
     if (bind(fd, (struct sockaddr *) &addr, sizeof (addr))) {
-        return ERR;
+        ERRORX("bind() failed for fd: %d", fd);  // LCOV_EXCL_LINE
     }
 
     if (*port == 0) {
         if (getsockname(fd, (struct sockaddr *) &addr, &addrlen)) {
-            return ERR;
+            ERRORX("Cannot resolve socket name for fd: %d", fd);  // LCOV_EXCL_LINE
         }
         *port = ntohs(addr.sin_port);
     }
 
     if (listen(fd, TCP_BACKLOG) < 0) {
-        return ERR;
+        ERRORX("listen() failed for fd: %d", fd);  // LCOV_EXCL_LINE
     }
 
     if (enable_nonblocking(fd) == ERR) {
-        return ERR;
+        ERRORX("Cannot enable non-blocking for fd: %d", fd);  // LCOV_EXCL_LINE
     }
     return fd;
 }

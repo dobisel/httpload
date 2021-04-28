@@ -63,7 +63,7 @@ test_bind() {
     EQS(p.out, "");
     EQNS(56, 
          p.err, 
-         "test_server_cli: Cannot bind on: 888: Permission denied"N);
+         "test_server_cli: bind() failed for fd: 3: Permission denied"N);
     SCAPT_KILL();
 }
 
