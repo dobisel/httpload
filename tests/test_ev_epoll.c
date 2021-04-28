@@ -145,6 +145,8 @@ test_ev_epoll_server_loop() {
     MMKOK(EPOLL_CTL_MOCK, 6);
     MMKOK(EPOLL_WAIT_MOCK, 4);
     MMKOK(ACCEPT4_MOCK, 1);
+    
+    /* Simulate EPOLLRDHUP */
 
     //close_ret = OK;
     //epoll_create1_ret = EPFD;
