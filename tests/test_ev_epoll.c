@@ -42,25 +42,37 @@ MMK_DEFINE(epoll_wait_mock_t, int, int, struct epoll_event*, int, int);
         mmk_any(int), \
         mmk_any(int))
 
+/* Mock accept4(2) */
+MMK_DEFINE(accept4_mock_t, int, int, struct sockaddr *, socklen_t *, int);
+#define ACCEPT4_MOCK accept4_mock( \
+        mmk_any(int), \
+        mmk_any(struct sockaddr *), \
+        mmk_any(socklen_t *), \
+        mmk_any(int))
+
+static bool epctl_firsttime = true;
+
 int 
 epoll_ctl_wrapper(int epfd, int op, int fd, struct epoll_event *event) {
     EQI(epfd, EPFD);
-    if (fd == LISTENFD) {
-        if (op == EPOLL_CTL_MOD) {
+    if (fd == LISTENFD && op == EPOLL_CTL_MOD) {
+        if (epctl_firsttime) {
             return ERR;
         }
+        return OK;
     }
     return OK;
 }
 
-static struct epoll_event epwait_event;
+static struct epoll_event epwait_events[2];
 
 int 
 epoll_wait_wrapper(int epfd, struct epoll_event *events, int maxevents, 
         int timeout) {
     EQI(epfd, EPFD);
-    events[0] = epwait_event;
-    return 1;
+    events[0] = epwait_events[0];
+    events[1] = epwait_events[1];
+    return 2;
 }
 
 void
@@ -68,6 +80,7 @@ test_ev_epoll_server_loop() {
     //int close_ret;
     int epoll_create1_ret;
     int epoll_wait_ret;
+    int accept4_ret;
     struct evs evs = {
         .listenfd = 777
     };
@@ -80,6 +93,9 @@ test_ev_epoll_server_loop() {
     epoll_wait_mock_t epoll_wait_mock = mmk_mock(
             "epoll_wait@self", 
             epoll_wait_mock_t);
+    accept4_mock_t accept4_mock = mmk_mock(
+            "accept4@self", 
+            accept4_mock_t);
     //close_mock_t close_mock = mmk_mock("close@self", close_mock_t);
     
     EQI(ev_epoll_server_init(&evs), OK);
@@ -104,22 +120,32 @@ test_ev_epoll_server_loop() {
     MMKOK(EPOLL_WAIT_MOCK, 1);
  
     /* Simulate EPOLLERR. */
-    epwait_event.events = EPOLLERR;
+    epwait_events[0].events = EPOLLERR;
     MMK_WHEN_CALL(EPOLL_WAIT_MOCK, epoll_wait_wrapper, NOERROR);
     EQI(ev_epoll_server_loop(&evs), ERR);
     MMKOK(EPOLL_CTL_MOCK, 2);
     MMKOK(EPOLL_WAIT_MOCK, 2);
     
     /* Simulate error when register listen fd after new connection. */
-    epwait_event.data.fd = LISTENFD;
-    epwait_event.events = EPOLLIN;
+    epwait_events[0].data.fd = LISTENFD;
+    epwait_events[0].events = EPOLLIN;
     MMK_WHEN_CALL(EPOLL_WAIT_MOCK, epoll_wait_wrapper, NOERROR);
     EQI(ev_epoll_server_loop(&evs), ERR);
     MMKOK(EPOLL_CTL_MOCK, 4);
     MMKOK(EPOLL_WAIT_MOCK, 3);
 
-    ///* Simulate new connection. */
-    //evs.listenfd = 888;
+    /* Simulate error when accepting a new connection. */
+    epctl_firsttime = false;
+    epwait_events[0].data.fd = LISTENFD;
+    epwait_events[0].events = EPOLLIN;
+    epwait_events[1].events = EPOLLERR;
+    accept4_ret = ERR;
+    MMK_WHEN_RET(ACCEPT4_MOCK, &accept4_ret, ENOENT);
+    EQI(ev_epoll_server_loop(&evs), ERR);
+    MMKOK(EPOLL_CTL_MOCK, 6);
+    MMKOK(EPOLL_WAIT_MOCK, 4);
+    MMKOK(ACCEPT4_MOCK, 1);
+
     //close_ret = OK;
     //epoll_create1_ret = EPFD;
     //MMK_WHEN_RET(EPOLL_CREATE1_MOCK, &epoll_create1_ret, OK);
