@@ -45,6 +45,7 @@
 #include <sys/types.h>
 #include <sys/epoll.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 struct ev_epoll;
 
@@ -77,6 +78,7 @@ typedef void (*ev_recvcb_t)(struct ev * ev, struct peer * c, const char *data,
 struct ev {
     uint8_t id;
     uint8_t forks;
+    bool cancel;
     pid_t *children;
     union ev_priv;
     ev_recvcb_t on_recvd;

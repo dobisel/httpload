@@ -81,12 +81,12 @@ ev_epoll_server_loop(struct evs *evs) {
         ERRORX("Unable to allocate memory for epoll_events."); // LCOV_EXCL_LINE
     }
 
-    while (true) {
+    while (!evs->cancel) {
         nready = epoll_wait(epollfd, events, EV_BATCHSIZE, -1);
         /* nready: %d */
         if (nready == ERR) {
             if (errno == EINTR) {
-                return OK;
+                break;
             }
             ERROR("epoll_wait() returned err(%d)", errno);
             return ERR;
@@ -162,7 +162,7 @@ ev_epoll_server_loop(struct evs *evs) {
             }
         }
     }
-    return ERR;
+    return OK;
 }
 
 int

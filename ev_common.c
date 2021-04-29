@@ -125,7 +125,8 @@ _parent_sigint(int s) {
 
 static void
 _child_sigint(int s) {
-    //DEBUG("Child signal recvd: %d, fork: %d", s, _ev->id);
+    DEBUG("Child signal recvd: %d, fork: %d", s, _ev->id);
+    _ev->cancel = true;
 }
 
 void
@@ -135,6 +136,8 @@ ev_common_init(struct ev *ev) {
 
     /* Set no buffer for stdout */
     setvbuf(stdout, NULL, _IONBF, 0);
+    
+    ev->cancel = false;
 }
 
 void
@@ -158,6 +161,8 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
     /* Preserve struct ev for signal handler. */
     _ev = ev;
 
+    signal(SIGINT, _parent_sigint);
+
     for (int i = 0; i < ev->forks; i++) {
         pid = fork();
         if (pid == ERR) {
@@ -166,7 +171,6 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
         if (pid > 0) {
             /* Parent */
             ev->children[i] = pid;
-            signal(SIGINT, _parent_sigint);
         }
         else if (pid == 0) {
             /* Child */
@@ -192,16 +196,10 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
 
 int
 ev_common_terminate(struct ev *ev) {
-    int status;
-    int ret = 0;
-
     for (int i = 0; i < ev->forks; i++) {
         kill(ev->children[i], SIGINT);
-        waitpid(ev->children[i], &status, 0);
-        ret |= WEXITSTATUS(status);
     }
-    free(ev->children);
-    return ret;
+    return ev_common_join(ev);
 }
 
 int
