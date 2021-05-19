@@ -8,9 +8,9 @@
 static struct test *t;
 static struct pcapt p = {.prog = "httploads"};
 
-#define SCAPTW0(...)    PCAPTW0   (&p, servercli_run, __VA_ARGS__)
-#define SCAPT(...)      PCAPT     (&p, servercli_run, __VA_ARGS__)
-#define SCAPT_KILL()    PCAPT_KILL(&p)
+#define SCAPTW0(...)       PCAPTW0   (&p, servercli_run, __VA_ARGS__)
+#define SCAPT(...)         PCAPT     (&p, servercli_run, __VA_ARGS__)
+#define SCAPT_TERMINATE()  PCAPT_TERM(&p)
 
 static void
 test_version() {
@@ -29,7 +29,8 @@ test_fork() {
     EQS(p.err, "");
     EQS(p.out, "");
     EQI(HTTPGET("http://localhost:8080/"), 200);
-    SCAPT_KILL();
+    usleep(50 * 1000);
+    SCAPT_TERMINATE();
 }
 
 static void
@@ -54,9 +55,9 @@ static void
 test_bind() {
     EQI(SCAPT("-b4444"), 0);
     EQI(HTTPGET("http://localhost:4444/"), 200);
-    SCAPT_KILL();
+    SCAPT_TERMINATE();
     EQS(p.err, "");
-    EQS(p.out, "Listening on port: 4444" N);
+    EQNS(24, p.out, "Listening on port: 4444" N);
     
     /* Listen on port < 1024 */
     EQI(SCAPTW0("-b888"), 1);
@@ -64,11 +65,12 @@ test_bind() {
     EQNS(56, 
          p.err, 
          "test_server_cli: Cannot bind on: 888: Permission denied"N);
-    SCAPT_KILL();
+    SCAPT_TERMINATE();
 }
 
 static void
 test_dryrun() {
+    log_setlevel(LL_INFO);
     EQI(SCAPTW0("--dry"), 0);
     EQS(p.err, "");
     EQS(p.out, 

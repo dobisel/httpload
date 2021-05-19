@@ -30,5 +30,5 @@ void pcapt_kill(struct pcapt *p);
     pcaptw(p_, f, t, NCARGS( __VA_ARGS__), (char *[]){ __VA_ARGS__})
 
 #define PCAPTW0(p_, f, ...) PCAPTW(p_, f, 0, __VA_ARGS__ ) 
-#define PCAPT_KILL(p_) ({pcapt_kill(p_); pcapt_join(p_);})
+#define PCAPT_TERM(p_) ({pcapt_kill(p_); pcapt_join(p_);})
 #endif

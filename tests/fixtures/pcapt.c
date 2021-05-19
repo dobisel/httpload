@@ -135,10 +135,15 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
 int
 pcapt_join(struct pcapt *p) {
     int status;
+    pid_t we;
     ssize_t bytes;
 
     /* Wait for child process to terminate. */
-    wait(&status);
+    we = waitpid(p->child, &status, 0);
+    if (we != p->child) {
+        ERROR("waitpid returned: %d for pid: %d", we, p->child);
+        return ERR;
+    }
 
     if (p->out) {
         /* Close the write side of output pipe. */
@@ -165,6 +170,7 @@ pcapt_join(struct pcapt *p) {
 
 void
 pcapt_kill(struct pcapt *p) {
+    /* Killing PCAPT child process: %d */
     kill(p->child, SIGINT);
 }
 
