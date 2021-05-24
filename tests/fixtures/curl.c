@@ -5,8 +5,9 @@
 #include <curl/curl.h>
 
 int
-curl_get(const char *url, struct curl_slist *headers, curlhook_t optionscb, 
-         char *const outbuff, char *const errbuff) {
+curl_request(const char *verb, const char *url, struct curl_slist *headers, 
+        curlhook_t optionscb, char *const outbuff, char *const errbuff, 
+        const char *payload, size_t payloadsize) {
     CURL *curl;
     CURLcode res;
     long status;
@@ -37,7 +38,18 @@ curl_get(const char *url, struct curl_slist *headers, curlhook_t optionscb,
 
         curl_easy_setopt(curl, CURLOPT_STDERR, ferr);
     }
-    
+  
+    if (payloadsize) {
+        //curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+        //curl_easy_setopt(curl, CURLOPT_INFILESIZE, payloadsize);
+
+        /* size of the POST data */
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, payloadsize);
+ 
+        /* pass in a pointer to the data - libcurl will not copy */
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+    }
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, verb);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     
     /* Hook */

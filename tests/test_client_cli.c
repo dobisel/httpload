@@ -3,7 +3,7 @@
 #include "fixtures/assert.h"
 #include "fixtures/pcapt.h"
 
-static struct pcapt p = {.prog = "httploadc"};
+static struct pcapt p = {.prog = "httploadc" };
 
 #define CCAPTW0(...) PCAPTW0(&p, clientcli_run, __VA_ARGS__)
 

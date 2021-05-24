@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 static struct test *t;
-static struct pcapt p = {.prog = "httploads"};
+static struct pcapt p = {.prog = "httploads" };
 
 #define SCAPTW0(...)       PCAPTW0   (&p, servercli_run, __VA_ARGS__)
 #define SCAPT(...)         PCAPT     (&p, servercli_run, __VA_ARGS__)
@@ -58,13 +58,12 @@ test_bind() {
     SCAPT_TERMINATE();
     EQS(p.err, "");
     EQNS(24, p.out, "Listening on port: 4444" N);
-    
+
     /* Listen on port < 1024 */
     EQI(SCAPTW0("-b888"), 1);
     EQS(p.out, "");
-    EQNS(56, 
-         p.err, 
-         "test_server_cli: Cannot bind on: 888: Permission denied"N);
+    EQNS(56,
+         p.err, "test_server_cli: Cannot bind on: 888: Permission denied" N);
     SCAPT_TERMINATE();
 }
 
@@ -73,15 +72,13 @@ test_dryrun() {
     log_setlevel(LL_INFO);
     EQI(SCAPTW0("--dry"), 0);
     EQS(p.err, "");
-    EQS(p.out, 
-        "forks:\t\t1" N 
-        "bind:\t\t8080" N
-        "verbosity:\tInfo(3)" N);
+    EQS(p.out, "forks:\t\t1" N "bind:\t\t8080" N "verbosity:\tInfo(3)" N);
 }
 
 int
 main() {
     static struct test test;
+
     t = &test;
 
     log_setlevel(LL_INFO);

@@ -60,16 +60,16 @@ MMK_DEFINE(accept4_mock_t, int, int, struct sockaddr *, socklen_t *, int);
 static void
 newconn(struct evs *evs, struct peer *c) {
     EQI(c->fd, 888);
-    EQI(c->state, PS_UNKNOWN);
+    EQI(c->status, PS_UNKNOWN);
     EQI(evs->listenfd, 777);
 }
 
 static void
 newconn_close(struct evs *evs, struct peer *c) {
     EQI(c->fd, 888);
-    EQI(c->state, PS_UNKNOWN);
+    EQI(c->status, PS_UNKNOWN);
     EQI(evs->listenfd, 777);
-    c->state = PS_CLOSE;
+    c->status = PS_CLOSE;
 }
 
 #define ACCEPT4MOCK \
@@ -98,7 +98,7 @@ test_ev_common_newconn() {
 
     c = ev_common_newconn(&evs);
     EQI(c->fd, 888);
-    EQI(c->state, PS_UNKNOWN);
+    EQI(c->status, PS_UNKNOWN);
     EQI(c->writerb.reader, 0);
     EQI(c->writerb.writer, 0);
 
@@ -189,7 +189,7 @@ read_wrapper(int fd, void *buf, size_t count) {
     if (readstate.calls == 3) {
         return readstate.third;
     }
-    return -1;  //LCOV_EXCL_LINE
+    return -1;                  //LCOV_EXCL_LINE
 }
 
 #define READMOCK read_mock(mmk_eq(int, 888), mmk_any(void *), mmk_any(size_t))
@@ -203,7 +203,7 @@ test_ev_common_read() {
     };
     struct peer peer = {
         .fd = 888,
-        .state = PS_UNKNOWN,
+        .status = PS_UNKNOWN,
     };
     struct peer *c = &peer;
 
@@ -213,25 +213,25 @@ test_ev_common_read() {
     MMK_WHEN_CALL(READMOCK, read_wrapper, OK);
 
     ev_common_read(&ev, c);
-    EQI(c->state, PS_CLOSE);
+    EQI(c->status, PS_CLOSE);
     MMKOK(READMOCK, 3);
 
     /* When read raise EAGAIN. */
-    c->state = PS_UNKNOWN;
+    c->status = PS_UNKNOWN;
     rret = ERR;
     MMK_WHEN_RET(READMOCK, &rret, EAGAIN);
 
     ev_common_read(&ev, c);
-    EQI(c->state, PS_UNKNOWN);
+    EQI(c->status, PS_UNKNOWN);
     MMKOK(READMOCK, 4);
 
     /* When read buffer is full. */
-    c->state = PS_UNKNOWN;
+    c->status = PS_UNKNOWN;
     rret = EV_READ_CHUNKSIZE;
     MMK_WHEN_RET(READMOCK, &rret, OK);
 
     ev_common_read(&ev, c);
-    EQI(c->state, PS_CLOSE);
+    EQI(c->status, PS_CLOSE);
     MMKOK(READMOCK, 6);
 
     ev_common_deinit(&ev);
@@ -262,7 +262,7 @@ test_ev_common_write() {
     };
     struct peer peer = {
         .fd = 888,
-        .state = PS_UNKNOWN,
+        .status = PS_UNKNOWN,
     };
     struct peer *c = &peer;
 
@@ -274,7 +274,7 @@ test_ev_common_write() {
     MMK_WHEN_RET(WRITEMOCK, &wret, OK);
 
     ev_common_write(&ev, c);
-    EQI(c->state, PS_UNKNOWN);
+    EQI(c->status, PS_UNKNOWN);
     EQI(c->writerb.reader, 7);
     EQI(c->writerb.writer, 7);
     MMKOK(WRITEMOCK, 1);
@@ -284,7 +284,7 @@ test_ev_common_write() {
     MMK_WHEN_RET(WRITEMOCK, &wret, EAGAIN);
     EQI(rb_write(&c->writerb, "ijklmn", 6), RB_OK);
     ev_common_write(&ev, c);
-    EQI(c->state, PS_WRITE);
+    EQI(c->status, PS_WRITE);
     EQI(c->writerb.reader, 7);
     EQI(c->writerb.writer, 13);
     MMKOK(WRITEMOCK, 2);
@@ -294,7 +294,7 @@ test_ev_common_write() {
     MMK_WHEN_RET(WRITEMOCK, &wret, ENOENT);
     EQI(rb_write(&c->writerb, "opqrs", 5), RB_OK);
     ev_common_write(&ev, c);
-    EQI(c->state, PS_CLOSE);
+    EQI(c->status, PS_CLOSE);
     EQI(c->writerb.reader, 7);
     EQI(c->writerb.writer, 18);
     MMKOK(WRITEMOCK, 3);

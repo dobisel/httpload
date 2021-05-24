@@ -3,9 +3,6 @@
 #include "ev.h"
 #include "httpd.h"
 
-/* Third party */
-#include <http_parser.h>
-
 #define HTTPRESP \
     "HTTP/1.1 %d %s" RN \
     "Server: httpload/" HTTPLOAD_VERSION RN \
@@ -30,11 +27,12 @@ should_keepalive(const http_parser * parser) {
 }
 
 static int
-req_complete_cb(http_parser * p) {
-    struct peer *c = (struct peer *) p->data;
-
-    /* Req complete */
-    c->state = PS_WRITE;
+resp_write(struct peer *c, const char *at, size_t len) {
+    if (rb_write(&c->writerb, at, len)) {
+        WARN("Buffer full");
+        c->status = PS_CLOSE;
+        return ERR;
+    }
     return OK;
 }
 
@@ -42,10 +40,8 @@ static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
 
-    /* Request body */
-    if (rb_write(&c->writerb, at, len)) {
-        WARN("Buffer full");
-        p->state = PS_CLOSE;
+    /* Request body: %ld %.*s */
+    if (resp_write(c, at, len)) {
         return ERR;
     }
     return OK;
@@ -53,18 +49,16 @@ body_cb(http_parser * p, const char *at, size_t len) {
 
 static int
 headercomplete_cb(http_parser * p) {
+    struct peer *c = (struct peer *) p->data;
     char tmp[2048];
     size_t tmplen;
     long clen = p->content_length;
-    struct peer *c = (struct peer *) p->data;
     int keep = should_keepalive(p);
 
     tmplen = sprintf(tmp, HTTPRESP,
                      200, "OK",
                      clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
-    if (rb_write(&c->writerb, tmp, tmplen)) {
-        WARN("Buffer full");
-        p->state = PS_CLOSE;
+    if (resp_write(c, tmp, tmplen)) {
         return ERR;
     }
 
@@ -72,27 +66,50 @@ headercomplete_cb(http_parser * p) {
     // ....
 
     /* Terminate headers by `\r\n` */
-    if (rb_write(&c->writerb, RN, 2)) {
-        p->state = PS_CLOSE;
+    if (resp_write(c, RN, 2)) {
         return ERR;
     }
 
     /* Parse header done, clen: %ld */
     if (clen <= 0) {
         tmplen = sprintf(tmp, "Hello HTTPLOAD!");
-        if (rb_write(&c->writerb, tmp, tmplen)) {
+        if (resp_write(c, tmp, tmplen)) {
             /* rbwrite error */
-            p->state = PS_CLOSE;
+            c->status = PS_CLOSE;
             return ERR;
         }
         return OK;
     }
 
-    p->state = PS_READ;
+    return OK;
+}
+
+static int
+req_complete_cb(http_parser * p) {
+    struct peer *c = (struct peer *) p->data;
+
+    /* Req complete */
+    c->status = PS_WRITE;
+    return OK;
+}
+
+static int
+header_value_cb(http_parser * p, const char *at, size_t len) {
+    struct peer *c = (struct peer *) p->data;
+
+    /* Check for 100 continue */
+    if (strncmp(at, "100-continue", len) == 0) {
+        /* HTTP 100 continue */
+        if (resp_write(c, "HTTP/1.1 100 Continue" RN RN, 25)) {
+            return ERR;
+        }
+        c->status = PS_WRITE;
+    }
     return OK;
 }
 
 static http_parser_settings hpconf = {
+    .on_header_value = header_value_cb,
     .on_headers_complete = headercomplete_cb,
     .on_body = body_cb,
     .on_message_complete = req_complete_cb,
@@ -105,8 +122,16 @@ client_connected(struct evs *evs, struct peer *c) {
 
     http_parser_init(p, HTTP_REQUEST);
     c->handler = p;
-    c->state = PS_READ;
+    c->status = PS_READ;
     p->data = c;
+}
+
+static void
+client_disconnected(struct evs *evs, struct peer *c) {
+    /* Deinitialize the http parser for this connection. */
+    struct http_parser *p = (struct http_parser *) c->handler;
+
+    free(p);
 }
 
 static void
@@ -115,14 +140,14 @@ data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
 
     /* Parse */
     if (http_parser_execute(p, &hpconf, data, len) != len) {
-        c->state = PS_CLOSE;
+        c->status = PS_CLOSE;
         return;
     }
 
     if (p->http_errno) {
         WARN("http-parser: %d: %s", p->http_errno,
              http_errno_name(p->http_errno));
-        c->state = PS_CLOSE;
+        c->status = PS_CLOSE;
         return;
     }
 }
@@ -132,10 +157,13 @@ writefinish(struct ev *ev, struct peer *c) {
     struct http_parser *p = (struct http_parser *) c->handler;
 
     if (!http_should_keep_alive(p)) {
-        c->state = PS_CLOSE;
+        /* Closing Connection */
+        c->status = PS_CLOSE;
         return;
     }
-    c->state = PS_READ;
+
+    /* More Reading */
+    c->status = PS_READ;
 }
 
 int
@@ -143,6 +171,7 @@ httpd_start(struct httpd *server) {
     server->on_recvd = data_recvd;
     server->on_writefinish = writefinish;
     server->on_connect = client_connected;
+    server->on_disconnect = client_disconnected;
     return ev_server_start((struct evs *) server);
 }
 

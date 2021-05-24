@@ -21,13 +21,13 @@ ev_common_write(struct ev *ev, struct peer *c) {
         bytes = rb_readf(&c->writerb, c->fd, EV_WRITE_CHUNKSIZE);
         if (bytes <= 0) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                c->state = PS_WRITE;
+                c->status = PS_WRITE;
             }
             else if (bytes == 0) {
                 ev->on_writefinish(ev, c);
             }
             else {
-                c->state = PS_CLOSE;
+                c->status = PS_CLOSE;
             }
             return;
         }
@@ -42,7 +42,7 @@ ev_common_read(struct ev *ev, struct peer *c) {
     for (;;) {
         if (tmplen == EV_READ_BUFFSIZE) {
             /* Buffer full */
-            c->state = PS_CLOSE;
+            c->status = PS_CLOSE;
             return;
         }
         bytes = read(c->fd, tmp + tmplen, EV_READ_CHUNKSIZE);
@@ -53,7 +53,7 @@ ev_common_read(struct ev *ev, struct peer *c) {
                 ev->on_recvd(ev, c, tmp, tmplen);
                 return;
             }
-            c->state = PS_CLOSE;
+            c->status = PS_CLOSE;
             return;
         }
         tmplen += bytes;
@@ -65,6 +65,11 @@ ev_common_peer_disconn(struct evs *evs, struct peer *c) {
     if (c == NULL) {
         return;
     }
+
+    if (evs->on_disconnect) {
+        evs->on_disconnect(evs, c);
+    }
+
     if (close(c->fd)) {
         WARN("Cannot close fd: %d", c->fd);
     }
@@ -100,13 +105,13 @@ ev_common_newconn(struct evs *evs) {
     /* Create and allocate new peer structure. */
     c = malloc(sizeof (struct peer));
     c->fd = fd;
-    c->state = PS_UNKNOWN;
+    c->status = PS_UNKNOWN;
 
     /* Initialize ringbuffer. */
     rb_init(&c->writerb, c->writebuff, EV_WRITE_BUFFSIZE);
 
     evs->on_connect(evs, c);
-    if (c->state == PS_CLOSE) {
+    if (c->status == PS_CLOSE) {
         /* Early close. */
         /* Callback returned error, close(fd), free memory and return. */
         close(fd);
@@ -125,7 +130,6 @@ _parent_sigint(int s) {
 
 static void
 _child_sigint(int s) {
-    DEBUG("Child signal recvd: %d, fork: %d", s, _ev->id);
     _ev->cancel = true;
 }
 
@@ -136,7 +140,7 @@ ev_common_init(struct ev *ev) {
 
     /* Set no buffer for stdout */
     setvbuf(stdout, NULL, _IONBF, 0);
-    
+
     ev->cancel = false;
 }
 
@@ -157,7 +161,7 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
         ERROR("Insifficient memory for %d forks.", ev->forks);
         return ERR;
     }
-    
+
     /* Preserve struct ev for signal handler. */
     _ev = ev;
 
@@ -188,7 +192,7 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
             /* Deinitialize ev loop. %d */
             ev_common_deinit(ev);
 
-            exit(ret? EXIT_FAILURE: EXIT_SUCCESS);
+            exit(ret ? EXIT_FAILURE : EXIT_SUCCESS);
         }
     }
     return ret;

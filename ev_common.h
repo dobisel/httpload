@@ -65,7 +65,7 @@ struct evs;
 
 struct peer {
     int fd;
-    enum peer_state state;
+    enum peer_state status;
     char writebuff[EV_WRITE_BUFFSIZE];
     struct ringbuffer writerb;
     void *handler;
@@ -90,6 +90,7 @@ struct evs {
     int listenfd;
     uint16_t bind;
     evs_conncb_t on_connect;
+    evs_conncb_t on_disconnect;
 };
 
 typedef int (*ev_cb_t)(struct ev * ev);

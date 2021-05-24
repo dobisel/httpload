@@ -5,10 +5,22 @@
 #include "ev.h"
 
 int
-httpdmock_get(struct httpdmock *m) {
+httpdmock_sendrequest(struct httpdmock *m, const char *verb, 
+        const char *payload, size_t payloadsize) {
     m->out[0] = 0;
     m->err[0] = 0;
-    return curl_get(m->url, m->req_headers, m->optcb, m->out, m->err);
+    return curl_request(verb, m->url, m->req_headers, m->optcb, m->out, 
+            m->err, payload, payloadsize);
+}
+
+int
+httpdmock_post(struct httpdmock *m, const char *payload, size_t len) {
+    return httpdmock_sendrequest(m, "POST", payload, len);
+}
+
+int
+httpdmock_get(struct httpdmock *m) {
+    return httpdmock_sendrequest(m, "GET", NULL, 0);
 }
 
 void 
@@ -17,6 +29,7 @@ httpdmock_start(struct httpdmock *m) {
 
     m->httpd.forks = 1;
     m->httpd.bind = 0;
+    m->httpd.bind = 8080;
     m->optcb = NULL;
     m->req_headers = NULL;
     fflush(stdout);    

@@ -1,7 +1,10 @@
 #ifndef HTTPD_H
 #define HTTPD_H
 
-#include "ev_epoll.h"
+#include "ev_common.h"
+
+/* Third party */
+#include <http_parser.h>
 
 struct httpd {
     struct evs;

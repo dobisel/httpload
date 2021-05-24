@@ -3,7 +3,7 @@
 #include "fixtures/pcapt.h"
 #include <stdlib.h>
 
-static struct pcapt p = {.prog = "logmock"};
+static struct pcapt p = {.prog = "logmock" };
 
 int
 monkeymain(int argc, char **argv) {

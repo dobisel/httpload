@@ -1,3 +1,4 @@
+
 /* local */
 #include "logging.h"
 #include "ringbuffer.h"
@@ -71,14 +72,14 @@ ev_epoll_server_loop(struct evs *evs) {
     ev.data.fd = evs->listenfd;
     ev.events = EPCOMM | EPOLLIN;
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, evs->listenfd, &ev)) {
-        ERRORX("epol_ctl error, add listenfd: %d", evs->listenfd); // LCOV_EXCL_LINE
+        ERRORX("epol_ctl error, add listenfd: %d", evs->listenfd);  // LCOV_EXCL_LINE
     }
 
     /* Allocate memory for epoll events. */
-    evs->epoll->events = events = calloc(EV_BATCHSIZE, 
-            sizeof (struct epoll_event));
+    evs->epoll->events = events = calloc(EV_BATCHSIZE,
+                                         sizeof (struct epoll_event));
     if (events == NULL) {
-        ERRORX("Unable to allocate memory for epoll_events."); // LCOV_EXCL_LINE
+        ERRORX("Unable to allocate memory for epoll_events.");  // LCOV_EXCL_LINE
     }
 
     while (!evs->cancel) {
@@ -132,15 +133,15 @@ ev_epoll_server_loop(struct evs *evs) {
                     ev_common_read((struct ev *) evs, c);
                 }
 
-                if (c->state == PS_CLOSE) {
+                if (c->status == PS_CLOSE) {
                     op = EPOLL_CTL_DEL;
                 }
             }
 
-            //DBUG("CTL: %s %s fd: %d", opname(op), statename(c->state), c->fd);
+            //DEBUG("CTL: %s %s fd: %d", opname(op), statename(c->status), c->fd);
             if (op == EPOLL_CTL_DEL) {
                 if (epoll_ctl(epollfd, EPOLL_CTL_DEL, c->fd, NULL)) {
-                    WARN("Cannot DEL EPOLL for fd: %d", c->fd); 
+                    WARN("Cannot DEL EPOLL for fd: %d", c->fd);
                     continue;
                 }
 
@@ -148,15 +149,15 @@ ev_epoll_server_loop(struct evs *evs) {
             }
             else {
 
-                if (c->state == PS_UNKNOWN) {
-                    ERROR("Invalid peer state: %s", statename(c->state));  
+                if (c->status == PS_UNKNOWN) {
+                    ERROR("Invalid peer state: %s", statename(c->status));
                     return ERR;
                 }
                 ev.data.ptr = c;
                 ev.events = EPCOMM |
-                    (c->state == PS_WRITE ? EPOLLOUT : EPOLLIN);
+                    (c->status == PS_WRITE ? EPOLLOUT : EPOLLIN);
                 if (epoll_ctl(epollfd, op, c->fd, &ev)) {
-                    ERROR("epol_ctl error, op: %d fd: %d", op, c->fd); 
+                    ERROR("epol_ctl error, op: %d fd: %d", op, c->fd);
                     return ERR;;
                 }
             }
@@ -182,7 +183,7 @@ ev_epoll_server_deinit(struct evs *evs) {
         if (evs->epoll->fd > 0) {
             close(evs->epoll->fd);
         }
-        if(evs->epoll->events) {
+        if (evs->epoll->events) {
             free(evs->epoll->events);
         }
         free(evs->epoll);

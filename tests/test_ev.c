@@ -39,7 +39,7 @@ test_ev_server_start() {
     MMKOK(MALLOC_M, 1);
     close(evs.listenfd);
     MMK_RESET(malloc);
-    
+
     calloc_ret = NULL;
     MMK_WHEN_RET(CALLOC_M, &calloc_ret, ENOMEM);
     EQI(ev_server_start(&evs), ERR);

@@ -1,6 +1,6 @@
 #include "common.h"
 #include "httpd.h"
-#include "logging.h" 
+#include "logging.h"
 #include "cli.h"
 
 #include <stdio.h>
@@ -102,12 +102,13 @@ servercli_run(int argc, char **argv) {
         ERROR("Cannot start HTTP server.");
         return EXIT_FAILURE;
     }
-   
+
     /* Prompt listening port. */
     INFO("Listening on port: %d", server.bind);
-    
+
     /* Wait for server to stop. */
     int ret = httpd_join(&server);
+
     //__gcov_flush();
     return ret;
 }

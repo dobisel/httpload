@@ -1,3 +1,4 @@
+
 /* local */
 #include "logging.h"
 #include "helpers.h"
@@ -16,14 +17,14 @@ ev_server_start(struct evs *evs) {
         ERROR("Cannot bind on: %d", evs->bind);
         return ERR;
     }
-    
+
     /* Initialize event loop. */
     if (ev_epoll_server_init(evs)) {
         return ERR;
     }
 
     /* Fork and start multiple instance of server. */
-    if(ev_common_fork(evs, (ev_cb_t) ev_epoll_server_loop)) {
+    if (ev_common_fork(evs, (ev_cb_t) ev_epoll_server_loop)) {
         /* loop error */
         ev_epoll_server_deinit(evs);
         return ERR;
@@ -36,6 +37,7 @@ ev_server_start(struct evs *evs) {
 int
 ev_server_terminate(struct evs *evs) {
     int ret = ev_common_terminate((struct ev *) evs);
+
     ev_epoll_server_deinit(evs);
     close(evs->listenfd);
     return ret;
@@ -44,6 +46,7 @@ ev_server_terminate(struct evs *evs) {
 int
 ev_server_join(struct evs *evs) {
     int ret = ev_common_join((struct ev *) evs);
+
     ev_epoll_server_deinit(evs);
     close(evs->listenfd);
     return ret;
