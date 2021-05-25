@@ -29,7 +29,6 @@ httpdmock_start(struct httpdmock *m) {
 
     m->httpd.forks = 1;
     m->httpd.bind = 0;
-    m->httpd.bind = 8080;
     m->optcb = NULL;
     m->req_headers = NULL;
     fflush(stdout);    
