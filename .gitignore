@@ -6,6 +6,7 @@ coverage.info
 build
 covout
 capt-*.txt
+
 # Prerequisites
 *.d
 
