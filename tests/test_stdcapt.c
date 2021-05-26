@@ -18,10 +18,9 @@ foo() {
 
 static void
 test_stdcapt() {
-    capt_start(&capt, STDCAPT_NO_OUT);
+    STDCAPT_ERR(capt);
     EQI(foo(), ERR);
-    capt_restore(&capt);
-    EQS(capt.err, "test_stdcapt: foo: Operation not permitted\n");
+    EQERR(capt, "test_stdcapt: foo: Operation not permitted" N);
 }
 
 int

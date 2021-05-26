@@ -141,7 +141,6 @@ pcapt_join(struct pcapt *p) {
     /* Wait for child process to terminate. */
     we = waitpid(p->child, &status, 0);
     if (we != p->child) {
-        ERROR("waitpid returned: %d for pid: %d", we, p->child);
         return ERR;
     }
 

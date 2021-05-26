@@ -27,7 +27,7 @@ static void
 _capt_restore(struct captfile *cf, char *outbuff) {
     int len;
     int readfd = dup(cf->fd);
-
+   
     dup2(cf->backfd, cf->fd);
     close(cf->backfd);
     
@@ -46,6 +46,7 @@ capt_start(struct capt *c, enum captopt options) {
     c->options = options;
     c->out[0] = 0;
     c->err[0] = 0;
+    c->running = true;
 
     /* stdout */
     if (options != STDCAPT_NO_OUT) {
@@ -64,12 +65,19 @@ capt_start(struct capt *c, enum captopt options) {
 
 void
 capt_restore(struct capt *c) {
+    if (!c->running) {
+        return;
+    }
 
+    /* stdout */
     if (c->options != STDCAPT_NO_OUT) {
         _capt_restore(&c->stdout, c->out);
     }
 
+    /* stderr */
     if (c->options != STDCAPT_NO_ERR) {
         _capt_restore(&c->stderr, c->err);
     }
+
+    c->running = false;
 }

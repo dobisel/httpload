@@ -1,8 +1,9 @@
 #include "common.h"
 #include "logging.h"
-#include "fixtures/assert.h"
 #include "ev_common.h"
 #include "ev_epoll.h"
+#include "fixtures/assert.h"
+#include "fixtures/stdcapt.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -214,13 +215,32 @@ test_ev_epoll_server_loop() {
     MMK_RESET(close);
 }
 
+#define EXPECTED_STDERR \
+    "test_ev_epoll: epoll_wait() returned err(2): No such file or directory" \
+    N \
+    "test_ev_epoll: epoll_wait returned EPOLLERR: Cannot allocate memory" \
+    N \
+    "test_ev_epoll: epol_ctl error, add listenfd: 777: Cannot allocate memory" \
+    N \
+    "test_ev_epoll: epoll_wait returned EPOLLERR: No such file or directory" \
+    N \
+    "test_ev_epoll: epoll_wait returned EPOLLERR: Cannot allocate memory" \
+    N \
+    "test_ev_epoll: epol_ctl error, op: 3 fd: 0: Success" \
+    N \
+    "test_ev_epoll: Invalid peer state: UNKNOWN: Success" \
+    N
+
 int
 main() {
     static struct test test;
+    static struct capt capt;
 
     log_setlevel(LL_ERROR);
     t = &test;
     SETUP(t);
+    STDCAPT_ERR(capt);
     test_ev_epoll_server_loop();
+    EQERR(capt, EXPECTED_STDERR);
     return TEARDOWN(t);
 }

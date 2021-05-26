@@ -1,6 +1,8 @@
 #ifndef FIXTURE_STDCAPT_H
 #define FIXTURE_STDCAPT_H
 
+#include <stdbool.h>
+
 #define STDCAPTMAX  1024
 
 enum captopt {
@@ -18,6 +20,7 @@ struct captfile {
 struct capt {
     struct captfile stdout;
     struct captfile stderr;
+    bool running;
     enum captopt options;
     
     char out[STDCAPTMAX + 1];
@@ -27,5 +30,10 @@ struct capt {
 void capt_start(struct capt *c, enum captopt options);
 void capt_restore(struct capt *c);
 
- 
+#define STDCAPT(c)     capt_start(&(c), STDCAPT_NO_OUT);
+#define STDCAPT_ERR(c) capt_start(&(c), STDCAPT_NO_OUT);
+#define STDCAPT_OUT(c) capt_start(&(c), STDCAPT_NO_ERR);
+#define EQOUT(c, e)    capt_restore(&(c));EQS(c.out, (e))
+#define EQERR(c, e)    capt_restore(&(c));EQS(c.err, (e))
+
 #endif

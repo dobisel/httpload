@@ -6,6 +6,7 @@
 #include "ev_epoll.h"
 #include "ev.h"
 #include "fixtures/assert.h"
+#include "fixtures/stdcapt.h"
 
 #include <unistd.h>
 
@@ -48,13 +49,23 @@ test_ev_server_start() {
     MMK_RESET(calloc);
 }
 
+#define EXPECTED_STDERR \
+    "test_ev: Insufficient memory to allocate for epoll data.: Cannot " \
+    "allocate memory" \
+    N \
+    "test_ev: Insifficient memory for 1 forks.: Cannot allocate memory" \
+    N
+
 int
 main() {
     static struct test test;
+    static struct capt capt;
 
     log_setlevel(LL_ERROR);
     t = &test;
     SETUP(t);
+    STDCAPT_ERR(capt);
     test_ev_server_start();
+    EQERR(capt, EXPECTED_STDERR);
     return TEARDOWN(t);
 }
