@@ -150,7 +150,7 @@ pcapt_join(struct pcapt *p) {
         close(p->outpipe[1]);
 
         /* Read stdout then close. */
-        bytes = read(p->outpipe[0], p->out, CAPTMAX);
+        bytes = read(p->outpipe[0], p->out, PCAPTMAX);
         p->out[bytes] = 0;
         close(p->outpipe[0]);
     }
@@ -160,7 +160,7 @@ pcapt_join(struct pcapt *p) {
         close(p->errpipe[1]);
 
         /* Read stderr then close. */
-        bytes = read(p->errpipe[0], p->err, CAPTMAX);
+        bytes = read(p->errpipe[0], p->err, PCAPTMAX);
         p->err[bytes] = 0;
         close(p->errpipe[0]);
     }

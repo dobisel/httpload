@@ -1,15 +1,15 @@
 #ifndef FIXTURE_PCAPT_H
 #define FIXTURE_PCAPT_H
 
-#define CAPTMAX 1024
+#define PCAPTMAX 1024
 
 typedef int (*pfunc_t)(int argc, char **argv);
 
 struct pcapt {
     pid_t child;
     const char *prog;
-    char out[CAPTMAX + 1];
-    char err[CAPTMAX + 1];
+    char out[PCAPTMAX + 1];
+    char err[PCAPTMAX + 1];
     int outpipe[2];
     int errpipe[2];
 };
