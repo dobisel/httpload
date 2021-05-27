@@ -29,11 +29,14 @@ tocover := $(filter-out $(nocover), $(tocover))
 nocover := $(subst $(eval) ,;,$(nocover))
 
 ifdef GCOV
+DEBUG = 1
 CFLAGS += \
 	--coverage \
-	-fprofile-exclude-files="$(nocover)" \
-	-g
+	-fprofile-exclude-files="$(nocover)"
+endif
 
+ifdef DEBUG
+CFLAGS += -g
 endif
 
 $(fixture_objects): %.o: %.c %.h
@@ -54,8 +57,8 @@ $(common_tests): $(TEST_BIN)/%: tests/%.c \
 	mkdir -p $(TEST_BIN)
 	$(CC) $(CFLAGS) $(TEST_CFLAGS) -o $@ $^ $(LDFLAGS) $(TEST_LDFLAGS)
 
-.PHONY: test
-test: $(common_tests) $(client_tests) $(server_tests)
+.PHONY: check
+check: $(common_tests) $(client_tests) $(server_tests)
 	@set -e; for t in $(filter $(TEST_BIN)/test_$(UNIT), $(common_tests)); \
 		do "$${t}"; done
 	@set -e; for t in $(filter $(TEST_BIN)/test_$(UNIT), $(client_tests)); \
@@ -64,7 +67,7 @@ test: $(common_tests) $(client_tests) $(server_tests)
 		do "$${t}"; done
 
 .PHONY: coverage
-coverage: test
+coverage: check
 	lcov --capture \
 		--directory . \
 		--no-external \
@@ -76,9 +79,13 @@ ifdef COVERALLS
 	coveralls -n -e tests 
 endif
 
+.PHONY: test
+test:
+	$(MAKE) check DEBUG=1
+
 .PHONY: cover
 cover:
-	$(MAKE) coverage GCOV=1
+	$(MAKE) coverage DEBUG=1 GCOV=1
 
 coverage_html_index := $(shell readlink -f covout/index.html)
 
@@ -93,7 +100,7 @@ cover-html-show: cover-html
 
 .PHONY: coveralls
 coveralls: 
-	$(MAKE) coverage GCOV=1 COVERALLS=1
+	$(MAKE) coverage DEBUG=1 GCOV=1 COVERALLS=1
 
 .PHONY: clean
 clean::
