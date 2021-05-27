@@ -3,8 +3,7 @@
 #include "ev.h"
 #include "httpd.h"
 
-#define HTTPRESP \
-    "HTTP/1.1 %d %s" RN \
+#define HTTPD_RESP_HEADERS \
     "Server: httpload/" HTTPLOAD_VERSION RN \
     "Content-Length: %ld" RN \
     "Connection: %s" RN
@@ -26,15 +25,22 @@ should_keepalive(const http_parser * parser) {
     return 0;
 }
 
+#define resp_write(c, s, l) rb_write(&c->writerb, s, l)
+
 static int
-resp_write(struct peer *c, const char *at, size_t len) {
-    if (rb_write(&c->writerb, at, len)) {
-        errno = ENOBUFS;
-        WARN("Response ringbuffer");
-        c->status = PS_CLOSE;
-        return ERR;
-    }
-    return OK;
+resp_write_statusline(struct peer *c, const char *status) {
+    return resp_write(c, "HTTP/1.1 ", 9)
+         | resp_write(c, status, strlen(status))
+         | resp_write(c, RN, 2);
+}
+
+static int
+resp_error(struct peer *c, const char *status) {
+    struct http_parser *p = (struct http_parser *) c->handler;
+
+    RB_RESET(&c->writerb);
+    p->flags |= F_CONNECTION_CLOSE;
+    return resp_write_statusline(c, "413 Request Entity Too Large");
 }
 
 static int
@@ -42,11 +48,7 @@ body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
 
     /* Request body: %ld */
-    if (resp_write(c, at, len)) {
-        // TODO: 500
-        return ERR;
-    }
-    return OK;
+    return resp_write(c, at, len);
 }
 
 static int
@@ -56,31 +58,29 @@ headercomplete_cb(http_parser * p) {
     size_t tmplen;
     ssize_t clen = p->content_length;
     int keep = should_keepalive(p);
+    
+    /* Status line */
+    resp_write_statusline(c, "200 Ok");
 
-    tmplen = sprintf(tmp, HTTPRESP, 200, "OK",
-                     clen > 0 ? clen : 15, 
+    tmplen = sprintf(tmp, HTTPD_RESP_HEADERS, clen > 0 ? clen : 15, 
                      keep ? "keep-alive" : "close");
-    if (resp_write(c, tmp, tmplen)) {
-        return ERR;
-    }
+    resp_write(c, tmp, tmplen);
 
     /* Write more headers */
     // ....
 
     /* Terminate headers by `\r\n` */
-    if (resp_write(c, RN, 2)) {
-        return ERR;
-    }
+    resp_write(c, RN, 2);
 
     /* Parse header done, clen: %ld */
     if (clen <= 0) {
-        tmplen = sprintf(tmp, "Hello HTTPLOAD!");
-        if (resp_write(c, tmp, tmplen)) {
-            return ERR;
-        }
+        resp_write(c, "Hello HTTPLOAD!", 15);
         return OK;
     }
-
+    
+    if (RB_AVAILABLE(&c->writerb) < clen) {
+        resp_error(c, "413 Request Entity Too Large");
+    }
     return OK;
 }
 
@@ -100,9 +100,7 @@ header_value_cb(http_parser * p, const char *at, size_t len) {
     /* Check for 100 continue */
     if (strncmp(at, "100-continue", len) == 0) {
         /* HTTP 100 continue */
-        if (resp_write(c, "HTTP/1.1 100 Continue" RN RN, 25)) {
-            return ERR;
-        }
+        resp_write(c, "HTTP/1.1 100 Continue" RN RN, 25);
         c->status = PS_WRITE;
     }
     return OK;
@@ -119,7 +117,8 @@ static void
 client_connected(struct evs *evs, struct peer *c) {
     /* Initialize the http parser for this connection. */
     struct http_parser *p = malloc(sizeof (struct http_parser));
-
+    
+    RB_RESET(&c->writerb);
     http_parser_init(p, HTTP_REQUEST);
     c->handler = p;
     c->status = PS_READ;
@@ -141,11 +140,7 @@ data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     /* Recv: %ld */
 
     /* Parse */
-    if (http_parser_execute(p, &hpconf, data, len) != len) {
-        c->status = PS_CLOSE;
-        return;
-    }
-
+    http_parser_execute(p, &hpconf, data, len);
     if (p->http_errno) {
         WARN("http-parser: %d: %s", p->http_errno, http_errno_name(
                     p->http_errno));

@@ -94,7 +94,7 @@ void
 test_body_verylarge(struct test *t) {
     struct httpdmock m;
 
-    size_t len = EV_WRITE_BUFFSIZE - 1; 
+    size_t len = EV_WRITE_BUFFSIZE; 
     char *payload = malloc(len);
 
     for (int i = 0; i < len; i++) {
@@ -104,8 +104,8 @@ test_body_verylarge(struct test *t) {
     int status = httpdmock_post(&m, payload, len);
     EQI(httpdmock_stop(&m), 0);
     EQS(m.err, "");
-    EQI(status, 200);
-    EQNS(len, m.out, payload);
+    EQS(m.out, "");
+    EQI(status, 413);
     free(payload);
 }
 
@@ -113,8 +113,7 @@ int
 main() {
     struct test t;
 
-    //log_setlevel(LL_WARN);
-    log_setlevel(LL_DEBUG);
+    log_setlevel(LL_WARN);
     SETUP(&t);
     test_single_packet(&t);
     test_http10_connection(&t);
