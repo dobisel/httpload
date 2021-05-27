@@ -74,8 +74,6 @@ test_body(struct test *t) {
 void
 test_body_large(struct test *t) {
     struct httpdmock m;
-
-    //size_t len = EV_WRITE_BUFFSIZE / 2;
     size_t len = 1024 + 1;
     char *payload = malloc(len);
 
@@ -89,6 +87,26 @@ test_body_large(struct test *t) {
     EQI(status, 200);
     EQS(m.err, "");
     EQNS(len, m.out, payload);
+    free(payload);
+}
+
+void
+test_body_verylarge(struct test *t) {
+    struct httpdmock m;
+
+    size_t len = EV_WRITE_BUFFSIZE - 1; 
+    char *payload = malloc(len);
+
+    for (int i = 0; i < len; i++) {
+        payload[i] = 'a';
+    }
+    httpdmock_start(&m);
+    int status = httpdmock_post(&m, payload, len);
+    EQI(httpdmock_stop(&m), 0);
+    EQS(m.err, "");
+    EQI(status, 200);
+    EQNS(len, m.out, payload);
+    free(payload);
 }
 
 int
@@ -103,5 +121,6 @@ main() {
     test_http11_connection(&t);
     test_body(&t);
     test_body_large(&t);
+    test_body_verylarge(&t);
     return TEARDOWN(&t);
 }

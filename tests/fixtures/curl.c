@@ -13,6 +13,7 @@ curl_request(const char *verb, const char *url, struct curl_slist *headers,
     long status;
     FILE *fout;
     FILE *ferr;
+    FILE *fin;
     
     curl = curl_easy_init();
     if (curl == NULL) {
@@ -25,7 +26,6 @@ curl_request(const char *verb, const char *url, struct curl_slist *headers,
             return ERR;
         }
         
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fwrite);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fout);
     }
@@ -40,17 +40,19 @@ curl_request(const char *verb, const char *url, struct curl_slist *headers,
     }
   
     if (payloadsize) {
-        //curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-        //curl_easy_setopt(curl, CURLOPT_INFILESIZE, payloadsize);
+        fin = fmemopen((void *)payload, payloadsize, "rb");
+        if (fin == NULL) {
+            return ERR;
+        }
 
-        /* size of the POST data */
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, payloadsize);
- 
-        /* pass in a pointer to the data - libcurl will not copy */
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+        curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+        curl_easy_setopt(curl, CURLOPT_READDATA, fin);
+        curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, 
+                (curl_off_t)payloadsize);
     }
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, verb);
     curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0L);
     
     /* Hook */
     if (optionscb != NULL) {

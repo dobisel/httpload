@@ -1,11 +1,12 @@
 #include "logging.h"
+#include "options.h"
 #include "ansicolors.h"
 #include "fixtures/assert.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 
-#define TEST_TEMP_BUFFSIZE      1024 * 8
+#define TEST_TEMP_BUFFSIZE     (EV_WRITE_BUFFSIZE * 2)
 #define FUNCSIGN()      printf(BHGRN "." RST)
 #define PASS()          printf(GRN "." RST)
 #define FAIL_HEADER() printf(\

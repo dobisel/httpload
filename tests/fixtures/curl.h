@@ -1,10 +1,11 @@
 #ifndef FIXTURE_CURL_H
 #define FIXTURE_CURL_H
 
+#include "options.h"
 #include "fixtures/curl.h"
 #include <curl/curl.h>
 
-#define CURL_BUFFMAX    1024 * 2
+#define CURL_BUFFMAX   (EV_WRITE_BUFFSIZE * 2)
 
 typedef void (*curlhook_t) (CURL *curl);
 

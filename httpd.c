@@ -29,7 +29,8 @@ should_keepalive(const http_parser * parser) {
 static int
 resp_write(struct peer *c, const char *at, size_t len) {
     if (rb_write(&c->writerb, at, len)) {
-        WARN("Buffer full");
+        errno = ENOBUFS;
+        WARN("Response ringbuffer");
         c->status = PS_CLOSE;
         return ERR;
     }
@@ -40,8 +41,9 @@ static int
 body_cb(http_parser * p, const char *at, size_t len) {
     struct peer *c = (struct peer *) p->data;
 
-    /* Request body: %ld %.*s */
+    /* Request body: %ld */
     if (resp_write(c, at, len)) {
+        // TODO: 500
         return ERR;
     }
     return OK;
@@ -52,12 +54,12 @@ headercomplete_cb(http_parser * p) {
     struct peer *c = (struct peer *) p->data;
     char tmp[2048];
     size_t tmplen;
-    long clen = p->content_length;
+    ssize_t clen = p->content_length;
     int keep = should_keepalive(p);
 
-    tmplen = sprintf(tmp, HTTPRESP,
-                     200, "OK",
-                     clen > 0 ? clen : 15, keep ? "keep-alive" : "close");
+    tmplen = sprintf(tmp, HTTPRESP, 200, "OK",
+                     clen > 0 ? clen : 15, 
+                     keep ? "keep-alive" : "close");
     if (resp_write(c, tmp, tmplen)) {
         return ERR;
     }
@@ -74,8 +76,6 @@ headercomplete_cb(http_parser * p) {
     if (clen <= 0) {
         tmplen = sprintf(tmp, "Hello HTTPLOAD!");
         if (resp_write(c, tmp, tmplen)) {
-            /* rbwrite error */
-            c->status = PS_CLOSE;
             return ERR;
         }
         return OK;
@@ -137,6 +137,8 @@ client_disconnected(struct evs *evs, struct peer *c) {
 static void
 data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     struct http_parser *p = (struct http_parser *) c->handler;
+    
+    /* Recv: %ld */
 
     /* Parse */
     if (http_parser_execute(p, &hpconf, data, len) != len) {
@@ -145,8 +147,8 @@ data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     }
 
     if (p->http_errno) {
-        WARN("http-parser: %d: %s", p->http_errno,
-             http_errno_name(p->http_errno));
+        WARN("http-parser: %d: %s", p->http_errno, http_errno_name(
+                    p->http_errno));
         c->status = PS_CLOSE;
         return;
     }
