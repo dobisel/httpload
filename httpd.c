@@ -30,8 +30,8 @@ should_keepalive(const http_parser * parser) {
 static int
 resp_write_statusline(struct peer *c, const char *status) {
     return resp_write(c, "HTTP/1.1 ", 9)
-         | resp_write(c, status, strlen(status))
-         | resp_write(c, RN, 2);
+        | resp_write(c, status, strlen(status))
+        | resp_write(c, RN, 2);
 }
 
 static int
@@ -40,7 +40,7 @@ resp_error(struct peer *c, const char *status) {
 
     RB_RESET(&c->writerb);
     p->flags |= F_CONNECTION_CLOSE;
-    return resp_write_statusline(c, "413 Request Entity Too Large");
+    return resp_write_statusline(c, status);
 }
 
 static int
@@ -58,11 +58,11 @@ headercomplete_cb(http_parser * p) {
     size_t tmplen;
     ssize_t clen = p->content_length;
     int keep = should_keepalive(p);
-    
+
     /* Status line */
     resp_write_statusline(c, "200 Ok");
 
-    tmplen = sprintf(tmp, HTTPD_RESP_HEADERS, clen > 0 ? clen : 15, 
+    tmplen = sprintf(tmp, HTTPD_RESP_HEADERS, clen > 0 ? clen : 15,
                      keep ? "keep-alive" : "close");
     resp_write(c, tmp, tmplen);
 
@@ -77,7 +77,7 @@ headercomplete_cb(http_parser * p) {
         resp_write(c, "Hello HTTPLOAD!", 15);
         return OK;
     }
-    
+
     if (RB_AVAILABLE(&c->writerb) < clen) {
         resp_error(c, "413 Request Entity Too Large");
     }
@@ -117,7 +117,7 @@ static void
 client_connected(struct evs *evs, struct peer *c) {
     /* Initialize the http parser for this connection. */
     struct http_parser *p = malloc(sizeof (struct http_parser));
-    
+
     RB_RESET(&c->writerb);
     http_parser_init(p, HTTP_REQUEST);
     c->handler = p;
@@ -136,16 +136,14 @@ client_disconnected(struct evs *evs, struct peer *c) {
 static void
 data_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     struct http_parser *p = (struct http_parser *) c->handler;
-    
-    /* Recv: %ld */
 
     /* Parse */
     http_parser_execute(p, &hpconf, data, len);
     if (p->http_errno) {
-        WARN("http-parser: %d: %s", p->http_errno, http_errno_name(
-                    p->http_errno));
-        c->status = PS_CLOSE;
-        return;
+        WARNN("http-parser: %d: %s", p->http_errno,
+              http_errno_name(p->http_errno));
+        resp_error(c, "400 Bad Request");
+        c->status = PS_WRITE;
     }
 }
 
@@ -165,6 +163,7 @@ writefinish(struct ev *ev, struct peer *c) {
 
 int
 httpd_start(struct httpd *server) {
+    http_parser_set_max_header_size(server->max_headers_size);
     server->on_recvd = data_recvd;
     server->on_writefinish = writefinish;
     server->on_connect = client_connected;

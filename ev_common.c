@@ -181,6 +181,7 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
             ev->id = i;
 
             /* Kill children by parent. */
+            prctl(PR_SET_PDEATHSIG, SIGINT);
             signal(SIGINT, _child_sigint);
 
             /* Initialize ev loop. */

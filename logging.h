@@ -27,17 +27,17 @@ extern const char *log_levelnames[];
 
 #define LOG_OK(level) ((level) <= log_level)
 
-#define ERROR( ... ) warn(__VA_ARGS__)
-#define ERRORX( ... ) err(EXIT_FAILURE, __VA_ARGS__)
-#define WARN( ... ) if LOG_OK(LL_WARN) warn( __VA_ARGS__ )
-#define INFO(fmt, ... ) if LOG_OK(LL_INFO) printf(fmt N, ## __VA_ARGS__ )
+#define ERROR(...) warn(__VA_ARGS__)
+#define ERRORX(...) err(EXIT_FAILURE, __VA_ARGS__)
+#define WARN(...) if LOG_OK(LL_WARN) warn(__VA_ARGS__)
+#define INFO(fmt, ...) if LOG_OK(LL_INFO) printf(fmt N, ## __VA_ARGS__)
 #define DEBUG(fmt, ...) if LOG_OK(LL_DEBUG) \
     printf("%03d:%s -- " fmt N, __LINE__, __FUNCTION__, ## __VA_ARGS__)
-#define CHK( ... ) DEBUG( __VA_ARGS__ )
+#define CHK(...) DEBUG(__VA_ARGS__)
 
-#define ERRORN( ... )  fprintf(stderr, ## __VA_ARGS__ )
-#define WARNN( ... ) if LOG_OK(LL_WARN)  fprintf(stderr, ## __VA_ARGS__ )
-#define INFON(fmt, ... ) if LOG_OK(LL_INFO) printf(fmt, ## __VA_ARGS__ )
+#define ERRORN(fmt, ...)  fprintf(stderr, fmt N, ## __VA_ARGS__)
+#define WARNN(fmt, ...) if LOG_OK(LL_WARN) ERRORN(fmt, __VA_ARGS__)
+#define INFON(fmt, ...) if LOG_OK(LL_INFO) printf(fmt, ## __VA_ARGS__)
 
 #define INFOC(c) if LOG_OK(LL_INFO) putchr(c)
 

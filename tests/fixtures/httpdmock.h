@@ -13,10 +13,11 @@ struct httpdmock {
     char *url;
 };
 
-int httpdmock_get(struct httpdmock *m);
-int httpdmock_post(struct httpdmock *m, const char *payload, size_t len);
 int httpdmock_stop(struct httpdmock *m);
 void httpdmock_start(struct httpdmock *m);
+int httpdmock_post(struct httpdmock *m, const char *url, const char *payload, 
+        size_t len);
+int httpdmock_get(struct httpdmock *m, const char *url);
 
 
 #endif

@@ -2,8 +2,8 @@
 #define OPTIONS_H
 
 // Must be power of 2
-#define EV_WRITE_BUFFSIZE          (1024 * 32)    // 2 ** 15
-#define EV_READ_BUFFSIZE           (1024 * 64)    // 2 ** 16
+#define EV_WRITE_BUFFSIZE          (1024 * 32)  // 2 ** 15
+#define EV_READ_BUFFSIZE           (1024 * 64)  // 2 ** 16
 
 #define TCP_BACKLOG           16
 

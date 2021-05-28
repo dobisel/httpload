@@ -8,6 +8,7 @@
 
 struct httpd {
     struct evs;
+    uint32_t max_headers_size;
 };
 
 int httpd_stop(struct httpd *server);

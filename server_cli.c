@@ -89,6 +89,7 @@ servercli_run(int argc, char **argv) {
     /* Configure HTTP server */
     struct httpd server = {
         .forks = settings.forks,
+        .max_headers_size = 1024 * 8,
         .bind = settings.bind
     };
 
