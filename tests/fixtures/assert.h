@@ -1,6 +1,8 @@
 #ifndef FIXTURES_ASSERT_H
 #define FIXTURES_ASSERT_H
 
+#include "logging.h"
+
 #include <sys/types.h>
 #include <stdbool.h>
 
@@ -24,15 +26,17 @@ void eqnstr(struct test *t, bool not, size_t len, const char *given,
         const char *expfmt, ...);
 void eqint(struct test *t, bool not, int given, int expected);
 void pre_assert(struct test *t, const char *func, size_t line);
-void test_setup(struct test *t, const char *filename);
-int test_teardown(struct test *t);
+struct test * test_suite_setup(loglevel_t loglevel, const char *filename);
+int test_suite_teardown(struct test *t);
 
-/* Private macro functions. */
+/* Private macros. */
 #define __PA() pre_assert(t, __func__, __LINE__)
 
-/* Public macro functions. */
-#define SETUP(t) test_setup(t, __FILE__)
-#define TEARDOWN(t) test_teardown(t)
+/* Public macros. */
+#define TEST_CASE static
+#define TEST_BEGIN(l) test_suite_setup(l, __FILE__)
+
+#define TEST_CLEAN(t) test_suite_teardown(t)
 
 /** Is NULL. */
 #define    ISNULL(g) __PA(); isnull(t, false, g)

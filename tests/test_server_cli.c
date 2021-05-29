@@ -1,19 +1,17 @@
-#include "logging.h"
 #include "server_cli.h"
 #include "fixtures/assert.h"
 #include "fixtures/pcapt.h"
 #include "fixtures/curl.h"
 #include <unistd.h>
 
-static struct test *t;
 static struct pcapt p = {.prog = "httploads" };
 
 #define SCAPTW0(...)       PCAPTW0   (&p, servercli_run, __VA_ARGS__)
 #define SCAPT(...)         PCAPT     (&p, servercli_run, __VA_ARGS__)
 #define SCAPT_TERMINATE()  PCAPT_TERM(&p)
 
-static void
-test_version() {
+TEST_CASE void
+test_version(struct test *t) {
     EQI(SCAPTW0("--version"), 0);
     EQS(p.out, HTTPLOAD_VERSION N);
     EQS(p.err, "");
@@ -23,8 +21,8 @@ test_version() {
     EQS(p.err, "");
 }
 
-static void
-test_fork() {
+TEST_CASE void
+test_fork(struct test *t) {
     EQI(SCAPT("-c2"), 0);
     EQS(p.err, "");
     EQS(p.out, "");
@@ -33,8 +31,8 @@ test_fork() {
     SCAPT_TERMINATE();
 }
 
-static void
-test_invalidargument() {
+TEST_CASE void
+test_invalidargument(struct test *t) {
     /* Invalid optional argument. */
     NEQI(SCAPTW0("--dry", "--invalidargument", "0"), 0);
     EQS(p.out, "");
@@ -51,8 +49,8 @@ test_invalidargument() {
     EQNS(42, p.err, "test_server_cli: Invalid number of forks: 0");
 }
 
-static void
-test_bind() {
+TEST_CASE void
+test_bind(struct test *t) {
     EQI(SCAPT("-b4444"), 0);
     EQI(HTTPGET("http://localhost:4444/"), 200);
     SCAPT_TERMINATE();
@@ -67,8 +65,8 @@ test_bind() {
     SCAPT_TERMINATE();
 }
 
-static void
-test_dryrun() {
+TEST_CASE void
+test_dryrun(struct test *t) {
     log_setlevel(LL_INFO);
     EQI(SCAPTW0("--dry"), 0);
     EQS(p.err, "");
@@ -77,16 +75,11 @@ test_dryrun() {
 
 int
 main() {
-    static struct test test;
-
-    t = &test;
-
-    log_setlevel(LL_INFO);
-    SETUP(t);
-    test_version();
-    test_fork();
-    test_invalidargument();
-    test_bind();
-    test_dryrun();
-    return TEARDOWN(t);
+    struct test *t = TEST_BEGIN(LL_INFO);
+    test_version(t);
+    test_fork(t);
+    test_invalidargument(t);
+    test_bind(t);
+    test_dryrun(t);
+    return TEST_CLEAN(t);
 }

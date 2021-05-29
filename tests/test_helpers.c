@@ -10,8 +10,6 @@
 /* third-party */
 #include <mimick.h>
 
-static struct test *t;
-
 /**********************************
  * enable_nonblocking()
  *********************************/
@@ -20,8 +18,8 @@ MMK_DEFINE(fcntl_mock_t, int, int, int, int);
 
 #define FCNTLMOCK fcntl_mock(mmk_eq(int, 888), mmk_any(int), mmk_any(int))
 
-static void
-test_enable_nonblocking() {
+TEST_CASE void
+test_enable_nonblocking(struct test *t) {
     int ret;
     fcntl_mock_t fcntl_mock = mmk_mock("fcntl@self", fcntl_mock_t);
 
@@ -36,11 +34,7 @@ test_enable_nonblocking() {
 
 int
 main() {
-    static struct test test;
-
-    log_setlevel(LL_DEBUG);
-    t = &test;
-    SETUP(t);
-    test_enable_nonblocking();
-    return TEARDOWN(t);
+    struct test *t = TEST_BEGIN(LL_WARN);
+    test_enable_nonblocking(t);
+    return TEST_CLEAN(t);
 }

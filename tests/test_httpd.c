@@ -5,9 +5,7 @@
 
 #include <stdlib.h>
 
-static struct test *t;
-
-void
+TEST_CASE void
 test_single_packet(struct test *t) {
     struct httpdmock m;
 
@@ -23,7 +21,7 @@ http10opts(CURL * curl) {
     curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 }
 
-void
+TEST_CASE void
 test_http10_connection(struct test *t) {
     struct curl_slist *headers = NULL;
 
@@ -43,7 +41,7 @@ test_http10_connection(struct test *t) {
     curl_slist_free_all(headers);
 }
 
-void
+TEST_CASE void
 test_http11_connection(struct test *t) {
     struct curl_slist *headers = NULL;
 
@@ -63,12 +61,13 @@ test_http11_connection(struct test *t) {
 }
 
 #define TESTBODY "foo=bar&baz=qux"
+
 static void
 bodyopts(CURL * curl) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, TESTBODY);
 }
 
-void
+TEST_CASE void
 test_body(struct test *t) {
     struct httpdmock m = {
         .httpd.max_headers_size = 1024
@@ -82,7 +81,7 @@ test_body(struct test *t) {
     EQI(httpdmock_stop(&m), 0);
 }
 
-void
+TEST_CASE void
 test_body_large(struct test *t) {
     struct httpdmock m = {
         .httpd.max_headers_size = 1024
@@ -103,7 +102,7 @@ test_body_large(struct test *t) {
     free(payload);
 }
 
-void
+TEST_CASE void
 test_body_verylarge(struct test *t) {
     struct httpdmock m = {
         .httpd.max_headers_size = 1024
@@ -125,7 +124,7 @@ test_body_verylarge(struct test *t) {
     free(payload);
 }
 
-void
+TEST_CASE void
 test_invalid_packet(struct test *t) {
     struct curl_slist *headers = NULL;
 
@@ -152,12 +151,9 @@ test_invalid_packet(struct test *t) {
 
 int
 main() {
-    static struct test test;
-    static struct capt capt;
+    struct capt capt;
+    struct test *t = TEST_BEGIN(LL_WARN);
 
-    log_setlevel(LL_WARN);
-    t = &test;
-    SETUP(t);
     STDCAPT_ERR(capt);
     test_single_packet(t);
     test_http10_connection(t);
@@ -167,5 +163,5 @@ main() {
     test_body_verylarge(t);
     test_invalid_packet(t);
     EQERR(capt, EXPECTED_STDERR);
-    return TEARDOWN(t);
+    return TEST_CLEAN(t);
 }

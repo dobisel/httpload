@@ -1,9 +1,9 @@
-#include "common.h"
-#include "logging.h"
 #include "fixtures/assert.h"
 #include <stdio.h>
 #include <http_parser.h>
 
+static http_parser p;
+static struct test *t;
 static char url[100];
 static char body[100];
 static size_t bodylen = 0;
@@ -22,9 +22,6 @@ body_cb(http_parser * p, const char *at, size_t len) {
     body[bodylen] = 0;
     return 0;
 }
-
-static struct test test;
-static http_parser p;
 
 static http_parser_settings settings = {
     .on_url = url_cb,
@@ -49,7 +46,6 @@ req(const char *b) {
     url[0] = body[0] = 0;
     bodylen = 0;
     size_t rl = req_chunk(b);
-    struct test *t = &test;
 
     EQI(p.http_errno, 0);
     req_chunk(NULL);
@@ -57,7 +53,7 @@ req(const char *b) {
     return rl;
 }
 
-void
+TEST_CASE void
 test_httpparser_get(struct test *t) {
     http_parser_init(&p, HTTP_REQUEST);
     req("GET / HTTP/1.1" RN "Content-Length: 5" RN RN "12345");
@@ -77,8 +73,7 @@ test_httpparser_get(struct test *t) {
 
 int
 main() {
-    log_setlevel(LL_DEBUG);
-    SETUP(&test);
-    test_httpparser_get(&test);
-    return TEARDOWN(&test);
+    t = TEST_BEGIN(LL_ERROR);
+    test_httpparser_get(t);
+    return TEST_CLEAN(t);
 }

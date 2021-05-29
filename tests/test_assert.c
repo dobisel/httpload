@@ -3,19 +3,19 @@
 
 #include <stdlib.h>
 
-void
+TEST_CASE void
 test_eqint(struct test *t) {
     EQI(1, 1);
     NEQI(1, 2);
 }
 
-void
+TEST_CASE void
 test_eqstr(struct test *t) {
     EQS("foo 02", "%s %02d", "foo", 2);
     NEQS("foo 02", "%s %02d", "foo", 3);
 }
 
-void
+TEST_CASE void
 test_eqnstr(struct test *t) {
     EQNS(5, "foo 02", "foo 03");
     EQNS(5, "foo 02", "foo 034567");
@@ -26,13 +26,13 @@ test_eqnstr(struct test *t) {
     NEQNS(4, "foo", "foo 02");
 }
 
-void
+TEST_CASE void
 test_eqbin(struct test *t) {
     EQB(3, "foo", "foo");
     NEQB(3, "foo", "bar");
 }
 
-void
+TEST_CASE void
 test_isnull(struct test *t) {
     ISNULL(NULL);
     ISNOTNULL(t);
@@ -40,14 +40,11 @@ test_isnull(struct test *t) {
 
 int
 main() {
-    struct test t;
-
-    log_setlevel(LL_DEBUG);
-    SETUP(&t);
-    test_eqint(&t);
-    test_eqstr(&t);
-    test_eqnstr(&t);
-    test_eqbin(&t);
-    test_isnull(&t);
-    return TEARDOWN(&t);
+    struct test *t = TEST_BEGIN(LL_ERROR);
+    test_eqint(t);
+    test_eqstr(t);
+    test_eqnstr(t);
+    test_eqbin(t);
+    test_isnull(t);
+    return TEST_CLEAN(t);
 }

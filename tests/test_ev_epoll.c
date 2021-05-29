@@ -13,11 +13,11 @@
 /* third-party */
 #include <mimick.h>
 
-static struct test *t;
-
 #define EPFD    888
 #define LISTENFD    777
 #define NOERROR 0
+
+static struct test *t;
 
 /* Mock epoll_create1(2) */
 MMK_DEFINE(epoll_create1_mock_t, int, int);
@@ -96,8 +96,8 @@ on_recvd(struct ev *ev, struct peer *c, const char *data, size_t len) {
     EQI(len, 0);
 }
 
-void
-test_ev_epoll_server_loop() {
+TEST_CASE void
+test_ev_epoll_server_loop(struct test *t) {
     int close_ret;
     ssize_t read_ret;
     int epoll_create1_ret;
@@ -233,14 +233,11 @@ test_ev_epoll_server_loop() {
 
 int
 main() {
-    static struct test test;
     static struct capt capt;
+    t = TEST_BEGIN(LL_ERROR);
 
-    log_setlevel(LL_ERROR);
-    t = &test;
-    SETUP(t);
     STDCAPT_ERR(capt);
-    test_ev_epoll_server_loop();
+    test_ev_epoll_server_loop(t);
     EQERR(capt, EXPECTED_STDERR);
-    return TEARDOWN(t);
+    return TEST_CLEAN(t);
 }

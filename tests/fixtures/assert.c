@@ -22,7 +22,7 @@
     })
 
 static void
-printbinary(const char *buf, int buflen) {
+_printbinary(const char *buf, int buflen) {
     for (int i = 0; i < buflen; i++) {
         printf("\\%02X", buf[i]);
     }
@@ -42,9 +42,9 @@ eqbin(struct test *t, bool not, size_t len, const char *given,
         printf("NOT ");
     }
     printf("EXPECTED:\t"); 
-    printbinary(expected, len);
+    _printbinary(expected, len);
     printf("GIVEN:\t\t"); 
-    printbinary(given, len);
+    _printbinary(given, len);
     exit(EXIT_FAILURE);
 }
 
@@ -121,9 +121,10 @@ pre_assert(struct test *t, const char *func, size_t line) {
 #define TM_PLUS             23
 #define TM     (TEST_MAXFILENAME + TM_PLUS)
 
-void
-test_setup(struct test *t, const char *filename) {
+struct test *
+test_suite_setup(loglevel_t loglevel, const char *filename) {
     char *fn = basename(filename) + 5;
+    struct test *t = malloc(sizeof(struct test));
     t->func = NULL;
     t->line = 0;
     t->filename = filename;
@@ -135,14 +136,17 @@ test_setup(struct test *t, const char *filename) {
     sprintf(temp + (TM - (strlen(fn) + TM_PLUS)), 
             CYN"%.*s" BLU ": " RST, (int)strlen(fn) - 2, fn);
     printf("%s", temp);
+    log_setlevel(loglevel);
+    return t;
 }
 
 int
-test_teardown(struct test *t) {
+test_suite_teardown(struct test *t) {
     free(t->tmp);
     if (t->func != NULL) {
         FUNCSIGN();
     }
     printf(N);
+    free(t);
     return EXIT_SUCCESS;
 }

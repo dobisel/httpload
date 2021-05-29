@@ -1,13 +1,7 @@
-#include "common.h"
-#include "logging.h"
-#include "helpers.h"
 #include "fixtures/assert.h"
 #include "fixtures/stdcapt.h"
 
-#include <unistd.h>
-
 static struct capt capt;
-static struct test *t;
 
 int
 foo() {
@@ -16,8 +10,8 @@ foo() {
     return ERR;
 }
 
-static void
-test_stdcapt() {
+TEST_CASE void
+test_stdcapt(struct test *t) {
     STDCAPT_ERR(capt);
     EQI(foo(), ERR);
     EQERR(capt, "test_stdcapt: foo: Operation not permitted" N);
@@ -25,11 +19,7 @@ test_stdcapt() {
 
 int
 main() {
-    static struct test test;
-
-    log_setlevel(LL_DEBUG);
-    t = &test;
-    SETUP(t);
-    test_stdcapt();
-    return TEARDOWN(t);
+    struct test *t = TEST_BEGIN(LL_ERROR);
+    test_stdcapt(t);
+    return TEST_CLEAN(t);
 }

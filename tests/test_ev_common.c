@@ -9,18 +9,18 @@
 /* third-party */
 #include <mimick.h>
 
-static struct test *t;
-
 /**********************************
  * ev_common_peer_disconn()
  *********************************/
+
+static struct test *t;
 
 MMK_DEFINE(close_mock_t, int, int);
 
 #define CLOSEMOCK close_mock(mmk_any(int))
 
-static void
-test_ev_common_peer_disconn() {
+TEST_CASE void
+test_ev_common_peer_disconn(struct test *t) {
     int cret;
     close_mock_t close_mock = mmk_mock("close@self", close_mock_t);
 
@@ -76,8 +76,8 @@ newconn_close(struct evs *evs, struct peer *c) {
     accept4_mock(mmk_eq(int, 777), mmk_any(struct sockaddr *), \
             mmk_any(socklen_t *), mmk_eq(int, SOCK_NONBLOCK))
 
-static void
-test_ev_common_newconn() {
+TEST_CASE void
+test_ev_common_newconn(struct test *t) {
     int aret;
     int cret;
     accept4_mock_t accept4_mock = mmk_mock("accept4@self", accept4_mock_t);
@@ -192,8 +192,8 @@ read_wrapper(int fd, void *buf, size_t count) {
 
 #define READMOCK read_mock(mmk_eq(int, 888), mmk_any(void *), mmk_any(size_t))
 
-void
-test_ev_common_read() {
+TEST_CASE void
+test_ev_common_read(struct test *t) {
     read_mock_t read_mock = mmk_mock("read@self", read_mock_t);
 
     struct ev ev = {
@@ -250,8 +250,8 @@ writefinishcb(struct ev *ev, struct peer *c) {
 #define WRITEMOCK \
     write_mock(mmk_eq(int, 888), mmk_any(void *), mmk_any(size_t))
 
-void
-test_ev_common_write() {
+TEST_CASE void
+test_ev_common_write(struct test *t) {
     ssize_t wret;
     write_mock_t write_mock = mmk_mock("write@self", write_mock_t);
 
@@ -301,14 +301,10 @@ test_ev_common_write() {
 
 int
 main() {
-    static struct test test;
-
-    log_setlevel(LL_ERROR);
-    t = &test;
-    SETUP(t);
-    test_ev_common_write();
-    test_ev_common_read();
-    test_ev_common_newconn();
-    test_ev_common_peer_disconn();
-    return TEARDOWN(t);
+    t = TEST_BEGIN(LL_ERROR);
+    test_ev_common_write(t);
+    test_ev_common_read(t);
+    test_ev_common_newconn(t);
+    test_ev_common_peer_disconn(t);
+    return TEST_CLEAN(t);
 }

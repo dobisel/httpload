@@ -39,7 +39,7 @@
 #define STDERR  2
 
 static int
-execchild(pfunc_t f, const char *prog, int argc, char **argv) {
+_execchild(pfunc_t f, const char *prog, int argc, char **argv) {
     int status;
     char **newargv = malloc(sizeof(char *) * (argc + 1));
     newargv[0] = (char *) prog;
@@ -116,7 +116,7 @@ pcapt(struct pcapt *p, pfunc_t f, int argc, char **argv) {
     }
 
     /* Run cli main & exit */
-    status = execchild(f, p->prog, argc, argv);
+    status = _execchild(f, p->prog, argc, argv);
 
     if (p->out) {
         /* Close the write side of stdout. */

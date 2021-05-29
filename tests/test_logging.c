@@ -16,7 +16,7 @@ monkeymain(int argc, char **argv) {
 
 #define LCAPTW0() PCAPTW0(&p, monkeymain)
 
-void
+TEST_CASE void
 test_logging_verbosity(struct test *t) {
     /* Debug */
     log_setlevel(LL_DEBUG);
@@ -52,10 +52,7 @@ test_logging_verbosity(struct test *t) {
 
 int
 main() {
-    struct test t;
-
-    log_setlevel(LL_DEBUG);
-    SETUP(&t);
-    test_logging_verbosity(&t);
-    return TEARDOWN(&t);
+    struct test *t = TEST_BEGIN(LL_DEBUG);
+    test_logging_verbosity(t);
+    return TEST_CLEAN(t);
 }

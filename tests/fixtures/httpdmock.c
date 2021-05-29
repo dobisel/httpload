@@ -5,7 +5,7 @@
 #include "ev.h"
 
 static int
-httpdmock_sendrequest(struct httpdmock *m, const char *verb, const char *url, 
+_httpdmock_sendrequest(struct httpdmock *m, const char *verb, const char *url, 
         const char *payload, size_t payloadsize) {
     m->out[0] = 0;
     m->err[0] = 0;
@@ -16,12 +16,12 @@ httpdmock_sendrequest(struct httpdmock *m, const char *verb, const char *url,
 int
 httpdmock_post(struct httpdmock *m, const char *url, const char *payload, 
         size_t len) {
-    return httpdmock_sendrequest(m, "POST", url, payload, len);
+    return _httpdmock_sendrequest(m, "POST", url, payload, len);
 }
 
 int
 httpdmock_get(struct httpdmock *m, const char *url) {
-    return httpdmock_sendrequest(m, "GET", url, NULL, 0);
+    return _httpdmock_sendrequest(m, "GET", url, NULL, 0);
 }
 
 void 

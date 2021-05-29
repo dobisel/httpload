@@ -76,6 +76,25 @@ make indent
 
 to reformat the entire project.
 
+## Coding convention
+
+### Static members
+
+Prepend `_` at the beginning of eavery static member.
+
+```C
+static http_parser_settings _hpconf = {
+    ...
+};
+
+static void
+_client_connected(struct evs *evs, struct peer *c) {
+    ...
+}
+```
+
+More: [Linux coding style] (https://www.kernel.org/doc/html/v4.10/process/coding-style.html)
+
 ## Code of Conduct
 
 We value the participation of each individual and want all to have an enjoyable and fulfilling experience. Nobody knows everything, and nobody is expected to be perfect. Asking questions is how we learn.

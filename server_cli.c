@@ -15,17 +15,17 @@ static struct {
     uint16_t bind;
     uint8_t forks;
     bool dryrun;
-} settings = {
+} _settings = {
     SERVER_DEFAULT_BIND,
     SERVER_DEFAULT_FORKS,
     false,
 };
 
-static char doc[] = "HTTP echo server using Linux epoll.";
-static char args_doc[] = "";
+static char _doc[] = "HTTP echo server using Linux epoll.";
+static char _args_doc[] = "";
 
 /* Options definition */
-static struct argp_option options[] = {
+static struct argp_option _options[] = {
     ARG_VERBOSITY,
     ARG_CONCURRENCY,
     ARG_DRYRUN,
@@ -36,22 +36,22 @@ static struct argp_option options[] = {
 
 /* Parse a single option. */
 static int
-parse_opt(int key, char *arg, struct argp_state *state) {
+_parse_opt(int key, char *arg, struct argp_state *state) {
     switch (key) {
         case 'c':
-            settings.forks = atoi(arg);
-            if (settings.forks <= 0) {
-                ERRORX("Invalid number of forks: %d", settings.forks);
+            _settings.forks = atoi(arg);
+            if (_settings.forks <= 0) {
+                ERRORX("Invalid number of forks: %d", _settings.forks);
             }
 
             break;
 
         case 'b':
-            settings.bind = atoi(arg);
+            _settings.bind = atoi(arg);
             break;
 
         case ARG_DRYRUN_KEY:
-            settings.dryrun = true;
+            _settings.dryrun = true;
             break;
 
         case ARGP_KEY_ARG:
@@ -67,12 +67,12 @@ parse_opt(int key, char *arg, struct argp_state *state) {
     return EXIT_SUCCESS;
 }
 
-static struct argp argp = { options, parse_opt, args_doc, doc };
+static struct argp _argp = { _options, _parse_opt, _args_doc, _doc };
 
 static int
 _dryrun() {
-    INFO("forks:\t\t%d", settings.forks);
-    INFO("bind:\t\t%d", settings.bind);
+    INFO("forks:\t\t%d", _settings.forks);
+    INFO("bind:\t\t%d", _settings.bind);
     INFO("verbosity:\t%s(%d)", log_levelnames[log_level], log_level);
     return EXIT_SUCCESS;
 }
@@ -84,17 +84,17 @@ servercli_run(int argc, char **argv) {
     setvbuf(stderr, NULL, _IONBF, 0);
 
     /* Parse CLI arguments. */
-    argp_parse(&argp, argc, argv, 0, 0, NULL);
+    argp_parse(&_argp, argc, argv, 0, 0, NULL);
 
     /* Configure HTTP server */
     struct httpd server = {
-        .forks = settings.forks,
+        .forks = _settings.forks,
         .max_headers_size = 1024 * 8,
-        .bind = settings.bind
+        .bind = _settings.bind
     };
 
     /* Dry Run. */
-    if (settings.dryrun) {
+    if (_settings.dryrun) {
         return _dryrun();
     }
 

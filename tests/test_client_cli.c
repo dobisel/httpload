@@ -7,7 +7,7 @@ static struct pcapt p = {.prog = "httploadc" };
 
 #define CCAPTW0(...) PCAPTW0(&p, clientcli_run, __VA_ARGS__)
 
-static void
+TEST_CASE void
 test_version(struct test *t) {
     EQI(CCAPTW0("--version"), 0);
     EQS(p.out, HTTPLOAD_VERSION N);
@@ -16,7 +16,7 @@ test_version(struct test *t) {
     EQS(p.out, HTTPLOAD_VERSION N);
 }
 
-static void
+TEST_CASE void
 test_verbosity(struct test *t) {
     EQI(CCAPTW0("-v", "1"), 0);
     EQS(p.out, "");
@@ -43,7 +43,7 @@ test_verbosity(struct test *t) {
     EQNS(29, p.err, "httploadc: Invalid verbosity level: 5");
 }
 
-static void
+TEST_CASE void
 test_invalidargument(struct test *t) {
     /* Invalid optional argument. */
     EQI(CCAPTW0("--invalidargument", "0"), 64);
@@ -58,12 +58,9 @@ test_invalidargument(struct test *t) {
 
 int
 main() {
-    struct test t;
-
-    log_setlevel(LL_DEBUG);
-    SETUP(&t);
-    test_version(&t);
-    test_verbosity(&t);
-    test_invalidargument(&t);
-    return TEARDOWN(&t);
+    struct test *t = TEST_BEGIN(LL_ERROR);
+    test_version(t);
+    test_verbosity(t);
+    test_invalidargument(t);
+    return TEST_CLEAN(t);
 }

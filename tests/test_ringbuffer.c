@@ -1,4 +1,3 @@
-
 /* local */
 #include "common.h"
 #include "ringbuffer.h"
@@ -15,7 +14,7 @@
 
 #define S   8
 
-void
+TEST_CASE void
 test_write_read(struct test *t) {
     char tmp[256];
     int tmplen = 0;
@@ -61,7 +60,7 @@ test_write_read(struct test *t) {
     EQI(b.writecounter, 13);
 }
 
-void
+TEST_CASE void
 test_dryread(struct test *t) {
     char tmp[256];
     int tmplen = 0;
@@ -96,7 +95,7 @@ test_dryread(struct test *t) {
     EQI(b.writecounter, 7);
 }
 
-void
+TEST_CASE void
 test_read_until(struct test *t) {
     char tmp[256];
     size_t tmplen = 0;
@@ -140,7 +139,7 @@ test_read_until(struct test *t) {
     EQI(tmplen, 0);
 }
 
-void
+TEST_CASE void
 test_read_until_chr(struct test *t) {
     char tmp[256];
     size_t tmplen = 0;
@@ -183,7 +182,7 @@ test_read_until_chr(struct test *t) {
     EQI(tmplen, 0);
 }
 
-void
+TEST_CASE void
 test_dryread_until(struct test *t) {
     char tmp[256];
     size_t tmplen = 0;
@@ -226,7 +225,7 @@ test_dryread_until(struct test *t) {
     EQI(tmplen, 0);
 }
 
-void
+TEST_CASE void
 test_read_intofile(struct test *t) {
     char tmp[256];
     char buff[S];
@@ -254,7 +253,7 @@ test_read_intofile(struct test *t) {
 
 mmk_mock_define(write_mock_t, ssize_t, int, const void *, size_t);
 
-void
+TEST_CASE void
 test_read_intofile_errors(struct test *t) {
     char buff[S];
     int p[2];
@@ -290,16 +289,13 @@ test_read_intofile_errors(struct test *t) {
 
 int
 main() {
-    struct test t;
-
-    log_setlevel(LL_DEBUG);
-    SETUP(&t);
-    test_write_read(&t);
-    test_dryread(&t);
-    test_dryread_until(&t);
-    test_read_until(&t);
-    test_read_until_chr(&t);
-    test_read_intofile(&t);
-    test_read_intofile_errors(&t);
-    return TEARDOWN(&t);
+    struct test *t = TEST_BEGIN(LL_ERROR);
+    test_write_read(t);
+    test_dryread(t);
+    test_dryread_until(t);
+    test_read_until(t);
+    test_read_until_chr(t);
+    test_read_intofile(t);
+    test_read_intofile_errors(t);
+    return TEST_CLEAN(t);
 }

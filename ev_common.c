@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 
 static struct ev *_ev;
-static char *tmp;
+static char *_tmp;
 
 void
 ev_common_write(struct ev *ev, struct peer *c) {
@@ -45,12 +45,12 @@ ev_common_read(struct ev *ev, struct peer *c) {
             c->status = PS_CLOSE;
             return;
         }
-        bytes = read(c->fd, tmp + tmplen, EV_READ_CHUNKSIZE);
+        bytes = read(c->fd, _tmp + tmplen, EV_READ_CHUNKSIZE);
         if (bytes <= 0) {
             if (errno == EAGAIN) {
                 errno = 0;
                 /* Calling read callback */
-                ev->on_recvd(ev, c, tmp, tmplen);
+                ev->on_recvd(ev, c, _tmp, tmplen);
                 return;
             }
             c->status = PS_CLOSE;
@@ -136,7 +136,7 @@ _child_sigint(int s) {
 void
 ev_common_init(struct ev *ev) {
     /* Allocate memory for temp buffer. */
-    tmp = malloc(EV_READ_BUFFSIZE);
+    _tmp = malloc(EV_READ_BUFFSIZE);
 
     /* Set no buffer for stdout */
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -147,7 +147,7 @@ ev_common_init(struct ev *ev) {
 void
 ev_common_deinit(struct ev *ev) {
     /* Deallocate memory of the temp buffer. */
-    free(tmp);
+    free(_tmp);
 }
 
 int

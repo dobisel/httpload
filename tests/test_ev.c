@@ -13,7 +13,6 @@
 /* third-party */
 #include <mimick.h>
 
-static struct test *t;
 
 /**********************************
  * ev_server_start()
@@ -25,8 +24,8 @@ MMK_DEFINE(calloc_mock_t, void *, size_t, size_t);
 #define MALLOC_M    malloc_mock(mmk_any(size_t))
 #define CALLOC_M    calloc_mock(mmk_any(size_t), mmk_any(size_t))
 
-static void
-test_ev_server_start() {
+TEST_CASE void
+test_ev_server_start(struct test *t) {
     struct evs evs = {
         .forks = 1,
     };
@@ -58,14 +57,11 @@ test_ev_server_start() {
 
 int
 main() {
-    static struct test test;
-    static struct capt capt;
+    struct capt capt;
+    struct test *t = TEST_BEGIN(LL_ERROR);
 
-    log_setlevel(LL_ERROR);
-    t = &test;
-    SETUP(t);
     STDCAPT_ERR(capt);
-    test_ev_server_start();
+    test_ev_server_start(t);
     EQERR(capt, EXPECTED_STDERR);
-    return TEARDOWN(t);
+    return TEST_CLEAN(t);
 }
