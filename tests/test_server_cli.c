@@ -2,6 +2,7 @@
 #include "fixtures/assert.h"
 #include "fixtures/pcapt.h"
 #include "fixtures/curl.h"
+
 #include <unistd.h>
 
 static struct pcapt p = {.prog = "httploads" };

@@ -1,4 +1,3 @@
-#include "common.h"
 #include "logging.h"
 #include "ev.h"
 #include "httpd.h"

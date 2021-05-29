@@ -1,4 +1,3 @@
-#include "logging.h"
 #include "client_cli.h"
 #include "fixtures/assert.h"
 #include "fixtures/pcapt.h"

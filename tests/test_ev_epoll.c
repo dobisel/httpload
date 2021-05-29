@@ -1,6 +1,3 @@
-#include "common.h"
-#include "logging.h"
-#include "ev_common.h"
 #include "ev_epoll.h"
 #include "fixtures/assert.h"
 #include "fixtures/stdcapt.h"

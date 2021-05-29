@@ -1,4 +1,3 @@
-#include "logging.h"
 #include "fixtures/assert.h"
 #include "fixtures/httpdmock.h"
 #include "fixtures/stdcapt.h"

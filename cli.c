@@ -1,5 +1,3 @@
-#include "common.h"
-#include "logging.h"
 #include "cli.h"
 
 #include <argp.h>

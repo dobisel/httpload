@@ -1,4 +1,3 @@
-#include "common.h"
 #include "options.h"
 #include "logging.h"
 #include "helpers.h"

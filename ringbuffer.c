@@ -1,4 +1,3 @@
-#include "common.h"
 #include "helpers.h"
 #include "ringbuffer.h"
 #include "logging.h"

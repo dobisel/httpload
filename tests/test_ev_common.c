@@ -1,7 +1,5 @@
-#include "common.h"
-#include "logging.h"
-#include "fixtures/assert.h"
 #include "ev_common.h"
+#include "fixtures/assert.h"
 
 #include <sys/socket.h>
 #include <unistd.h>

@@ -1,6 +1,7 @@
 #include "logging.h"
 #include "fixtures/assert.h"
 #include "fixtures/pcapt.h"
+
 #include <stdlib.h>
 
 static struct pcapt p = {.prog = "logmock" };
@@ -25,7 +26,7 @@ test_logging_verbosity(struct test *t) {
     EQS(p.err,
         "test_logging: w: Success" N
         "test_logging: e: Operation not permitted" N);
-    EQS(p.out, "i" N "012:monkeymain -- d" N);
+    EQS(p.out, "i" N "013:monkeymain -- d" N);
 
     /* Info */
     log_setlevel(LL_INFO);

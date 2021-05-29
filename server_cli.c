@@ -1,6 +1,4 @@
-#include "common.h"
 #include "httpd.h"
-#include "logging.h"
 #include "cli.h"
 
 #include <stdio.h>

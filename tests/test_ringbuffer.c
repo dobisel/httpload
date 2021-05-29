@@ -1,7 +1,5 @@
 /* local */
-#include "common.h"
 #include "ringbuffer.h"
-#include "logging.h"
 #include "fixtures/assert.h"
 
 /* system */

@@ -1,8 +1,8 @@
 #include "logging.h"
-#include "fixtures/httpdmock.h"
-#include "fixtures/curl.h"
 #include "httpd.h"
 #include "ev.h"
+#include "fixtures/httpdmock.h"
+#include "fixtures/curl.h"
 
 static int
 _httpdmock_sendrequest(struct httpdmock *m, const char *verb, const char *url, 

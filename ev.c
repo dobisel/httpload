@@ -1,4 +1,3 @@
-
 /* local */
 #include "logging.h"
 #include "helpers.h"

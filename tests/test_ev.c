@@ -1,13 +1,8 @@
-#include "common.h"
-#include "logging.h"
-#include "helpers.h"
-#include "inttypes.h"
-#include "ev_common.h"
-#include "ev_epoll.h"
 #include "ev.h"
 #include "fixtures/assert.h"
 #include "fixtures/stdcapt.h"
 
+#include <inttypes.h>
 #include <unistd.h>
 
 /* third-party */
