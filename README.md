@@ -7,10 +7,6 @@
 
 Event based HTTP stress testing. 
 
-## Project Status: Development
-
-### Roadap:
-
 ## Contributing
 
 Take a look at [CONTRIBUTING.md](CONTRIBUTING.md).
