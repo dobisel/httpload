@@ -1,5 +1,6 @@
-
 # Contributing
+
+## Setup development env
 
 ### Install development prerequicites:
 
@@ -74,6 +75,7 @@ make indent
 ```
 
 to reformat the entire project.
+
 ## Code of Conduct
 
 We value the participation of each individual and want all to have an enjoyable and fulfilling experience. Nobody knows everything, and nobody is expected to be perfect. Asking questions is how we learn.
