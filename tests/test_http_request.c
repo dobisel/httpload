@@ -1,6 +1,6 @@
 #include "fixtures/assert.h"
-#include "logging.h"
 #include "http_request.h"
+
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -124,14 +124,12 @@ test_send_request(struct test *t) {
 
 int
 main() {
-    struct test t;
+    struct test *t = TEST_BEGIN(LL_WARN);
 
-    log_setlevel(LL_DEBUG);
-    SETUP(&t);
-    test_write_verb_path_version(&t);
-    test_write_host(&t);
-    test_write_headers(&t);
-    test_write_body(&t);
-    test_send_request(&t);
-    return TEARDOWN(&t);
+    test_write_verb_path_version(t);
+    test_write_host(t);
+    test_write_headers(t);
+    test_write_body(t);
+    test_send_request(t);
+    return TEST_CLEAN(t);
 }
