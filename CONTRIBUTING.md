@@ -5,7 +5,13 @@
 ### Install development prerequicites:
 
 ```shell
-apt install build-essential cmake indent libcurl4-gnutls-dev lcov
+apt install build-essential cmake indent libcurl4-gnutls-dev lcov libssl-dev
+```
+
+Optional packages:
+
+```shell
+apt install libssl-doc
 ```
 
 ##### Mimick
