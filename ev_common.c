@@ -166,6 +166,7 @@ ev_common_fork(struct ev *ev, ev_cb_t loop) {
     _ev = ev;
 
     signal(SIGINT, _parent_sigint);
+    signal(SIGCHLD, _parent_sigint);
 
     for (int i = 0; i < ev->forks; i++) {
         pid = fork();
